@@ -1,0 +1,50 @@
+{
+  "name": "caminho",
+  "version": "0.0.1",
+  "description": "Caminho means path, a new path to your data processing.",
+  "main": "build/index.js",
+  "types": "./build/index.d.ts",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc --project tsconfig.json",
+    "lint": "eslint ./src",
+    "lint-fix": "eslint ./src --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pedrokehl/caminho"
+  },
+  "jest": {
+    "preset": "ts-jest"
+  },
+  "keywords": [
+    "pipeline",
+    "data",
+    "functional",
+    "javascript",
+    "js",
+    "typescript",
+    "ts"
+  ],
+  "files": [
+    "README.md",
+    "build"
+  ],
+  "author": "Pedro Kehl",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^27.4.0",
+    "@types/node": "^14.18.5",
+    "@typescript-eslint/eslint-plugin": "^5.9.0",
+    "@typescript-eslint/parser": "^5.9.0",
+    "eslint": "^8.6.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.4",
+    "jest": "^27.4.7",
+    "ts-jest": "^27.1.2",
+    "typescript": "^4.5.4"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

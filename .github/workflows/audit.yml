@@ -1,0 +1,12 @@
+name: Audit
+
+on: [pull_request]
+
+jobs:
+  build:
+    name: 🔍 Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v1
+      - run: npm audit
