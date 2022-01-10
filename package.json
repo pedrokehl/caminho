@@ -2,8 +2,8 @@
   "name": "caminho",
   "version": "0.0.1",
   "description": "Caminho means path, a new path to your data processing.",
-  "main": "build/index.js",
-  "types": "./build/index.d.ts",
+  "main": "build/caminho.js",
+  "types": "./build/caminho.d.ts",
   "scripts": {
     "test": "jest --coverage --silent",
     "build": "npm run clean && tsc --build",
@@ -48,5 +48,8 @@
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "rxjs": "^7.5.1"
   }
 }

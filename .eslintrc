@@ -23,7 +23,9 @@
     "no-restricted-syntax": "off",
     "no-param-reassign": ["error", { "props": true, "ignorePropertyModificationsFor": ["valueBag"] }],
     "no-shadow": "off",
-    "@typescript-eslint/no-shadow": "error"
+    "@typescript-eslint/no-shadow": "error",
+    "no-use-before-define": "off",
+    "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }]
   },
   "env": {
     "es2020": true,
