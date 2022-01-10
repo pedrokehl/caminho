@@ -5,10 +5,12 @@
   "main": "build/index.js",
   "types": "./build/index.d.ts",
   "scripts": {
-    "test": "jest",
-    "build": "tsc --project tsconfig.json",
-    "lint": "eslint ./src",
-    "lint-fix": "eslint ./src --fix"
+    "test": "jest --coverage --silent",
+    "build": "npm run clean && tsc --build",
+    "clean": "tsc --build --clean",
+    "lint": "eslint ./src ./test",
+    "lint-fix": "eslint ./src ./test --fix",
+    "watch-test": "npm run test -- --watchAll"
   },
   "repository": {
     "type": "git",
