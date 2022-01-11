@@ -1,42 +1,51 @@
 import {
-  bufferCount, bufferTime, mergeAll, Observable,
+  bufferTime, mergeAll, Observable,
 } from 'rxjs'
 import { generate } from './operations/generate'
 import { pipe, OperationType } from './operations/pipe'
-import { CaminhoMapper, CaminhoGenerator, ValueBag } from './types'
+import type {
+  CaminhoGenerator, ValueBag, OperatorProviderParams, OperatorParams,
+} from './types'
 
 // TODO: add onEachStep logOption
 // TODO: add onSourceFinish logOption
 export class Caminho {
   private observable!: Observable<ValueBag>
 
-  source(generator: CaminhoGenerator, provides: string) {
-    this.observable = generate(generator, provides)
+  source(params: { fn: CaminhoGenerator, provides: string }) {
+    this.observable = generate(params.fn, params.provides)
     return this
   }
 
-  fetch(fetchFunction: CaminhoMapper, provides: string) {
-    this.observable = pipe(this.observable, fetchFunction, OperationType.FETCH, provides)
+  fetch(params: OperatorProviderParams) {
+    return this.appendOperatorWithOptions(params, OperationType.FETCH)
+  }
+
+  map(params: OperatorProviderParams) {
+    return this.appendOperatorWithOptions(params, OperationType.MAP)
+  }
+
+  save(params: OperatorParams) {
+    return this.appendOperatorWithOptions(params, OperationType.SAVE)
+  }
+
+  private appendOperatorWithOptions(params: OperatorParams, operation: OperationType) {
+    if (params.options?.batch) {
+      this.timerBatch(params.options.batch.timeoutMs, params.options.batch.maxSize)
+      this.observable = this.appendOperator(params, operation)
+      this.flatten()
+      return this
+    }
+    this.observable = this.appendOperator(params, operation)
     return this
   }
 
-  map(mapFunction: CaminhoMapper, provides: string) {
-    this.observable = pipe(this.observable, mapFunction, OperationType.MAP, provides)
-    return this
+  private appendOperator(params: OperatorParams, operation: OperationType) {
+    return pipe(this.observable, operation, params)
   }
 
-  save(saveFunction: CaminhoMapper, provides?: string) {
-    this.observable = pipe(this.observable, saveFunction, OperationType.SAVE, provides)
-    return this
-  }
-
-  batch(count: number) {
-    this.observable = this.observable.pipe(bufferCount(count))
-    return this
-  }
-
-  timerBatch(ms: number, count: number) {
-    this.observable = this.observable.pipe(bufferTime(ms, ms, count))
+  timerBatch(timeoutMs: number, maxSize: number) {
+    this.observable = this.observable.pipe(bufferTime(timeoutMs, timeoutMs, maxSize))
     return this
   }
 
