@@ -1,5 +1,5 @@
-import { Observable, map as rxjsMap } from 'rxjs'
-import { CaminhoMapper, ValueBag } from '../types'
+import { Observable, mergeMap as rxjsMergeMap } from 'rxjs'
+import type { OperatorParams, ValueBag } from '../types'
 
 export enum OperationType {
     FETCH = 'fetch',
@@ -9,19 +9,18 @@ export enum OperationType {
 
 export function pipe(
   observable: Observable<ValueBag>,
-  mapFunction: CaminhoMapper,
-  type: OperationType,
-  provides?: string,
+  operationType: OperationType,
+  operatorParams: OperatorParams,
 ): Observable<ValueBag> {
-  const getBag = getValueBagGetter(provides)
+  const getBag = getValueBagGetter(operatorParams.provides)
 
   async function wrappedMapper(valueBagPromise: Promise<ValueBag>) {
     // TODO: add log for each emitted data
     const valueBag = await valueBagPromise
-    const value = await mapFunction(valueBag)
+    const value = await operatorParams.fn(valueBag)
     return getBag(valueBag, value)
   }
-  return observable.pipe(rxjsMap(wrappedMapper))
+  return observable.pipe(rxjsMergeMap(wrappedMapper, operatorParams.options?.concurrency ?? 1))
 }
 
 function getValueBagGetter(provides?: string) {

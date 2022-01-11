@@ -1,5 +1,5 @@
 import { from, Observable } from 'rxjs'
-import { CaminhoGenerator, ValueBag } from '../types'
+import type { CaminhoGenerator, ValueBag } from '../types'
 
 export function generate(
   asyncGeneratorFunction: CaminhoGenerator,
