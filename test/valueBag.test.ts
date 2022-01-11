@@ -14,7 +14,7 @@ test('Should provide valueBag properly to the flow', async () => {
   const generatorMock = getMockedGenerator(1)
 
   new Caminho()
-    .source({ fn: generatorMock.generator, provides: 'job' })
+    .source({ fn: generatorMock, provides: 'job' })
     .fetch({ fn: fetchMock, provides: 'rawData' })
     .map({ fn: mapMock, provides: 'mappedData' })
     .save({ fn: saveMock })

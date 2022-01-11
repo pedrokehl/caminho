@@ -5,19 +5,32 @@
   "main": "build/caminho.js",
   "types": "./build/caminho.d.ts",
   "scripts": {
-    "test": "jest --coverage --silent",
+    "test": "jest --coverage",
     "build": "npm run clean && tsc --build",
     "clean": "tsc --build --clean",
     "lint": "eslint ./src ./test",
     "lint-fix": "eslint ./src ./test --fix",
-    "watch-test": "npm run test -- --watchAll"
+    "watch-test": "jest -o --watch"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/pedrokehl/caminho"
   },
   "jest": {
-    "preset": "ts-jest"
+    "preset": "ts-jest",
+    "globals": {
+      "ts-jest": {
+        "tsconfig": "test/tsconfig.json"
+      }
+    },
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    }
   },
   "keywords": [
     "pipeline",

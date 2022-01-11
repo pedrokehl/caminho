@@ -10,7 +10,7 @@ test('Should call generator and run all function provided to the flow', async ()
   const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
 
   new Caminho()
-    .source({ fn: generatorMock.generator, provides: 'job' })
+    .source({ fn: generatorMock, provides: 'job' })
     .fetch({ fn: fetchMock, provides: 'rawData' })
     .map({ fn: mapMock, provides: 'mappedData' })
     .start()
@@ -18,7 +18,6 @@ test('Should call generator and run all function provided to the flow', async ()
   // TODO: replace sleep with proper checking execution status
   await sleep(5)
 
-  expect(generatorMock.called).toBe(NUMBER_OF_ITERATIONS)
   expect(fetchMock).toBeCalledTimes(NUMBER_OF_ITERATIONS)
   expect(mapMock).toBeCalledTimes(NUMBER_OF_ITERATIONS)
 })
