@@ -12,23 +12,29 @@ export function pipe(
   operationType: OperationType,
   operatorParams: OperatorParams,
 ): Observable<ValueBag> {
-  const getBag = getValueBagGetter(operatorParams.provides)
+  const getBag = getValueBagGetter(operatorParams)
 
-  async function wrappedMapper(valueBagPromise: Promise<ValueBag>) {
+  async function wrappedMapper(valueBag: ValueBag) {
     // TODO: add log for each emitted data
-    const valueBag = await valueBagPromise
     const value = await operatorParams.fn(valueBag)
     return getBag(valueBag, value)
   }
   return observable.pipe(rxjsMergeMap(wrappedMapper, operatorParams.options?.concurrency ?? 1))
 }
 
-function getValueBagGetter(provides?: string) {
-  if (provides) {
+function getValueBagGetter(operatorParams: OperatorParams) {
+  if (operatorParams.options?.batch) {
+    return function getValueBagWithProvides(valueBag: ValueBag[]) {
+      return valueBag
+    }
+  }
+
+  if (operatorParams.provides) {
+    const toProvide = operatorParams.provides
     // TODO: Proper typing for ValueBag!
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return function getValueBagWithProvides(valueBag: ValueBag, value: any) {
-      return { ...valueBag, [provides]: value }
+      return { ...valueBag, [toProvide]: value }
     }
   }
 
