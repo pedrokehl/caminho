@@ -1,5 +1,5 @@
 import {
-  bufferTime, mergeAll, Observable,
+  bufferTime, filter, mergeAll, Observable,
 } from 'rxjs'
 import { generate } from './operations/generate'
 import { pipe, OperationType } from './operations/pipe'
@@ -45,7 +45,10 @@ export class Caminho {
   }
 
   timerBatch(timeoutMs: number, maxSize: number) {
-    this.observable = this.observable.pipe(bufferTime(timeoutMs, timeoutMs, maxSize))
+    this.observable = this.observable.pipe(
+      bufferTime(timeoutMs, undefined, maxSize),
+      filter((buffer) => buffer.length > 0),
+    )
     return this
   }
 
