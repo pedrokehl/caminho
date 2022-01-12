@@ -11,9 +11,11 @@ import type {
 // TODO: add onSourceFinish logOption
 export class Caminho {
   private observable!: Observable<ValueBag>
+  private flow: { name: string, type: string }[] = []
 
   source(params: { fn: CaminhoGenerator, provides: string }) {
     this.observable = generate(params.fn, params.provides)
+    this.flow.push({ name: params.fn.name, type: 'source' })
     return this
   }
 
@@ -41,10 +43,12 @@ export class Caminho {
   }
 
   private appendOperator(params: OperatorParams, operation: OperationType) {
+    this.flow.push({ name: params.fn.name, type: operation })
     return pipe(this.observable, operation, params)
   }
 
   timerBatch(timeoutMs: number, maxSize: number) {
+    this.flow.push({ name: `timeoutMs: ${timeoutMs} - maxSize: ${maxSize}`, type: 'timerBatch' })
     this.observable = this.observable.pipe(
       bufferTime(timeoutMs, undefined, maxSize),
       filter((buffer) => buffer.length > 0),
@@ -53,11 +57,13 @@ export class Caminho {
   }
 
   flatten() {
+    this.flow.push({ name: 'mergeAll', type: 'flatten' })
     this.observable = this.observable.pipe(mergeAll())
     return this
   }
 
   async start() {
+    this.flow.push({ name: 'subscribe', type: 'start' })
     this.observable.subscribe()
   }
 }
