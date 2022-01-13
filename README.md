@@ -13,13 +13,13 @@ Poc for the implementation using rxJS v7
 Features:
 [X] Concurrency
 [X] Batching
+[X] Execution stats for each step
 [ ] Aggregation
 [ ] Type Checking
 [ ] Parallel execution (multiple steps at the same time)
 [ ] Backpressure - See articles like https://itnext.io/lossless-backpressure-in-rxjs-b6de30a1b6d4
 [ ] Subflow - See forkJoin operator, can be helpful
 [ ] Error handling - See catchError operator, and https://blog.angular-university.io/rxjs-error-handling/
-[ ] Reporting for timing and emitted count
 
 ## Getting started
 - Clone the repository
