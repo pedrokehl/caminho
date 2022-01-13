@@ -1,22 +1,21 @@
 import { Observable, mergeMap as rxjsMergeMap } from 'rxjs'
-import type { OperatorParams, ValueBag } from '../types'
-
-export enum OperationType {
-    FETCH = 'fetch',
-    MAP = 'map',
-    SAVE = 'save'
-}
+import type { CaminhoOptions, ValueBag } from '../types'
+import { OperationType, OperatorParams } from './operations'
+import { getLogger } from './stepLogger'
 
 export function pipe(
   observable: Observable<ValueBag>,
   operationType: OperationType,
   operatorParams: OperatorParams,
+  caminhoOptions?: CaminhoOptions,
 ): Observable<ValueBag> {
   const getBag = getValueBagGetter(operatorParams)
+  const logger = getLogger(operationType, operatorParams.fn, caminhoOptions)
 
-  async function wrappedMapper(valueBag: ValueBag) {
-    // TODO: add log for each emitted data
+  async function wrappedMapper(valueBag: ValueBag | ValueBag[]) {
+    const stepStartedAt = Date.now()
     const value = await operatorParams.fn(valueBag)
+    logger(stepStartedAt)
     return getBag(valueBag, value)
   }
   return observable.pipe(rxjsMergeMap(wrappedMapper, operatorParams.options?.concurrency ?? 1))

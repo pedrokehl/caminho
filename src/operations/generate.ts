@@ -1,16 +1,23 @@
 import { from, Observable } from 'rxjs'
-import type { CaminhoGenerator, ValueBag } from '../types'
+import type { CaminhoGenerator, CaminhoOptions, ValueBag } from '../types'
+import { OperationType } from './operations'
+import { getLogger } from './stepLogger'
 
 export function generate(
   asyncGeneratorFunction: CaminhoGenerator,
   provides: string,
+  caminhoOptions?: CaminhoOptions,
 ): Observable<ValueBag> {
+  const logger = getLogger(OperationType.GENERATE, asyncGeneratorFunction, caminhoOptions)
+
   async function* wrappedGenerator() {
+    let stepStartedAt: number = Date.now()
     for await (const value of asyncGeneratorFunction()) {
-      // TODO: add log for each emitted data
+      logger(stepStartedAt)
+      stepStartedAt = Date.now()
       yield { [provides]: value }
     }
-    // TODO: Finish log
   }
+
   return from(wrappedGenerator())
 }

@@ -25,7 +25,12 @@
     "no-shadow": "off",
     "@typescript-eslint/no-shadow": "error",
     "no-use-before-define": "off",
-    "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }]
+    "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+    "no-useless-constructor": "off",
+    "indent": "off",
+    "@typescript-eslint/indent": ["error", 2],
+    "@typescript-eslint/no-empty-function": "off",
+    "object-curly-newline": ["error", { "multiline": true, "consistent": true }]
   },
   "env": {
     "es2020": true,
@@ -33,7 +38,7 @@
   },
   "overrides": [
     {
-        "files": ["test/**"],
+        "files": ["test/**/*"],
         "env": {
             "jest": true
         }

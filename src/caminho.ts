@@ -1,20 +1,19 @@
 import {
   bufferTime, filter, mergeAll, Observable,
 } from 'rxjs'
+import { OperationType, OperatorParams, OperatorProviderParams } from './operations/operations'
 import { generate } from './operations/generate'
-import { pipe, OperationType } from './operations/pipe'
-import type {
-  CaminhoGenerator, ValueBag, OperatorProviderParams, OperatorParams,
-} from './types'
+import { pipe } from './operations/pipe'
+import type { CaminhoGenerator, ValueBag, CaminhoOptions } from './types'
 
-// TODO: add onEachStep logOption
-// TODO: add onSourceFinish logOption
 export class Caminho {
   private observable!: Observable<ValueBag>
   private flow: { name: string, type: string }[] = []
 
+  constructor(private options?: CaminhoOptions) {}
+
   source(params: { fn: CaminhoGenerator, provides: string }) {
-    this.observable = generate(params.fn, params.provides)
+    this.observable = generate(params.fn, params.provides, this.options)
     this.flow.push({ name: params.fn.name, type: 'source' })
     return this
   }
@@ -44,7 +43,7 @@ export class Caminho {
 
   private appendOperator(params: OperatorParams, operation: OperationType) {
     this.flow.push({ name: params.fn.name, type: operation })
-    return pipe(this.observable, operation, params)
+    return pipe(this.observable, operation, params, this.options)
   }
 
   timerBatch(timeoutMs: number, maxSize: number) {
