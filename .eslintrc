@@ -30,7 +30,9 @@
     "indent": "off",
     "@typescript-eslint/indent": ["error", 2],
     "@typescript-eslint/no-empty-function": "off",
-    "object-curly-newline": ["error", { "multiline": true, "consistent": true }]
+    "object-curly-newline": ["error", { "multiline": true, "consistent": true }],
+    "no-plusplus": "off",
+    "no-underscore-dangle": ["error", { "allow": ["_uniqueId"] }]
   },
   "env": {
     "es2020": true,
