@@ -14,9 +14,9 @@ test('Should provide valueBag properly to the flow', async () => {
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .fetch({ fn: fetchMock, provides: 'rawData' })
-    .map({ fn: mapMock, provides: 'mappedData' })
-    .save({ fn: saveMock })
+    .pipe({ fn: fetchMock, provides: 'rawData' })
+    .pipe({ fn: mapMock, provides: 'mappedData' })
+    .pipe({ fn: saveMock })
     .run()
 
   expect(fetchMock).toBeCalledWith({ _uniqueId: expect.any(Number), job: mockedJob })

@@ -1,12 +1,12 @@
-import { OperationType } from '../../src/operations/operations'
+import { OperationStatus, OperationType } from '../../src/operations/operations'
 
-export function mockStepResultForCallsCheck(type: OperationType) {
+export function mockStepResultForCallsCheck(mock: { name?: string, type: OperationType, status?: OperationStatus }) {
   return [
     {
-      name: expect.any(String),
-      status: expect.any(String),
+      name: mock.name ?? expect.any(String),
+      status: mock.status ?? expect.any(String),
       tookMs: expect.any(Number),
-      type,
+      type: mock.type,
     },
   ]
 }

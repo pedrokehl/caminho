@@ -6,7 +6,7 @@ export interface GeneratorParams {
   maxItemsFlowing?: number
 }
 
-export interface OperatorParams {
+export interface PipeParams {
   fn: CaminhoMapper
   options?: {
     concurrency?: number
@@ -18,10 +18,6 @@ export interface OperatorParams {
   provides?: string
 }
 
-export interface OperatorProviderParams extends OperatorParams {
-  provides: string
-}
-
 export interface OnEachStepParams {
   name: string
   type: OperationType
@@ -30,10 +26,8 @@ export interface OnEachStepParams {
 }
 
 export enum OperationType {
-  FETCH = 'fetch',
-  MAP = 'map',
-  SAVE = 'save',
-  GENERATE = 'generate'
+  GENERATE = 'generate',
+  PIPE = 'pipe'
 }
 
 export enum OperationStatus {
