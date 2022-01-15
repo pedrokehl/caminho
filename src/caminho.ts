@@ -1,7 +1,7 @@
 import {
   bufferTime, filter, mergeAll, Observable,
 } from 'rxjs'
-import { GeneratorParams, OperationType, OperatorParams, OperatorProviderParams } from './operations/operations'
+import { GeneratorParams, OperationType, PipeParams } from './operations/operations'
 import { generate } from './operations/generate'
 import { pipe } from './operations/pipe'
 import type { ValueBag, CaminhoOptions } from './types'
@@ -23,32 +23,20 @@ export class Caminho {
     return this
   }
 
-  fetch(params: OperatorProviderParams) {
-    return this.appendOperatorWithOptions(params, OperationType.FETCH)
-  }
-
-  map(params: OperatorProviderParams) {
-    return this.appendOperatorWithOptions(params, OperationType.MAP)
-  }
-
-  save(params: OperatorParams) {
-    return this.appendOperatorWithOptions(params, OperationType.SAVE)
-  }
-
-  private appendOperatorWithOptions(params: OperatorParams, operation: OperationType) {
+  pipe(params: PipeParams) {
     if (params.options?.batch) {
       this.timerBatch(params.options.batch.timeoutMs, params.options.batch.maxSize)
-      this.observable = this.appendOperator(params, operation)
+      this.observable = this.appendOperator(params)
       this.flatten()
       return this
     }
-    this.observable = this.appendOperator(params, operation)
+    this.observable = this.appendOperator(params)
     return this
   }
 
-  private appendOperator(params: OperatorParams, operation: OperationType) {
-    this.flow.push({ name: params.fn.name, type: operation })
-    return pipe(this.observable, operation, params, this.options)
+  private appendOperator(params: PipeParams) {
+    this.flow.push({ name: params.fn.name, type: OperationType.PIPE })
+    return pipe(this.observable, params, this.options)
   }
 
   private onGeneratorFinish(generatorResult: { emitted: number }) {

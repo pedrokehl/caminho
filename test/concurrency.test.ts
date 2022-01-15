@@ -21,8 +21,8 @@ test('Should not run components in concurrency if not set', async () => {
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .fetch({ fn: fetchMock, provides: 'rawData' })
-    .save({ fn: saveMock })
+    .pipe({ fn: fetchMock, provides: 'rawData' })
+    .pipe({ fn: saveMock })
     .run()
 
   expect(saveMock).toHaveBeenCalledTimes(NUMBER_OF_ITERATIONS)
@@ -46,8 +46,8 @@ test('Should run components in concurrency if set', async () => {
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .fetch({ fn: fetchMock, provides: 'rawData', options: { concurrency: 5 } })
-    .save({ fn: saveMock })
+    .pipe({ fn: fetchMock, provides: 'rawData', options: { concurrency: 5 } })
+    .pipe({ fn: saveMock })
     .run()
 
   expect(saveMock).toHaveBeenCalledTimes(NUMBER_OF_ITERATIONS)

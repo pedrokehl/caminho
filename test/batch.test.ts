@@ -12,7 +12,7 @@ test('Should emit batch after the "timeoutMs" time has passed if the "maxSize" i
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .save({ fn: saveMock, options: { batch: { maxSize, timeoutMs: 10 } } })
+    .pipe({ fn: saveMock, options: { batch: { maxSize, timeoutMs: 10 } } })
     .run()
 
   expect(saveMock).toHaveBeenCalledTimes(1)
@@ -29,7 +29,7 @@ test('Should batch events after the provided count is reached from "maxSize"', a
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .save({ fn: saveMock, options: { batch: { maxSize, timeoutMs: 10 }, concurrency: 2 } })
+    .pipe({ fn: saveMock, options: { batch: { maxSize, timeoutMs: 10 }, concurrency: 2 } })
     .run()
 
   expect(saveMock).toHaveBeenCalledTimes(2)
@@ -59,8 +59,8 @@ test('Should work properly with concurrency', async () => {
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .save({ fn: saveMock, options })
-    .save({ fn: anotherSaveMock })
+    .pipe({ fn: saveMock, options })
+    .pipe({ fn: anotherSaveMock })
     .run()
 
   expect(concurrentExecutionTrack).toHaveLength(NUMBER_OF_ITERATIONS / MAX_SIZE)
@@ -77,8 +77,8 @@ test('Should call the next operator with the flatten events', async () => {
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .save({ fn: saveMock, options: { batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
-    .save({ fn: anotherSaveMock })
+    .pipe({ fn: saveMock, options: { batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
+    .pipe({ fn: anotherSaveMock })
     .run()
 
   expect(saveMock).toHaveBeenCalledTimes(NUMBER_OF_ITERATIONS / MAX_SIZE)

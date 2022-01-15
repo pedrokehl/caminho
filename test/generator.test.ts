@@ -13,8 +13,8 @@ test('Should call generator and run all function provided to the flow', async ()
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .fetch({ fn: fetchMock, provides: 'rawData' })
-    .map({ fn: mapMock, provides: 'mappedData' })
+    .pipe({ fn: fetchMock, provides: 'rawData' })
+    .pipe({ fn: mapMock, provides: 'mappedData' })
     .run()
 
   expect(fetchMock).toBeCalledTimes(NUMBER_OF_ITERATIONS)
@@ -30,24 +30,24 @@ test('Should control maxItemsFlowing properly', async () => {
 
   await new Caminho({ onEachStep: onEachStepMock })
     .source({ fn: generatorMock, provides: 'job', maxItemsFlowing: 3 })
-    .fetch({ fn: fetchMock, provides: 'rawData' })
+    .pipe({ fn: fetchMock, provides: 'rawData' })
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.FETCH),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
   ])
 })
 
@@ -60,23 +60,23 @@ test('Should emit values from generator uncontrolably if maxItemsFlowing was not
 
   await new Caminho({ onEachStep: onEachStepMock })
     .source({ fn: generatorMock, provides: 'job' })
-    .fetch({ fn: fetchMock, provides: 'rawData' })
+    .pipe({ fn: fetchMock, provides: 'rawData' })
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.GENERATE),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.FETCH),
-    mockStepResultForCallsCheck(OperationType.FETCH),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
   ])
 })

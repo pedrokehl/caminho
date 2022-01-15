@@ -1,5 +1,7 @@
 import { Caminho } from '../src/caminho'
+import { OperationStatus, OperationType } from '../src/operations/operations'
 import { getMockedGenerator } from './mocks/getMockedGenerator'
+import { mockStepResultForCallsCheck } from './mocks/mockStepCallResult'
 
 test('Should call onEachStep provided callback with proper values', async () => {
   const NUMBER_OF_ITERATIONS = 5
@@ -11,23 +13,23 @@ test('Should call onEachStep provided callback with proper values', async () => 
 
   await new Caminho({ onEachStep: onEachStepMock })
     .source({ fn: generatorMock, provides: 'job' })
-    .fetch({ fn: fetchMock, provides: 'rawData', options: { concurrency: 5 } })
-    .save({ fn: saveMock, options: { batch: { maxSize: 2, timeoutMs: 1 }, concurrency: 5 } })
+    .pipe({ fn: fetchMock, provides: 'rawData', options: { concurrency: 5 } })
+    .pipe({ fn: saveMock, options: { batch: { maxSize: 2, timeoutMs: 1 }, concurrency: 5 } })
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([
-    [{ name: 'generator', status: 'success', tookMs: expect.any(Number), type: 'generate' }],
-    [{ name: 'fetchSomething', status: 'success', tookMs: expect.any(Number), type: 'fetch' }],
-    [{ name: 'generator', status: 'success', tookMs: expect.any(Number), type: 'generate' }],
-    [{ name: 'fetchSomething', status: 'success', tookMs: expect.any(Number), type: 'fetch' }],
-    [{ name: 'saveSomething', status: 'success', tookMs: expect.any(Number), type: 'save' }],
-    [{ name: 'generator', status: 'success', tookMs: expect.any(Number), type: 'generate' }],
-    [{ name: 'fetchSomething', status: 'success', tookMs: expect.any(Number), type: 'fetch' }],
-    [{ name: 'generator', status: 'success', tookMs: expect.any(Number), type: 'generate' }],
-    [{ name: 'fetchSomething', status: 'success', tookMs: expect.any(Number), type: 'fetch' }],
-    [{ name: 'saveSomething', status: 'success', tookMs: expect.any(Number), type: 'save' }],
-    [{ name: 'generator', status: 'success', tookMs: expect.any(Number), type: 'generate' }],
-    [{ name: 'fetchSomething', status: 'success', tookMs: expect.any(Number), type: 'fetch' }],
-    [{ name: 'saveSomething', status: 'success', tookMs: expect.any(Number), type: 'save' }],
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' }),
+    mockStepResultForCallsCheck({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' }),
+    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' }),
   ])
 })
