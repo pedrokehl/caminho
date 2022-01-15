@@ -1,4 +1,10 @@
-import { CaminhoMapper } from '../types'
+import { CaminhoGenerator, CaminhoMapper } from '../types'
+
+export interface GeneratorParams {
+  fn: CaminhoGenerator
+  provides: string
+  maxItemsFlowing?: number
+}
 
 export interface OperatorParams {
   fn: CaminhoMapper

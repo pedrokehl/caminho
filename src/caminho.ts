@@ -1,10 +1,10 @@
 import {
   bufferTime, filter, mergeAll, Observable,
 } from 'rxjs'
-import { OperationType, OperatorParams, OperatorProviderParams } from './operations/operations'
+import { GeneratorParams, OperationType, OperatorParams, OperatorProviderParams } from './operations/operations'
 import { generate } from './operations/generate'
 import { pipe } from './operations/pipe'
-import type { CaminhoGenerator, ValueBag, CaminhoOptions } from './types'
+import type { ValueBag, CaminhoOptions } from './types'
 import { getPromiseState, PromiseState } from './helpers/getPromiseState'
 
 export class Caminho {
@@ -17,10 +17,9 @@ export class Caminho {
     this.onGeneratorFinish = this.onGeneratorFinish.bind(this)
   }
 
-  source(params: { fn: CaminhoGenerator, provides: string }) {
-    const { fn, provides } = params
-    this.observable = generate(fn, provides, this.onGeneratorFinish, this.pendingDataControl, this.options)
-    this.flow.push({ name: params.fn.name, type: 'source' })
+  source(generatorParams: GeneratorParams) {
+    this.observable = generate(generatorParams, this.onGeneratorFinish, this.pendingDataControl, this.options)
+    this.flow.push({ name: generatorParams.fn.name, type: 'source' })
     return this
   }
 
