@@ -4,24 +4,21 @@
 
 # Caminho
 
-
-## Requirements
-To build and run this app you just need [Node.js](https://nodejs.org/en/) installed.
-
-Poc for the implementation using rxJS v7
+## Features
 
 Features:
 [X] Concurrency
 [X] Batching
 [X] Execution stats for each step
+[X] Backpressure
 [ ] Aggregation
 [ ] Type Checking
 [ ] Parallel execution (multiple steps at the same time)
-[ ] Backpressure - See articles like https://itnext.io/lossless-backpressure-in-rxjs-b6de30a1b6d4
+[ ] Dynamic/smart backpressure - see: https://itnext.io/lossless-backpressure-in-rxjs-b6de30a1b6d4
 [ ] Subflow - See forkJoin operator, can be helpful
 [ ] Error handling - See catchError operator, and https://blog.angular-university.io/rxjs-error-handling/
 
-## Getting started
+## Contributing
 - Clone the repository
 ```
 git clone https://github.com/pedrokehl/caminho
@@ -31,7 +28,9 @@ git clone https://github.com/pedrokehl/caminho
 cd caminho
 npm install
 ```
-- Start the project
+- Use unit-tests as your guide
 ```
-npm start
+npm test
+or
+npm watch-test
 ```

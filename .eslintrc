@@ -32,7 +32,8 @@
     "@typescript-eslint/no-empty-function": "off",
     "object-curly-newline": ["error", { "multiline": true, "consistent": true }],
     "no-plusplus": "off",
-    "no-underscore-dangle": ["error", { "allow": ["_uniqueId"] }]
+    "no-underscore-dangle": ["error", { "allow": ["_uniqueId"] }],
+    "no-await-in-loop": "off"
   },
   "env": {
     "es2020": true,
