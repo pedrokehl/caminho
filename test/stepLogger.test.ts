@@ -1,7 +1,7 @@
 import { Caminho } from '../src/caminho'
 import { OperationStatus, OperationType } from '../src/operations/operations'
-import { getMockedGenerator } from './mocks/getMockedGenerator'
-import { mockStepResultForCallsCheck } from './mocks/mockStepCallResult'
+import { getMockedGenerator } from './mocks/generator.mock'
+import { mockStepResult } from './mocks/stepResult.mock'
 
 test('Should call onEachStep provided callback with proper values', async () => {
   const NUMBER_OF_ITERATIONS = 5
@@ -18,18 +18,18 @@ test('Should call onEachStep provided callback with proper values', async () => 
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' }),
+    [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
+    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
+    [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
+    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
+    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
+    [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
+    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
+    [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
+    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
+    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
+    [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
+    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
+    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
   ])
 })

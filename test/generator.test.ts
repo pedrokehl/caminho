@@ -1,8 +1,8 @@
 import { Caminho } from '../src/caminho'
 import { sleep } from '../src/helpers/sleep'
 import { OperationType } from '../src/operations/operations'
-import { getMockedGenerator } from './mocks/getMockedGenerator'
-import { mockStepResultForCallsCheck } from './mocks/mockStepCallResult'
+import { getMockedGenerator } from './mocks/generator.mock'
+import { mockStepResult } from './mocks/stepResult.mock'
 
 test('Should call generator and run all function provided to the flow', async () => {
   const mapMock = jest.fn()
@@ -34,20 +34,20 @@ test('Should control maxItemsFlowing properly', async () => {
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.PIPE })],
   ])
 })
 
@@ -64,19 +64,19 @@ test('Should emit values from generator uncontrolably if maxItemsFlowing was not
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.GENERATE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
-    mockStepResultForCallsCheck({ type: OperationType.PIPE }),
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.GENERATE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.PIPE })],
+    [mockStepResult({ type: OperationType.PIPE })],
   ])
 })

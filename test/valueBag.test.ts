@@ -1,6 +1,6 @@
 import { Caminho } from '../src/caminho'
-import { getMockedGenerator } from './mocks/getMockedGenerator'
-import { getMockedJob } from './mocks/getMockedJob'
+import { getMockedGenerator } from './mocks/generator.mock'
+import { getMockedJob } from './mocks/job.mock'
 
 test('Should provide valueBag properly to the flow', async () => {
   const mockedJob = getMockedJob(0)
