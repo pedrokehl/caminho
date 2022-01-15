@@ -1,6 +1,6 @@
 import { Caminho } from '../src/caminho'
 import { sleep } from '../src/helpers/sleep'
-import { getMockedGenerator } from './mocks/getMockedGenerator'
+import { getMockedGenerator } from './mocks/generator.mock'
 
 test('Should emit batch after the "timeoutMs" time has passed if the "maxSize" is not reached', async () => {
   const NUMBER_OF_ITERATIONS = 2

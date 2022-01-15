@@ -1,5 +1,5 @@
 import { Caminho } from '../src/caminho'
-import { getMockedGenerator } from './mocks/getMockedGenerator'
+import { getMockedGenerator } from './mocks/generator.mock'
 import { sleep } from '../src/helpers/sleep'
 
 test('Should not run components in concurrency if not set', async () => {
