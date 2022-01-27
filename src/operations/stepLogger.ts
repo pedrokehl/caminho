@@ -1,5 +1,4 @@
-import { CaminhoOptions } from '../types'
-import { OperationStatus, OperationType } from './operations'
+import { CaminhoOptions, OperationStatus, OperationType } from '../types'
 
 export function getLogger(operationType: OperationType, executor: { name: string }, caminhoOptions?: CaminhoOptions) {
   if (caminhoOptions?.onEachStep) {

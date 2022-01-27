@@ -1,75 +1,65 @@
-import {
-  bufferTime, filter, mergeAll, Observable,
-} from 'rxjs'
-import { GeneratorParams, OperationType, PipeParams } from './operations/operations'
-import { generate } from './operations/generate'
-import { pipe } from './operations/pipe'
-import type { ValueBag, CaminhoOptions } from './types'
+import { Observable } from 'rxjs'
+import { ValueBag, CaminhoOptions, OperationType } from './types'
 import { getPromiseState, PromiseState } from './helpers/getPromiseState'
+
+import { source, SourceParams, SourceResult } from './operations/source'
+import { pipe, PipeParams } from './operations/pipe'
+import { batch, BatchParams } from './operations/batch'
 
 export class Caminho {
   private observable!: Observable<ValueBag>
   private flow: { name: string, type: string }[] = []
-  private onGeneratorFinishPromise = new Promise(() => {})
+  private onSourceFinishPromise: Promise<SourceResult> = new Promise(() => {})
   private pendingDataControl = new Set<number>()
 
   constructor(private options?: CaminhoOptions) {
-    this.onGeneratorFinish = this.onGeneratorFinish.bind(this)
+    this.onSourceFinish = this.onSourceFinish.bind(this)
   }
 
-  source(generatorParams: GeneratorParams) {
-    this.observable = generate(generatorParams, this.onGeneratorFinish, this.pendingDataControl, this.options)
-    this.flow.push({ name: generatorParams.fn.name, type: 'source' })
+  source(sourceParams: SourceParams) {
+    this.observable = source(sourceParams, this.onSourceFinish, this.pendingDataControl, this.options)
+    this.flow.push({ name: sourceParams.fn.name, type: 'source' })
     return this
   }
 
-  pipe(params: PipeParams) {
-    if (params.options?.batch) {
-      this.timerBatch(params.options.batch.timeoutMs, params.options.batch.maxSize)
-      this.observable = this.appendOperator(params)
-      this.flatten()
-      return this
-    }
-    this.observable = this.appendOperator(params)
-    return this
+  pipe(params: PipeParams | BatchParams) {
+    return isBatch(params)
+      ? this.batchPipe(params)
+      : this.normalPipe(params)
   }
 
-  private appendOperator(params: PipeParams) {
+  private normalPipe(params: PipeParams) {
+    this.observable = pipe(this.observable, params, this.options)
     this.flow.push({ name: params.fn.name, type: OperationType.PIPE })
-    return pipe(this.observable, params, this.options)
-  }
-
-  private onGeneratorFinish(generatorResult: { emitted: number }) {
-    this.onGeneratorFinishPromise = Promise.resolve({ generatorResult })
-  }
-
-  timerBatch(timeoutMs: number, maxSize: number) {
-    this.flow.push({ name: `timeoutMs: ${timeoutMs} - maxSize: ${maxSize}`, type: 'timerBatch' })
-    this.observable = this.observable.pipe(
-      bufferTime(timeoutMs, undefined, maxSize),
-      filter((buffer) => buffer.length > 0),
-    )
     return this
   }
 
-  flatten() {
-    this.flow.push({ name: 'mergeAll', type: 'flatten' })
-    this.observable = this.observable.pipe(mergeAll())
+  private batchPipe(params: BatchParams) {
+    this.observable = batch(this.observable, params, this.options)
+    this.flow.push({ name: params.fn.name, type: OperationType.BATCH })
     return this
   }
 
-  async run() {
+  private onSourceFinish(sourceResult: SourceResult) {
+    this.onSourceFinishPromise = Promise.resolve(sourceResult)
+  }
+
+  async run(): Promise<SourceResult> {
     return new Promise((resolve) => {
       this.flow.push({ name: 'subscribe', type: 'start' })
       this.observable.subscribe(async (valueBag: ValueBag) => {
-        const promiseState = await getPromiseState(this.onGeneratorFinishPromise)
+        const promiseState = await getPromiseState(this.onSourceFinishPromise)
         this.pendingDataControl.delete(valueBag._uniqueId)
         const pendingItemsLength = this.pendingDataControl.size
         if (promiseState === PromiseState.FULFILLED && pendingItemsLength === 0) {
-          const generatorResult = await this.onGeneratorFinishPromise
-          resolve(generatorResult)
+          const sourceResult = await this.onSourceFinishPromise
+          resolve(sourceResult)
         }
       })
     })
   }
+}
+
+function isBatch(params: PipeParams | BatchParams): params is BatchParams {
+  return !!(params as BatchParams)?.options?.batch
 }

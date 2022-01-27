@@ -1,6 +1,5 @@
 import { from, Observable } from 'rxjs'
-import type { CaminhoOptions, ValueBag } from '../types'
-import { GeneratorParams, OperationType } from './operations'
+import { CaminhoOptions, ValueBag, OperationType } from '../types'
 import { getLogger } from './stepLogger'
 
 import { getRandomInt } from '../helpers/random'
@@ -8,29 +7,39 @@ import { sleep } from '../helpers/sleep'
 
 const SLEEP_FOR_BACKPRESSURE_MS = 10
 
-export function generate(
-  generatorParams: GeneratorParams,
-  onGeneratorFinish: (onGeneratorResult: { emitted: number }) => void,
+export interface SourceParams {
+  fn: () => AsyncGenerator
+  provides: string
+  maxItemsFlowing?: number
+}
+
+export interface SourceResult {
+  emitted: number
+}
+
+export function source(
+  sourceParams: SourceParams,
+  onSourceFinish: (sourceResult: SourceResult) => void,
   pendingDataControl: Set<number>,
   caminhoOptions?: CaminhoOptions,
 ): Observable<ValueBag> {
-  const logger = getLogger(OperationType.GENERATE, generatorParams.fn, caminhoOptions)
+  const logger = getLogger(OperationType.GENERATE, sourceParams.fn, caminhoOptions)
 
   async function* wrappedGenerator() {
     let count = 0
     let stepStartedAt: number = Date.now()
-    for await (const value of generatorParams.fn()) {
+    for await (const value of sourceParams.fn()) {
       count++
       const uniqueId = getRandomInt()
       pendingDataControl.add(uniqueId)
-      yield { [generatorParams.provides]: value, _uniqueId: uniqueId }
+      yield { [sourceParams.provides]: value, _uniqueId: uniqueId }
       logger(stepStartedAt)
       stepStartedAt = Date.now()
-      if (generatorParams.maxItemsFlowing && pendingDataControl.size >= generatorParams.maxItemsFlowing) {
-        await waitOnBackpressure(generatorParams.maxItemsFlowing, pendingDataControl)
+      if (sourceParams.maxItemsFlowing && pendingDataControl.size >= sourceParams.maxItemsFlowing) {
+        await waitOnBackpressure(sourceParams.maxItemsFlowing, pendingDataControl)
       }
     }
-    onGeneratorFinish({ emitted: count })
+    onSourceFinish({ emitted: count })
   }
 
   return from(wrappedGenerator())

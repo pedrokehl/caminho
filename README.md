@@ -11,11 +11,11 @@ Features:
 [X] Batching
 [X] Execution stats for each step
 [X] Backpressure
+[ ] Parallel execution (multiple steps at the same time)
+[ ] Subflow - See forkJoin operator, can be helpful
 [ ] Aggregation
 [ ] Type Checking
-[ ] Parallel execution (multiple steps at the same time)
 [ ] Dynamic/smart backpressure - see: https://itnext.io/lossless-backpressure-in-rxjs-b6de30a1b6d4
-[ ] Subflow - See forkJoin operator, can be helpful
 [ ] Error handling - See catchError operator, and https://blog.angular-university.io/rxjs-error-handling/
 
 ## Contributing

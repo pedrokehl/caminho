@@ -1,17 +1,34 @@
 import { Observable, mergeMap as rxjsMergeMap } from 'rxjs'
-import type { CaminhoOptions, ValueBag } from '../types'
-import { OperationType, PipeParams } from './operations'
+import { CaminhoOptions, ValueBag, OperationType } from '../types'
 import { getLogger } from './stepLogger'
+import { getNewValueBag } from './valueBag'
+
+export type PipeParams = PipeParamsProvides | PipeParamsNoProvides
+
+interface PipeOptions {
+  concurrency?: number
+}
+
+export interface PipeParamsProvides {
+  fn: (valueBag: ValueBag) => unknown | Promise<unknown>
+  provides: string
+  options?: PipeOptions
+}
+
+export interface PipeParamsNoProvides {
+  fn: (valueBag: ValueBag) => void | Promise<void>
+  options?: PipeOptions
+}
 
 export function pipe(
   observable: Observable<ValueBag>,
   params: PipeParams,
   caminhoOptions?: CaminhoOptions,
 ): Observable<ValueBag> {
-  const getBag = getValueBagGetter(params)
+  const getBag = hasProvides(params) ? valueBagGetterProvides(params.provides) : valueBagGetterNoProvides()
   const logger = getLogger(OperationType.PIPE, params.fn, caminhoOptions)
 
-  async function wrappedMapper(valueBag: ValueBag | ValueBag[]) {
+  async function wrappedMapper(valueBag: ValueBag): Promise<ValueBag> {
     const stepStartedAt = Date.now()
     const value = await params.fn(valueBag)
     logger(stepStartedAt)
@@ -20,23 +37,18 @@ export function pipe(
   return observable.pipe(rxjsMergeMap(wrappedMapper, params.options?.concurrency ?? 1))
 }
 
-function getValueBagGetter(pipeParams: PipeParams) {
-  if (pipeParams.options?.batch) {
-    return function getValueBagWithProvides(valueBag: ValueBag[]) {
-      return valueBag
-    }
-  }
+function hasProvides(params: PipeParams): params is PipeParamsProvides {
+  return !!(params as PipeParamsProvides).provides
+}
 
-  if (pipeParams.provides) {
-    const toProvide = pipeParams.provides
-    // TODO: Proper typing for ValueBag!
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return function getValueBagWithProvides(valueBag: ValueBag, value: any) {
-      return { ...valueBag, [toProvide]: value }
-    }
-  }
-
-  return function getValueBag(valueBag: ValueBag) {
+export function valueBagGetterNoProvides() {
+  return function getValueBagWithProvides(valueBag: ValueBag) {
     return { ...valueBag }
+  }
+}
+
+export function valueBagGetterProvides(provides: string) {
+  return function getValueBagWithProvides(valueBag: ValueBag, value: unknown) {
+    return getNewValueBag(valueBag, provides, value)
   }
 }
