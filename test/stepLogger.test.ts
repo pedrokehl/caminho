@@ -1,5 +1,5 @@
 import { Caminho } from '../src/caminho'
-import { OperationStatus, OperationType } from '../src/operations/operations'
+import { OperationStatus, OperationType } from '../src/types'
 import { getMockedGenerator } from './mocks/generator.mock'
 import { mockStepResult } from './mocks/stepResult.mock'
 
@@ -22,14 +22,14 @@ test('Should call onEachStep provided callback with proper values', async () => 
     [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
     [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
     [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
-    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
+    [mockStepResult({ type: OperationType.BATCH, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
     [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
     [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
     [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
     [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
-    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
+    [mockStepResult({ type: OperationType.BATCH, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
     [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
     [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
-    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
+    [mockStepResult({ type: OperationType.BATCH, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
   ])
 })

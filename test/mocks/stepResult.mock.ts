@@ -1,4 +1,4 @@
-import { OperationStatus, OperationType } from '../../src/operations/operations'
+import { OperationStatus, OperationType } from '../../src/types'
 
 export function mockStepResult(mock: { name?: string, type: OperationType, status?: OperationStatus }) {
   return {

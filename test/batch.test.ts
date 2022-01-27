@@ -1,5 +1,6 @@
 import { Caminho } from '../src/caminho'
 import { sleep } from '../src/helpers/sleep'
+import { ValueBag } from '../src/types'
 import { getMockedGenerator } from './mocks/generator.mock'
 
 test('Should emit batch after the "timeoutMs" time has passed if the "maxSize" is not reached', async () => {
@@ -49,17 +50,14 @@ test('Should work properly with concurrency', async () => {
     await sleep(2)
     concurrentExecutionTrack.push(concurrentExecutions)
     concurrentExecutions -= 1
-    return 'save'
   }
 
   const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
   const anotherSaveMock = jest.fn().mockName('anotherSave').mockResolvedValue(null)
 
-  const options = { concurrency: CONCURRENCY, batch: { maxSize: MAX_SIZE, timeoutMs: 10 } }
-
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: saveMock, options })
+    .pipe({ fn: saveMock, options: { concurrency: CONCURRENCY, batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
     .pipe({ fn: anotherSaveMock })
     .run()
 
@@ -85,4 +83,32 @@ test('Should call the next operator with the flatten events', async () => {
   expect(anotherSaveMock).toHaveBeenCalledTimes(NUMBER_OF_ITERATIONS)
 })
 
-test.todo('Should properly provide values from a batched execution')
+test('Should properly provide values from a batched execution', async () => {
+  const NUMBER_OF_ITERATIONS = 8
+  const MAX_SIZE = 3
+
+  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  function batchMock(valueBags: ValueBag[]) {
+    return valueBags.map((valueBag) => `${valueBag.job.job_id} - processed`)
+  }
+  const anotherSaveMock = jest.fn().mockName('anotherSave')
+
+  await new Caminho()
+    .source({ fn: generatorMock, provides: 'job' })
+    .pipe({ fn: batchMock, provides: 'status', options: { batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
+    .pipe({ fn: anotherSaveMock })
+    .run()
+
+  const firstParamCalls = anotherSaveMock.mock.calls.map((params) => params[0])
+  expect(firstParamCalls).toHaveLength(NUMBER_OF_ITERATIONS)
+  expect(firstParamCalls).toEqual([
+    { job: { job_id: '1' }, status: '1 - processed', _uniqueId: expect.any(Number) },
+    { job: { job_id: '2' }, status: '2 - processed', _uniqueId: expect.any(Number) },
+    { job: { job_id: '3' }, status: '3 - processed', _uniqueId: expect.any(Number) },
+    { job: { job_id: '4' }, status: '4 - processed', _uniqueId: expect.any(Number) },
+    { job: { job_id: '5' }, status: '5 - processed', _uniqueId: expect.any(Number) },
+    { job: { job_id: '6' }, status: '6 - processed', _uniqueId: expect.any(Number) },
+    { job: { job_id: '7' }, status: '7 - processed', _uniqueId: expect.any(Number) },
+    { job: { job_id: '8' }, status: '8 - processed', _uniqueId: expect.any(Number) },
+  ])
+})
