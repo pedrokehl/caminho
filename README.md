@@ -10,17 +10,18 @@ Caminho means path, a new path to your data processing.
 ## Features
 
 Features:
-[X] Concurrency
-[X] Batching
-[X] Execution stats for each step
-[X] Backpressure
-[X] Parallel execution (multiple steps at the same time)
-[ ] Subflow
-[ ] Aggregation
-[ ] Type Checking
-[ ] Dynamic/smart backpressure - see: https://itnext.io/lossless-backpressure-in-rxjs-b6de30a1b6d4
-[ ] Error handling - See catchError operator, and https://blog.angular-university.io/rxjs-error-handling/
-[ ] Documentation
+
+- [X] Concurrency
+- [X] Batching
+- [X] Execution stats for each step
+- [X] Backpressure
+- [X] Parallel execution
+- [ ] Subflow
+- [ ] Aggregation
+- [ ] Type Checking
+- [ ] Dynamic/smart backpressure - see: https://itnext.io/lossless-backpressure-in-rxjs-b6de30a1b6d4
+- [ ] Error handling
+- [ ] Documentation
 
 ## Contributing
 - Clone the repository
