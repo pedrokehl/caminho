@@ -2,7 +2,10 @@
 [![Build Status](https://github.com/pedrokehl/caminho/workflows/Lint/badge.svg)](https://github.com/pedrokehl/caminho/actions)
 [![Build Status](https://github.com/pedrokehl/caminho/workflows/Test/badge.svg)](https://github.com/pedrokehl/caminho/actions)
 
+100% covered by unit tests.
+
 # Caminho
+Caminho means path, a new path to your data processing.
 
 ## Features
 
@@ -11,12 +14,13 @@ Features:
 [X] Batching
 [X] Execution stats for each step
 [X] Backpressure
-[ ] Parallel execution (multiple steps at the same time)
-[ ] Subflow - See forkJoin operator, can be helpful
+[X] Parallel execution (multiple steps at the same time)
+[ ] Subflow
 [ ] Aggregation
 [ ] Type Checking
 [ ] Dynamic/smart backpressure - see: https://itnext.io/lossless-backpressure-in-rxjs-b6de30a1b6d4
 [ ] Error handling - See catchError operator, and https://blog.angular-university.io/rxjs-error-handling/
+[ ] Documentation
 
 ## Contributing
 - Clone the repository

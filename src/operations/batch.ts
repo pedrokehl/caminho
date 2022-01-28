@@ -1,5 +1,6 @@
 import { bufferTime, filter, mergeAll, mergeMap, Observable } from 'rxjs'
 import { CaminhoOptions, ValueBag, OperationType } from '../types'
+import { batchHasProvides } from './operationDiscrimator'
 import { getLogger } from './stepLogger'
 import { getNewValueBag } from './valueBag'
 
@@ -28,7 +29,9 @@ export function batch(
   params: BatchParams,
   caminhoOptions?: CaminhoOptions,
 ): Observable<ValueBag> {
-  const getBag = hasProvides(params) ? valueBagGetterBatchProvides(params.provides) : valueBagGetterBatchNoProvides()
+  const getBag = batchHasProvides(params)
+    ? valueBagGetterBatchProvides(params.provides)
+    : valueBagGetterBatchNoProvides()
   const logger = getLogger(OperationType.BATCH, params.fn, caminhoOptions)
 
   async function wrappedMapper(valueBag: ValueBag[]): Promise<ValueBag[]> {
@@ -45,10 +48,6 @@ export function batch(
     )
     .pipe(mergeMap(wrappedMapper, params.options.concurrency ?? 1))
     .pipe(mergeAll())
-}
-
-function hasProvides(params: BatchParams): params is BatchParamsProvides {
-  return !!(params as BatchParamsProvides).provides
 }
 
 export function valueBagGetterBatchNoProvides() {

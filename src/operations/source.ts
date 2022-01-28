@@ -45,7 +45,7 @@ export function source(
   return from(wrappedGenerator())
 }
 
-async function waitOnBackpressure(maxItemsFlowing: number, pendingDataControl: Set<number>) {
+async function waitOnBackpressure(maxItemsFlowing: number, pendingDataControl: Set<number>): Promise<void> {
   while (pendingDataControl.size >= maxItemsFlowing) {
     await sleep(SLEEP_FOR_BACKPRESSURE_MS)
   }
