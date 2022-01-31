@@ -1,18 +1,23 @@
-import { map, Observable, share, zip } from 'rxjs'
-import { ValueBag, CaminhoOptions, OperationType, PipeGenericParams } from './types'
-import { getPromiseState, PromiseState } from './helpers/getPromiseState'
+import { from, map, Observable, share, zip } from 'rxjs'
+import { ValueBag, OperationType, PipeGenericParams, OnEachStep } from './types'
+import { generateId } from './helpers/random'
 
-import { source, SourceParams, SourceResult } from './operations/source'
+import { SourceParams, SourceResult, wrapGenerator } from './operations/generator'
 import { pipe, PipeParams } from './operations/pipe'
 import { batch, BatchParams } from './operations/batch'
 import { isBatch } from './operations/operationDiscrimator'
 import { buildValueBagAccumulator } from './operations/valueBag'
+import { getLogger } from './operations/stepLogger'
+
+export interface CaminhoOptions {
+  onEachStep?: OnEachStep
+}
 
 export class Caminho {
+  private flowId = generateId()
   private observable!: Observable<ValueBag>
-  private flow: { name: string, type: string }[] = []
-  private onSourceFinishPromise: Promise<SourceResult> = new Promise(() => {})
   private pendingDataControl = new Set<number>()
+  private sourceResult: SourceResult | null = null
 
   constructor(private options?: CaminhoOptions) {
     this.onSourceFinish = this.onSourceFinish.bind(this)
@@ -20,8 +25,15 @@ export class Caminho {
   }
 
   source(sourceParams: SourceParams): Caminho {
-    this.observable = source(sourceParams, this.onSourceFinish, this.pendingDataControl, this.options)
-    this.flow.push({ name: sourceParams.fn.name, type: 'source' })
+    const logger = getLogger(OperationType.GENERATE, sourceParams.fn, this.options?.onEachStep)
+    const wrappedGenerator = wrapGenerator(
+      sourceParams,
+      this.onSourceFinish,
+      this.pendingDataControl,
+      this.flowId,
+      logger,
+    )
+    this.observable = from(wrappedGenerator({}))
     return this
   }
 
@@ -37,36 +49,33 @@ export class Caminho {
     return this
   }
 
-  getObservableForPipe(params: PipeGenericParams): Observable<ValueBag> {
+  private getObservableForPipe(params: PipeGenericParams): Observable<ValueBag> {
     return isBatch(params)
       ? this.batchPipe(params)
       : this.normalPipe(params)
   }
 
   private normalPipe(params: PipeParams): Observable<ValueBag> {
-    this.flow.push({ name: params.fn.name, type: OperationType.PIPE })
-    return pipe(this.observable, params, this.options)
+    const logger = getLogger(OperationType.PIPE, params.fn, this.options?.onEachStep)
+    return pipe(this.observable, params, logger)
   }
 
   private batchPipe(params: BatchParams): Observable<ValueBag> {
-    this.flow.push({ name: params.fn.name, type: OperationType.BATCH })
-    return batch(this.observable, params, this.options)
+    const logger = getLogger(OperationType.BATCH, params.fn, this.options?.onEachStep)
+    return batch(this.observable, params, logger)
   }
 
   private onSourceFinish(sourceResult: SourceResult): void {
-    this.onSourceFinishPromise = Promise.resolve(sourceResult)
+    this.sourceResult = sourceResult
   }
 
   async run(): Promise<SourceResult> {
     return new Promise((resolve) => {
-      this.flow.push({ name: 'subscribe', type: 'start' })
-      this.observable.subscribe(async (valueBag: ValueBag) => {
-        const promiseState = await getPromiseState(this.onSourceFinishPromise)
-        this.pendingDataControl.delete(valueBag._uniqueId)
-        const pendingItemsLength = this.pendingDataControl.size
-        if (promiseState === PromiseState.FULFILLED && pendingItemsLength === 0) {
-          const sourceResult = await this.onSourceFinishPromise
-          resolve(sourceResult)
+      this.observable.subscribe((valueBag: ValueBag) => {
+        this.pendingDataControl.delete(valueBag[this.flowId])
+
+        if (this.sourceResult && this.pendingDataControl.size === 0) {
+          resolve(this.sourceResult)
         }
       })
     })

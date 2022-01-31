@@ -1,7 +1,7 @@
 import { Observable, mergeMap as rxjsMergeMap } from 'rxjs'
-import { CaminhoOptions, ValueBag, OperationType } from '../types'
+import { ValueBag } from '../types'
 import { pipeHasProvides } from './operationDiscrimator'
-import { getLogger } from './stepLogger'
+import { Logger } from './stepLogger'
 import { getNewValueBag } from './valueBag'
 
 export type PipeParams = PipeParamsProvides | PipeParamsNoProvides
@@ -24,15 +24,13 @@ export interface PipeParamsNoProvides {
 export function pipe(
   observable: Observable<ValueBag>,
   params: PipeParams,
-  caminhoOptions?: CaminhoOptions,
+  logger: Logger,
 ): Observable<ValueBag> {
   const getBag = pipeHasProvides(params) ? valueBagGetterProvides(params.provides) : valueBagGetterNoProvides()
-  const logger = getLogger(OperationType.PIPE, params.fn, caminhoOptions)
 
   async function wrappedMapper(valueBag: ValueBag): Promise<ValueBag> {
-    const stepStartedAt = Date.now()
     const value = await params.fn(valueBag)
-    logger(stepStartedAt)
+    logger()
     return getBag(valueBag, value)
   }
   return observable.pipe(rxjsMergeMap(wrappedMapper, params.options?.concurrency ?? 1))
