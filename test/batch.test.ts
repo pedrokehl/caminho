@@ -101,14 +101,14 @@ test('Should properly provide values from a batched execution', async () => {
 
   const firstParamCalls = anotherSaveMock.mock.calls.map((params) => params[0])
   expect(firstParamCalls).toHaveLength(NUMBER_OF_ITERATIONS)
-  expect(firstParamCalls).toEqual([
-    { job: { job_id: '1' }, status: '1 - processed', _uniqueId: expect.any(Number) },
-    { job: { job_id: '2' }, status: '2 - processed', _uniqueId: expect.any(Number) },
-    { job: { job_id: '3' }, status: '3 - processed', _uniqueId: expect.any(Number) },
-    { job: { job_id: '4' }, status: '4 - processed', _uniqueId: expect.any(Number) },
-    { job: { job_id: '5' }, status: '5 - processed', _uniqueId: expect.any(Number) },
-    { job: { job_id: '6' }, status: '6 - processed', _uniqueId: expect.any(Number) },
-    { job: { job_id: '7' }, status: '7 - processed', _uniqueId: expect.any(Number) },
-    { job: { job_id: '8' }, status: '8 - processed', _uniqueId: expect.any(Number) },
+  expect(firstParamCalls).toMatchObject([
+    { job: { job_id: '1' }, status: '1 - processed' },
+    { job: { job_id: '2' }, status: '2 - processed' },
+    { job: { job_id: '3' }, status: '3 - processed' },
+    { job: { job_id: '4' }, status: '4 - processed' },
+    { job: { job_id: '5' }, status: '5 - processed' },
+    { job: { job_id: '6' }, status: '6 - processed' },
+    { job: { job_id: '7' }, status: '7 - processed' },
+    { job: { job_id: '8' }, status: '8 - processed' },
   ])
 })

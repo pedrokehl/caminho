@@ -32,17 +32,17 @@ test('Parallel steps should provide valueBag properly to the following steps', a
 
   const firstParamCalls = saveAllFn.mock.calls.map((params) => params[0])
 
-  expect(firstParamCalls).toEqual([
-    { _uniqueId: expect.any(Number), job: { job_id: '1' }, status: '1 is ok', position: 'SW' },
-    { _uniqueId: expect.any(Number), job: { job_id: '2' }, status: '2 is ok', position: 'SW' },
-    { _uniqueId: expect.any(Number), job: { job_id: '3' }, status: '3 is fired', position: 'SW' },
-    { _uniqueId: expect.any(Number), job: { job_id: '4' }, status: '4 is ok', position: 'SW' },
-    { _uniqueId: expect.any(Number), job: { job_id: '5' }, status: '5 is ok', position: 'HR' },
-    { _uniqueId: expect.any(Number), job: { job_id: '6' }, status: '6 is fired', position: 'SW' },
-    { _uniqueId: expect.any(Number), job: { job_id: '7' }, status: '7 is ok', position: 'SW' },
-    { _uniqueId: expect.any(Number), job: { job_id: '8' }, status: '8 is ok', position: 'SW' },
-    { _uniqueId: expect.any(Number), job: { job_id: '9' }, status: '9 is fired', position: 'SW' },
-    { _uniqueId: expect.any(Number), job: { job_id: '10' }, status: '10 is ok', position: 'HR' },
+  expect(firstParamCalls).toMatchObject([
+    { job: { job_id: '1' }, status: '1 is ok', position: 'SW' },
+    { job: { job_id: '2' }, status: '2 is ok', position: 'SW' },
+    { job: { job_id: '3' }, status: '3 is fired', position: 'SW' },
+    { job: { job_id: '4' }, status: '4 is ok', position: 'SW' },
+    { job: { job_id: '5' }, status: '5 is ok', position: 'HR' },
+    { job: { job_id: '6' }, status: '6 is fired', position: 'SW' },
+    { job: { job_id: '7' }, status: '7 is ok', position: 'SW' },
+    { job: { job_id: '8' }, status: '8 is ok', position: 'SW' },
+    { job: { job_id: '9' }, status: '9 is fired', position: 'SW' },
+    { job: { job_id: '10' }, status: '10 is ok', position: 'HR' },
   ])
 })
 

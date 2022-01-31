@@ -1,11 +1,15 @@
-import { CaminhoOptions, OperationStatus, OperationType } from '../types'
+import { OnEachStep, OperationStatus, OperationType } from '../types'
 
-export function getLogger(operationType: OperationType, executor: { name: string }, caminhoOptions?: CaminhoOptions) {
-  if (caminhoOptions?.onEachStep) {
-    const onEachStep = caminhoOptions?.onEachStep
+export type Logger = () => void
 
-    return function logStep(stepStartedAt: number) {
-      const tookMs = Date.now() - stepStartedAt
+export function getLogger(operationType: OperationType, executor: { name: string }, onEachStep?: OnEachStep) {
+  if (onEachStep) {
+    let stepStartedAt: number = Date.now()
+
+    return function logStep() {
+      const now = Date.now()
+      const tookMs = now - stepStartedAt
+      stepStartedAt = now
 
       onEachStep({
         name: executor.name,

@@ -33,7 +33,8 @@
     "object-curly-newline": ["error", { "multiline": true, "consistent": true }],
     "no-plusplus": "off",
     "no-underscore-dangle": ["error", { "allow": ["_uniqueId"] }],
-    "no-await-in-loop": "off"
+    "no-await-in-loop": "off",
+    "complexity": ["error", { "max": 3 }]
   },
   "env": {
     "es2020": true,

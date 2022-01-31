@@ -3,15 +3,13 @@ import { PipeParams } from './operations/pipe'
 
 // TODO: Proper typing for ValueBag!
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ValueBag extends Record<string, any> {
-  _uniqueId: number
-}
+export type ValueBag = Record<string, any>
+
+export type PendingDataControl = Set<number>
 
 export type PipeGenericParams = PipeParams | BatchParams
 
-export interface CaminhoOptions {
-  onEachStep?: (params: OnEachStepParams) => void
-}
+export type OnEachStep = (params: OnEachStepParams) => void
 
 export interface OnEachStepParams {
   name: string
