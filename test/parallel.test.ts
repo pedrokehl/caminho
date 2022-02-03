@@ -21,7 +21,7 @@ test('Parallel steps should provide valueBag properly to the following steps', a
   const saveAllFn = jest.fn().mockName('save')
 
   const fetchStatus = { fn: fetchStatusFn, provides: 'status', options: { batch: { maxSize: 3, timeoutMs: 15 } } }
-  const fetchPosition = { fn: fetchPositionFn, provides: 'position', concurrency: 5 }
+  const fetchPosition = { fn: fetchPositionFn, provides: 'position', maxConcurrency: 5 }
   const saveAll = { fn: saveAllFn }
 
   await new Caminho()
@@ -32,7 +32,7 @@ test('Parallel steps should provide valueBag properly to the following steps', a
 
   const firstParamCalls = saveAllFn.mock.calls.map((params) => params[0])
 
-  expect(firstParamCalls).toMatchObject([
+  expect(firstParamCalls).toEqual([
     { job: { job_id: '1' }, status: '1 is ok', position: 'SW' },
     { job: { job_id: '2' }, status: '2 is ok', position: 'SW' },
     { job: { job_id: '3' }, status: '3 is fired', position: 'SW' },
@@ -66,7 +66,7 @@ test('Parallel steps should use the most efficient path for emiting values', asy
       return 'SW'
     },
     provides: 'position',
-    concurrency: 5,
+    maxConcurrency: 5,
   }
   const saveAll = {
     fn: async function saveSomething() {

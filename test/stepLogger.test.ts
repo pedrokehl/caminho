@@ -13,8 +13,8 @@ test('Should call onEachStep provided callback with proper values', async () => 
 
   await new Caminho({ onEachStep: onEachStepMock })
     .source({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: fetchMock, provides: 'rawData', options: { concurrency: 5 } })
-    .pipe({ fn: saveMock, options: { batch: { maxSize: 2, timeoutMs: 1 }, concurrency: 5 } })
+    .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 5 } })
+    .pipe({ fn: saveMock, options: { batch: { maxSize: 2, timeoutMs: 1 }, maxConcurrency: 5 } })
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([

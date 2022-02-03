@@ -32,7 +32,7 @@
     "@typescript-eslint/no-empty-function": "off",
     "object-curly-newline": ["error", { "multiline": true, "consistent": true }],
     "no-plusplus": "off",
-    "no-underscore-dangle": ["error", { "allow": ["_uniqueId"] }],
+    "no-underscore-dangle": ["error"],
     "no-await-in-loop": "off",
     "complexity": ["error", { "max": 3 }]
   },

@@ -1,6 +1,5 @@
 import { from, lastValueFrom, map, mergeMap, Observable, reduce, share, tap, zip } from 'rxjs'
 import { ValueBag, OperationType, PipeGenericParams, OnEachStep } from './types'
-import { generateId } from './helpers/random'
 
 import { SourceParams, SourceResult, wrapGenerator } from './operations/generator'
 import { pipe, PipeParams } from './operations/pipe'
@@ -8,6 +7,7 @@ import { batch, BatchParams } from './operations/batch'
 import { isBatch } from './operations/operationDiscrimator'
 import { buildValueBagAccumulator, getNewValueBag } from './operations/valueBag'
 import { getLogger } from './operations/stepLogger'
+import { PendingDataControlInMemory } from './PendingDataControl'
 
 export interface CaminhoOptions {
   onEachStep?: OnEachStep
@@ -20,9 +20,8 @@ export interface Accumulator<A> {
 }
 
 export class Caminho {
-  private flowId = generateId()
   protected observable!: Observable<ValueBag>
-  private pendingDataControl = new Set<number>()
+  private pendingDataControl = new PendingDataControlInMemory()
   private sourceResult: SourceResult | null = null
 
   constructor(private options?: CaminhoOptions) {
@@ -78,28 +77,24 @@ export class Caminho {
     return new Promise((resolve) => {
       this.observable
         .subscribe(() => {
-          if (this.sourceResult && this.pendingDataControl.size === 0) {
-            resolve(this.sourceResult)
+          if (this.hasFinished(this.sourceResult)) {
+            resolve(this.sourceResult as SourceResult)
           }
         })
     })
   }
 
+  private hasFinished(sourceResult: SourceResult | null): boolean {
+    return sourceResult !== null && this.pendingDataControl.size === 0
+  }
+
   protected getGenerator(sourceParams: SourceParams) {
     const logger = getLogger(OperationType.GENERATE, sourceParams.fn, this.options?.onEachStep)
-    return wrapGenerator(
-      sourceParams,
-      this.onSourceFinish,
-      this.pendingDataControl,
-      this.flowId,
-      logger,
-    )
+    return wrapGenerator(sourceParams, this.onSourceFinish, this.pendingDataControl, logger)
   }
 
   protected appendFinalStep() {
-    this.observable = this.observable.pipe(tap((valueBag: ValueBag) => {
-      this.pendingDataControl.delete(valueBag[this.flowId])
-    }))
+    this.observable = this.observable.pipe(tap(() => this.pendingDataControl.decrement()))
   }
 
   private getObservableForPipe(params: PipeGenericParams): Observable<ValueBag> {

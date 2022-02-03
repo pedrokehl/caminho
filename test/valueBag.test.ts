@@ -19,9 +19,9 @@ test('Should provide valueBag properly to the flow', async () => {
     .pipe({ fn: saveMock })
     .run()
 
-  expect(fetchMock.mock.calls[0][0]).toMatchObject({ job: mockedJob })
-  expect(mapMock.mock.calls[0][0]).toMatchObject({ job: mockedJob, rawData: mockedData })
-  expect(saveMock.mock.calls[0][0]).toMatchObject({
+  expect(fetchMock.mock.calls[0][0]).toEqual({ job: mockedJob })
+  expect(mapMock.mock.calls[0][0]).toEqual({ job: mockedJob, rawData: mockedData })
+  expect(saveMock.mock.calls[0][0]).toEqual({
     job: mockedJob,
     rawData: mockedData,
     mappedData: mockedData.message,

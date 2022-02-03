@@ -30,7 +30,7 @@ test('Should batch events after the provided count is reached from "maxSize"', a
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: saveMock, options: { batch: { maxSize, timeoutMs: 10 }, concurrency: 2 } })
+    .pipe({ fn: saveMock, options: { batch: { maxSize, timeoutMs: 10 }, maxConcurrency: 2 } })
     .run()
 
   expect(saveMock).toHaveBeenCalledTimes(2)
@@ -57,7 +57,7 @@ test('Should work properly with concurrency', async () => {
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: saveMock, options: { concurrency: CONCURRENCY, batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
+    .pipe({ fn: saveMock, options: { maxConcurrency: CONCURRENCY, batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
     .pipe({ fn: anotherSaveMock })
     .run()
 
@@ -101,7 +101,7 @@ test('Should properly provide values from a batched execution', async () => {
 
   const firstParamCalls = anotherSaveMock.mock.calls.map((params) => params[0])
   expect(firstParamCalls).toHaveLength(NUMBER_OF_ITERATIONS)
-  expect(firstParamCalls).toMatchObject([
+  expect(firstParamCalls).toEqual([
     { job: { job_id: '1' }, status: '1 - processed' },
     { job: { job_id: '2' }, status: '2 - processed' },
     { job: { job_id: '3' }, status: '3 - processed' },

@@ -5,8 +5,6 @@ import { PipeParams } from './operations/pipe'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ValueBag = Record<string, any>
 
-export type PendingDataControl = Set<number>
-
 export type PipeGenericParams = PipeParams | BatchParams
 
 export type OnEachStep = (params: OnEachStepParams) => void

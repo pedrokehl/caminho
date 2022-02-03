@@ -30,7 +30,7 @@ test('Should control maxItemsFlowing properly', async () => {
 
   await new Caminho({ onEachStep: onEachStepMock })
     .source({ fn: generatorMock, provides: 'job', maxItemsFlowing: 3 })
-    .pipe({ fn: fetchMock, provides: 'rawData' })
+    .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 1 } })
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([

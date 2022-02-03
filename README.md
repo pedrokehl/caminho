@@ -2,7 +2,7 @@
 [![Build Status](https://github.com/pedrokehl/caminho/workflows/Lint/badge.svg)](https://github.com/pedrokehl/caminho/actions)
 [![Build Status](https://github.com/pedrokehl/caminho/workflows/Test/badge.svg)](https://github.com/pedrokehl/caminho/actions)
 
-100% covered by unit tests.
+100% Test Coverage.
 
 # Caminho
 Caminho means path, a new path to your data processing.
