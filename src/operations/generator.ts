@@ -8,7 +8,6 @@ export interface SourceParams {
   fn: () => AsyncGenerator
   provides: string
   maxItemsFlowing?: number
-  initialBag?: ValueBag
 }
 
 export interface SourceResult {

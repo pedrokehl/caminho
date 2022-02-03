@@ -1,7 +1,7 @@
 import { Caminho } from '../src/caminho'
 import { sleep } from '../src/helpers/sleep'
 import { OperationType } from '../src/types'
-import { getMockedGenerator } from './mocks/generator.mock'
+import { getMockedJobGenerator } from './mocks/generator.mock'
 import { mockStepResult } from './mocks/stepResult.mock'
 
 test('Should call generator and run all function provided to the flow', async () => {
@@ -9,7 +9,7 @@ test('Should call generator and run all function provided to the flow', async ()
   const fetchMock = jest.fn()
   const NUMBER_OF_ITERATIONS = 50
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
@@ -26,7 +26,7 @@ test('Should control maxItemsFlowing properly', async () => {
   const onEachStepMock = jest.fn().mockName('onEachStepLog')
   const NUMBER_OF_ITERATIONS = 7
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
 
   await new Caminho({ onEachStep: onEachStepMock })
     .source({ fn: generatorMock, provides: 'job', maxItemsFlowing: 3 })
@@ -56,7 +56,7 @@ test('Should emit values from generator uncontrolably if maxItemsFlowing was not
   const onEachStepMock = jest.fn().mockName('onEachStepLog')
   const NUMBER_OF_ITERATIONS = 7
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
 
   await new Caminho({ onEachStep: onEachStepMock })
     .source({ fn: generatorMock, provides: 'job' })

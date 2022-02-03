@@ -1,7 +1,7 @@
 import { Caminho } from '../src/caminho'
 import { sleep } from '../src/helpers/sleep'
 import { OperationType, ValueBag } from '../src/types'
-import { getMockedGenerator } from './mocks/generator.mock'
+import { getMockedJobGenerator } from './mocks/generator.mock'
 import { mockStepResult } from './mocks/stepResult.mock'
 
 test('Parallel steps should provide valueBag properly to the following steps', async () => {
@@ -25,7 +25,7 @@ test('Parallel steps should provide valueBag properly to the following steps', a
   const saveAll = { fn: saveAllFn }
 
   await new Caminho()
-    .source({ fn: getMockedGenerator(10), provides: 'job' })
+    .source({ fn: getMockedJobGenerator(10), provides: 'job' })
     .parallel([fetchStatus, fetchPosition])
     .pipe(saveAll)
     .run()
@@ -49,7 +49,7 @@ test('Parallel steps should provide valueBag properly to the following steps', a
 test('Parallel steps should use the most efficient path for emiting values', async () => {
   const NUMBER_OF_ITERATIONS = 5
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const onEachStepMock = jest.fn().mockName('onEachStepLog')
 
   const fetchStatus = {

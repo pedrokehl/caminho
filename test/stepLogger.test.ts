@@ -1,12 +1,12 @@
 import { Caminho } from '../src/caminho'
 import { OperationStatus, OperationType } from '../src/types'
-import { getMockedGenerator } from './mocks/generator.mock'
+import { getMockedJobGenerator } from './mocks/generator.mock'
 import { mockStepResult } from './mocks/stepResult.mock'
 
 test('Should call onEachStep provided callback with proper values', async () => {
   const NUMBER_OF_ITERATIONS = 5
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const fetchMock = function fetchSomething() {}
   const saveMock = function saveSomething() {}
   const onEachStepMock = jest.fn().mockName('onEachStepLog')

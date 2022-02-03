@@ -1,12 +1,12 @@
 import { Caminho } from '../src/caminho'
 import { sleep } from '../src/helpers/sleep'
 import { ValueBag } from '../src/types'
-import { getMockedGenerator } from './mocks/generator.mock'
+import { getMockedJobGenerator } from './mocks/generator.mock'
 
 test('Should emit batch after the "timeoutMs" time has passed if the "maxSize" is not reached', async () => {
   const NUMBER_OF_ITERATIONS = 2
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
   const maxSize = 4
@@ -23,7 +23,7 @@ test('Should emit batch after the "timeoutMs" time has passed if the "maxSize" i
 test('Should batch events after the provided count is reached from "maxSize"', async () => {
   const NUMBER_OF_ITERATIONS = 4
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
   const maxSize = 2
@@ -52,7 +52,7 @@ test('Should work properly with concurrency', async () => {
     concurrentExecutions -= 1
   }
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const anotherSaveMock = jest.fn().mockName('anotherSave').mockResolvedValue(null)
 
   await new Caminho()
@@ -69,7 +69,7 @@ test('Should call the next operator with the flatten events', async () => {
   const NUMBER_OF_ITERATIONS = 12
   const MAX_SIZE = 4
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
   const anotherSaveMock = jest.fn().mockName('anotherSave').mockResolvedValue(null)
 
@@ -87,7 +87,7 @@ test('Should properly provide values from a batched execution', async () => {
   const NUMBER_OF_ITERATIONS = 8
   const MAX_SIZE = 3
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   function batchMock(valueBags: ValueBag[]) {
     return valueBags.map((valueBag) => `${valueBag.job.job_id} - processed`)
   }

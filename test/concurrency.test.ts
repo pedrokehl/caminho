@@ -1,5 +1,5 @@
 import { Caminho } from '../src/caminho'
-import { getMockedGenerator } from './mocks/generator.mock'
+import { getMockedJobGenerator } from './mocks/generator.mock'
 import { sleep } from '../src/helpers/sleep'
 
 test('Should not run components in concurrency if not set', async () => {
@@ -16,7 +16,7 @@ test('Should not run components in concurrency if not set', async () => {
     return 'fetch'
   }
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
   await new Caminho()
@@ -41,7 +41,7 @@ test('Should run components in concurrency if set', async () => {
     return 'fetch'
   }
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
   await new Caminho()

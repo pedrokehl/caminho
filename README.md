@@ -16,11 +16,10 @@ Features:
 - [X] Execution stats for each step
 - [X] Backpressure
 - [X] Parallel execution
-- [ ] Subflow
+- [X] Subflow
+- [ ] Error Handling
 - [ ] Aggregation
-- [ ] Type Checking
-- [ ] Dynamic/smart backpressure - see: https://itnext.io/lossless-backpressure-in-rxjs-b6de30a1b6d4
-- [ ] Error handling
+- [ ] Type Checking On ValueBags
 - [ ] Documentation
 
 ## Contributing

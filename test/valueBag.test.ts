@@ -1,5 +1,5 @@
 import { Caminho } from '../src/caminho'
-import { getMockedGenerator } from './mocks/generator.mock'
+import { getMockedJobGenerator } from './mocks/generator.mock'
 import { getMockedJob } from './mocks/job.mock'
 
 test('Should provide valueBag properly to the flow', async () => {
@@ -10,7 +10,7 @@ test('Should provide valueBag properly to the flow', async () => {
   const mapMock = jest.fn().mockName('map').mockReturnValue(mockedData.message)
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
-  const generatorMock = getMockedGenerator(1)
+  const generatorMock = getMockedJobGenerator(1)
 
   await new Caminho()
     .source({ fn: generatorMock, provides: 'job' })
