@@ -16,9 +16,9 @@ Features:
 - [X] Execution stats for each step
 - [X] Backpressure
 - [X] Parallel execution
-- [X] Subflow
+- [X] Subflow - Multiple / Nested
+- [X] Subflow provide aggregated data
 - [ ] Error Handling
-- [ ] Aggregation
 - [ ] Type Checking On ValueBags
 - [ ] Documentation
 
