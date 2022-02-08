@@ -20,7 +20,7 @@ export interface Accumulator<A> {
 }
 
 export class Caminho {
-  protected observable!: Observable<ValueBag>
+  private observable!: Observable<ValueBag>
   private pendingDataControl = new PendingDataControlInMemory()
   private sourceResult: SourceResult | null = null
 
@@ -88,12 +88,12 @@ export class Caminho {
     return sourceResult !== null && this.pendingDataControl.size === 0
   }
 
-  protected getGenerator(sourceParams: SourceParams) {
+  private getGenerator(sourceParams: SourceParams) {
     const logger = getLogger(OperationType.GENERATE, sourceParams.fn, this.options?.onEachStep)
     return wrapGenerator(sourceParams, this.onSourceFinish, this.pendingDataControl, logger)
   }
 
-  protected appendFinalStep() {
+  private appendFinalStep() {
     this.observable = this.observable.pipe(tap(() => this.pendingDataControl.decrement()))
   }
 
