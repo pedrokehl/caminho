@@ -190,24 +190,19 @@ function assertDocumentSteps(lastStepMock: jest.Mock) {
     mockEmployeeResult(1, true, 'Elon', 'Employed', { documentId: 1 }),
     mockEmployeeResult(1, true, 'Bezos', 'Employed', { documentId: 1 }),
     mockEmployeeResult(1, true, 'Cook', 'Employed', { documentId: 1 }),
-
     mockEmployeeResult(2, false, 'Elon', 'Unemployed', { documentId: 1 }),
     mockEmployeeResult(2, false, 'Bezos', 'Unemployed', { documentId: 1 }),
     mockEmployeeResult(2, false, 'Cook', 'Unemployed', { documentId: 1 }),
-
     mockEmployeeResult(3, true, 'Elon', 'Employed', { documentId: 1 }),
     mockEmployeeResult(3, true, 'Bezos', 'Employed', { documentId: 1 }),
     mockEmployeeResult(3, true, 'Cook', 'Employed', { documentId: 1 }),
 
-
     mockEmployeeResult(1, true, 'Elon', 'Employed', { documentId: 2 }),
     mockEmployeeResult(1, true, 'Bezos', 'Employed', { documentId: 2 }),
     mockEmployeeResult(1, true, 'Cook', 'Employed', { documentId: 2 }),
-
     mockEmployeeResult(2, false, 'Elon', 'Unemployed', { documentId: 2 }),
     mockEmployeeResult(2, false, 'Bezos', 'Unemployed', { documentId: 2 }),
     mockEmployeeResult(2, false, 'Cook', 'Unemployed', { documentId: 2 }),
-
     mockEmployeeResult(3, true, 'Elon', 'Employed', { documentId: 2 }),
     mockEmployeeResult(3, true, 'Bezos', 'Employed', { documentId: 2 }),
     mockEmployeeResult(3, true, 'Cook', 'Employed', { documentId: 2 }),
