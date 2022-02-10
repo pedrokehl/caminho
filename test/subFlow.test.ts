@@ -20,6 +20,24 @@ describe('Sub-Flow', () => {
       .pipe(companySteps.saver)
       .run()
 
+    assertCompanySteps(companySteps.saver.fn, { savedEmployees: 3 })
+    assertEmployeeSteps(employeeSteps.saver.fn)
+  })
+
+  test('Should provide the proper item to the next parent step even when accumulator is not defined', async () => {
+    const companySteps = getCompanySteps()
+    const employeeSteps = getEmployeeSteps()
+
+    await new Caminho()
+      .source(companySteps.generator)
+      .pipe(companySteps.fetchStatus)
+      .subFlow((caminho) => caminho
+        .source(employeeSteps.generator)
+        .pipe(employeeSteps.mapper)
+        .pipe(employeeSteps.saver))
+      .pipe(companySteps.saver)
+      .run()
+
     assertCompanySteps(companySteps.saver.fn)
     assertEmployeeSteps(employeeSteps.saver.fn)
   })
@@ -46,7 +64,7 @@ describe('Sub-Flow', () => {
       .pipe(finalStepCompany)
       .run()
 
-    assertCompanySteps(finalStepCompany.fn)
+    assertCompanySteps(finalStepCompany.fn, { savedEmployees: 3 })
     assertEmployeeSteps(finalStepEmployee.fn)
   })
 
@@ -69,7 +87,7 @@ describe('Sub-Flow', () => {
         .pipe(internSteps.saver), internSteps.accumulator)
       .run()
 
-    assertCompanySteps(companySteps.saver.fn)
+    assertCompanySteps(companySteps.saver.fn, { savedEmployees: 3 })
 
     assertEmployeeSteps(employeeSteps.saver.fn)
     assertEmployeeSteps(internSteps.saver.fn, { savedEmployees: 3 })
@@ -98,7 +116,7 @@ describe('Sub-Flow', () => {
         .pipe(internSteps.saver), internSteps.accumulator)
       .run()
 
-    assertCompanySteps(companySteps.saver.fn)
+    assertCompanySteps(companySteps.saver.fn, { savedEmployees: 3 })
 
     assertEmployeeSteps(employeeSteps.saver.fn, { savedDocuments: 2 })
     assertEmployeeSteps(internSteps.saver.fn, { savedEmployees: 3 })
@@ -213,13 +231,13 @@ function getDocumentSteps() {
   }
 }
 
-function assertCompanySteps(lastStepMock: jest.Mock) {
+function assertCompanySteps(lastStepMock: jest.Mock, additionalValues?: ValueBag) {
   expect(lastStepMock).toHaveBeenCalledTimes(3)
   const companyParams = lastStepMock.mock.calls.map((params) => params[0])
   expect(companyParams).toEqual(expect.arrayContaining([
-    { companyId: 1, companyStatus: true, savedEmployees: 3 },
-    { companyId: 2, companyStatus: false, savedEmployees: 3 },
-    { companyId: 3, companyStatus: true, savedEmployees: 3 },
+    { companyId: 1, companyStatus: true, ...additionalValues },
+    { companyId: 2, companyStatus: false, ...additionalValues },
+    { companyId: 3, companyStatus: true, ...additionalValues },
   ]))
 }
 
