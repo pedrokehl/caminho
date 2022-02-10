@@ -1,20 +1,20 @@
 import { Caminho } from '../src/caminho'
 import { OperationStatus, OperationType } from '../src/types'
-import { getMockedGenerator } from './mocks/generator.mock'
+import { getMockedJobGenerator } from './mocks/generator.mock'
 import { mockStepResult } from './mocks/stepResult.mock'
 
 test('Should call onEachStep provided callback with proper values', async () => {
   const NUMBER_OF_ITERATIONS = 5
 
-  const generatorMock = getMockedGenerator(NUMBER_OF_ITERATIONS)
+  const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const fetchMock = function fetchSomething() {}
   const saveMock = function saveSomething() {}
   const onEachStepMock = jest.fn().mockName('onEachStepLog')
 
   await new Caminho({ onEachStep: onEachStepMock })
     .source({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: fetchMock, provides: 'rawData', options: { concurrency: 5 } })
-    .pipe({ fn: saveMock, options: { batch: { maxSize: 2, timeoutMs: 1 }, concurrency: 5 } })
+    .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 5 } })
+    .pipe({ fn: saveMock, options: { batch: { maxSize: 2, timeoutMs: 1 }, maxConcurrency: 5 } })
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([

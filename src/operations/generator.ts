@@ -1,6 +1,8 @@
-import { ValueBag, PendingDataControl } from '../types'
+import { ValueBag } from '../types'
 import { sleep } from '../helpers/sleep'
 import { Logger } from './stepLogger'
+import { PendingDataControl } from '../PendingDataControl'
+import { getNewValueBag } from './valueBag'
 
 const SLEEP_FOR_BACKPRESSURE_MS = 10
 
@@ -8,7 +10,6 @@ export interface SourceParams {
   fn: () => AsyncGenerator
   provides: string
   maxItemsFlowing?: number
-  initialBag?: ValueBag
 }
 
 export interface SourceResult {
@@ -19,7 +20,6 @@ export function wrapGenerator(
   sourceParams: SourceParams,
   onSourceFinish: (sourceResult: SourceResult) => void,
   pendingDataControl: PendingDataControl,
-  flowId: string,
   logger: Logger,
 ) {
   const checksForBackpressure = getNeedsToWaitForBackpressure(sourceParams.maxItemsFlowing)
@@ -32,13 +32,9 @@ export function wrapGenerator(
       }
 
       count++
-      pendingDataControl.add(count)
+      pendingDataControl.increment()
       logger()
-      yield {
-        ...initialBag,
-        [flowId]: count,
-        [sourceParams.provides]: value,
-      }
+      yield getNewValueBag(initialBag, sourceParams.provides, value)
     }
     onSourceFinish({ emitted: count })
   }

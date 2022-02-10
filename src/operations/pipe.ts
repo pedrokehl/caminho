@@ -7,7 +7,7 @@ import { getNewValueBag } from './valueBag'
 export type PipeParams = PipeParamsProvides | PipeParamsNoProvides
 
 interface PipeOptions {
-  concurrency?: number
+  maxConcurrency?: number
 }
 
 export interface PipeParamsProvides {
@@ -33,7 +33,7 @@ export function pipe(
     logger()
     return getBag(valueBag, value)
   }
-  return observable.pipe(rxjsMergeMap(wrappedMapper, params.options?.concurrency ?? 1))
+  return observable.pipe(rxjsMergeMap(wrappedMapper, params.options?.maxConcurrency))
 }
 
 export function valueBagGetterNoProvides() {

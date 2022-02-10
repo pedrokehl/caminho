@@ -11,7 +11,7 @@ interface BatchOptions {
     maxSize: number
     timeoutMs: number
   }
-  concurrency?: number
+  maxConcurrency?: number
 }
 export interface BatchParamsProvides {
   fn: (valueBag: ValueBag[]) => unknown[] | Promise<unknown[]>
@@ -44,7 +44,7 @@ export function batch(
       bufferTime(params.options.batch.timeoutMs, undefined, params.options.batch.maxSize),
       filter((buffer) => buffer.length > 0),
     )
-    .pipe(mergeMap(wrappedMapper, params.options.concurrency ?? 1))
+    .pipe(mergeMap(wrappedMapper, params.options.maxConcurrency))
     .pipe(mergeAll())
 }
 

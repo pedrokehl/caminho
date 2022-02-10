@@ -2,7 +2,7 @@
 [![Build Status](https://github.com/pedrokehl/caminho/workflows/Lint/badge.svg)](https://github.com/pedrokehl/caminho/actions)
 [![Build Status](https://github.com/pedrokehl/caminho/workflows/Test/badge.svg)](https://github.com/pedrokehl/caminho/actions)
 
-100% covered by unit tests.
+100% Test Coverage.
 
 # Caminho
 Caminho means path, a new path to your data processing.
@@ -16,11 +16,10 @@ Features:
 - [X] Execution stats for each step
 - [X] Backpressure
 - [X] Parallel execution
-- [ ] Subflow
-- [ ] Aggregation
-- [ ] Type Checking
-- [ ] Dynamic/smart backpressure - see: https://itnext.io/lossless-backpressure-in-rxjs-b6de30a1b6d4
-- [ ] Error handling
+- [X] Subflow - Multiple / Nested
+- [X] Subflow provide aggregated data
+- [ ] Error Handling
+- [ ] Type Checking On ValueBags
 - [ ] Documentation
 
 ## Contributing
