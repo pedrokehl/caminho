@@ -1,7 +1,9 @@
 import { Accumulator, Caminho } from '../src/caminho'
-import { ValueBag } from '../src/types'
+import { sleep } from '../src/helpers/sleep'
+import { OperationType, ValueBag } from '../src/types'
 import { getNumberedArray } from './mocks/array.mock'
-import { getMockedGenerator } from './mocks/generator.mock'
+import { getMockedGenerator, getMockedJobGenerator } from './mocks/generator.mock'
+import { mockStepResult } from './mocks/stepResult.mock'
 
 describe('Sub-Flow', () => {
   test('Should provide the valueBag properly to a child step and the parent next step', async () => {
@@ -11,7 +13,8 @@ describe('Sub-Flow', () => {
     await new Caminho()
       .source(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow(employeeSteps.generator, (caminho) => caminho
+      .subFlow((caminho) => caminho
+        .source(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
         .pipe(employeeSteps.saver), employeeSteps.accumulator)
       .pipe(companySteps.saver)
@@ -34,7 +37,8 @@ describe('Sub-Flow', () => {
     await new Caminho()
       .source({ ...companySteps.generator, maxItemsFlowing: 2 })
       .pipe(companySteps.fetchStatus)
-      .subFlow({ ...employeeSteps.generator, maxItemsFlowing: 1 }, (caminho) => caminho
+      .subFlow((caminho) => caminho
+        .source({ ...employeeSteps.generator, maxItemsFlowing: 1 })
         .pipe({ ...employeeSteps.mapper, options: { maxConcurrency: 1 } })
         .pipe({ ...employeeSteps.saver, options: { batch: { maxSize: 10, timeoutMs: 5 } } })
         .pipe(finalStepEmployee), employeeSteps.accumulator)
@@ -54,11 +58,13 @@ describe('Sub-Flow', () => {
     await new Caminho()
       .source(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow(employeeSteps.generator, (caminho) => caminho
+      .subFlow((caminho) => caminho
+        .source(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
         .pipe(employeeSteps.saver), employeeSteps.accumulator)
       .pipe(companySteps.saver)
-      .subFlow(internSteps.generator, (caminho) => caminho
+      .subFlow((caminho) => caminho
+        .source(internSteps.generator)
         .pipe(internSteps.mapper)
         .pipe(internSteps.saver), internSteps.accumulator)
       .run()
@@ -78,13 +84,16 @@ describe('Sub-Flow', () => {
     await new Caminho()
       .source(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow(employeeSteps.generator, (employeeCaminho) => employeeCaminho
+      .subFlow((employeeCaminho) => employeeCaminho
+        .source(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
-        .subFlow(documentSteps.generator, (documentCaminho) => documentCaminho
+        .subFlow((documentCaminho) => documentCaminho
+          .source(documentSteps.generator)
           .pipe(documentSteps.saver), documentSteps.accumulator)
         .pipe(employeeSteps.saver), employeeSteps.accumulator)
       .pipe(companySteps.saver)
-      .subFlow(internSteps.generator, (caminho) => caminho
+      .subFlow((caminho) => caminho
+        .source(internSteps.generator)
         .pipe(internSteps.mapper)
         .pipe(internSteps.saver), internSteps.accumulator)
       .run()
@@ -94,6 +103,54 @@ describe('Sub-Flow', () => {
     assertEmployeeSteps(employeeSteps.saver.fn, { savedDocuments: 2 })
     assertEmployeeSteps(internSteps.saver.fn, { savedEmployees: 3 })
     assertDocumentSteps(documentSteps.saver.fn)
+  })
+
+  test('Should share backpressure between parentEvents, but have a standalone "finish" state', async () => {
+    const onEachStepMock = jest.fn().mockName('onEachStepLog')
+    const fetch = jest.fn().mockName('fetch').mockImplementation(() => sleep(5))
+    const save = jest.fn().mockName('save').mockImplementation(() => sleep(2))
+
+    const subFetch = jest.fn().mockName('subFetch').mockImplementation(() => sleep(5))
+    const subSave = jest.fn().mockName('subSave').mockImplementation(() => sleep(2))
+    const subFlowAccumulator = { fn: (acc: number) => acc + 1, seed: 0, provides: 'sum' }
+
+    const generator = { fn: getMockedJobGenerator(3), provides: 'job', name: 'jobGenerator', maxItemsFlowing: 1 }
+    const subFlowGenerator = {
+      fn: getMockedJobGenerator(2),
+      provides: 'subJob',
+      maxItemsFlowing: 1,
+      name: 'subJobGenerator',
+    }
+
+    await new Caminho({ onEachStep: onEachStepMock })
+      .source(generator)
+      .pipe({ fn: fetch, name: 'fetch' })
+      .subFlow((caminho) => caminho
+        .source(subFlowGenerator)
+        .pipe({ fn: subFetch, name: 'subFetch' })
+        .pipe({ fn: subSave, name: 'subSave' }), subFlowAccumulator)
+      .pipe({ fn: save, name: 'save' })
+      .run()
+
+    const subFlowSteps = [
+      [mockStepResult({ name: 'subJobGenerator', type: OperationType.GENERATE })],
+      [mockStepResult({ name: 'subFetch', type: OperationType.PIPE })],
+      [mockStepResult({ name: 'subSave', type: OperationType.PIPE })],
+    ]
+
+    const eachParentSteps = [
+      [mockStepResult({ name: 'jobGenerator', type: OperationType.GENERATE })],
+      [mockStepResult({ name: 'fetch', type: OperationType.PIPE })],
+      ...subFlowSteps,
+      ...subFlowSteps,
+      [mockStepResult({ name: 'save', type: OperationType.PIPE })],
+    ]
+
+    expect(onEachStepMock.mock.calls).toEqual([
+      ...eachParentSteps,
+      ...eachParentSteps,
+      ...eachParentSteps,
+    ])
   })
 })
 

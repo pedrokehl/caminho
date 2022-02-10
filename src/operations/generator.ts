@@ -10,6 +10,7 @@ export interface SourceParams {
   fn: () => AsyncGenerator
   provides: string
   maxItemsFlowing?: number
+  name?: string
 }
 
 export interface SourceResult {
