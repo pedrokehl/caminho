@@ -9,8 +9,9 @@
     "build": "npm run clean && tsc --build",
     "clean": "tsc --build --clean",
     "lint": "eslint ./src ./test",
-    "lint-fix": "eslint ./src ./test --fix",
-    "watch-test": "jest -o --watch"
+    "lint-fix": "eslint ./src ./test ./benchmark --fix",
+    "watch-test": "jest -o --watch",
+    "benchmark-subflow": "npx ts-node benchmark/subFlow.benchmark.ts"
   },
   "repository": {
     "type": "git",

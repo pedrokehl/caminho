@@ -46,6 +46,12 @@
         "env": {
             "jest": true
         }
-    }
+    },
+    {
+      "files": ["benchmark/**/*"],
+      "rules": {
+          "no-console": "off"
+      }
+  }
   ]
 }
