@@ -1,4 +1,4 @@
-import { from, lastValueFrom, map, mergeMap, reduce, tap } from 'rxjs'
+import { from, last, lastValueFrom, map, mergeMap, reduce, tap } from 'rxjs'
 import type { ValueBag, PipeGenericParams, OnEachStep, OperatorApplier } from './types'
 
 import { SourceParams, SourceResult, wrapGenerator } from './operators/generator'
@@ -58,18 +58,27 @@ export class Caminho {
 
   subFlow<T>(
     submitSubFlow: (newFlow: Caminho) => Caminho,
-    accumulator: Accumulator<T>,
+    accumulator?: Accumulator<T>,
     maxConcurrency?: number,
   ): Caminho {
     const subCaminho = new Caminho(this.options)
     submitSubFlow(subCaminho)
     subCaminho.addOperatorApplier(subCaminho.finalStep as OperatorApplier)
-    subCaminho.addOperatorApplier(reduce(accumulator.fn, accumulator.seed))
+
+    const aggregator = accumulator
+      ? reduce(accumulator.fn, accumulator.seed)
+      : last<ValueBag>()
+
+    subCaminho.addOperatorApplier(aggregator)
+
+    const parentItemMapper = accumulator
+      ? (parentItem: ValueBag, child: ValueBag) => getNewValueBag(parentItem, accumulator.provides, child)
+      : (parentItem: ValueBag) => parentItem
 
     function applyChildFlow(parentItem: ValueBag): Promise<ValueBag> {
       return lastValueFrom(
         subCaminho.buildObservable(parentItem)
-          .pipe(map((accumulated) => getNewValueBag(parentItem, accumulator.provides, accumulated))),
+          .pipe(map((child: ValueBag) => parentItemMapper(parentItem, child))),
       )
     }
 
