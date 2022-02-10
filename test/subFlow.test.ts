@@ -1,5 +1,6 @@
 import { Accumulator, Caminho } from '../src/caminho'
 import { ValueBag } from '../src/types'
+import { getNumberedArray } from './mocks/array.mock'
 import { getMockedGenerator } from './mocks/generator.mock'
 
 describe('Sub-Flow', () => {
@@ -102,7 +103,7 @@ function getCompanySteps() {
     .mockImplementation((valueBag: ValueBag) => valueBag.companyId % 2 !== 0)
 
   const saveCompanyFn = jest.fn().mockName('saveCompany').mockResolvedValue([])
-  const companyIdGeneratorFn = getMockedGenerator(new Array(3).fill(0).map((_, index) => index + 1))
+  const companyIdGeneratorFn = getMockedGenerator(getNumberedArray(3))
 
   const generator = { fn: companyIdGeneratorFn, provides: 'companyId' }
   const fetchStatus = { fn: fetchCompanyStatusFn, provides: 'companyStatus' }
