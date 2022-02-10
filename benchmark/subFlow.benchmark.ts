@@ -15,14 +15,14 @@ async function runSubflowBenchmark(parentItems: number, childItemsPerParent: num
     options: { batch: { maxSize: 50, timeoutMs: 5 } },
   }
 
-  const subSource = { fn: steps.childGenerator, maxItemsFlowing: 1_000, provides: 'subSource1' }
   console.timeEnd('initialize steps')
   console.time('initialize caminho')
 
   const benchmarkCaminho = new Caminho()
     .source({ fn: steps.parentGenerator, maxItemsFlowing: 1_000, provides: 'source1' })
     .pipe({ fn: steps.sleeper, provides: 'pipe1' })
-    .subFlow(subSource, (caminho) => caminho
+    .subFlow((caminho) => caminho
+      .source({ fn: steps.childGenerator, maxItemsFlowing: 1_000, provides: 'subSource1' })
       .pipe(batchStep), steps.accumulator)
     .pipe({ fn: steps.sleeper, provides: 'pipe2' })
 

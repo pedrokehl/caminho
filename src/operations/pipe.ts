@@ -1,5 +1,5 @@
-import { Observable, mergeMap as rxjsMergeMap } from 'rxjs'
-import { ValueBag } from '../types'
+import { mergeMap } from 'rxjs'
+import { Operator, ValueBag } from '../types'
 import { pipeHasProvides } from './operationDiscrimator'
 import { Logger } from './stepLogger'
 import { getNewValueBag } from './valueBag'
@@ -12,20 +12,18 @@ interface PipeOptions {
 
 export interface PipeParamsProvides {
   fn: (valueBag: ValueBag) => unknown | Promise<unknown>
+  name?: string
   provides: string
   options?: PipeOptions
 }
 
 export interface PipeParamsNoProvides {
   fn: (valueBag: ValueBag) => void | Promise<void>
+  name?: string
   options?: PipeOptions
 }
 
-export function pipe(
-  observable: Observable<ValueBag>,
-  params: PipeParams,
-  logger: Logger,
-): Observable<ValueBag> {
+export function pipe(params: PipeParams, logger: Logger): Operator[] {
   const getBag = pipeHasProvides(params) ? valueBagGetterProvides(params.provides) : valueBagGetterNoProvides()
 
   async function wrappedMapper(valueBag: ValueBag): Promise<ValueBag> {
@@ -33,7 +31,9 @@ export function pipe(
     logger()
     return getBag(valueBag, value)
   }
-  return observable.pipe(rxjsMergeMap(wrappedMapper, params.options?.maxConcurrency))
+  return [
+    mergeMap(wrappedMapper, params.options?.maxConcurrency),
+  ]
 }
 
 export function valueBagGetterNoProvides() {

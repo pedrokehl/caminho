@@ -1,5 +1,5 @@
-import { bufferTime, filter, mergeAll, mergeMap, Observable } from 'rxjs'
-import { ValueBag } from '../types'
+import { bufferTime, filter, mergeAll, mergeMap } from 'rxjs'
+import { Operator, ValueBag } from '../types'
 import { batchHasProvides } from './operationDiscrimator'
 import { Logger } from './stepLogger'
 import { getNewValueBag } from './valueBag'
@@ -15,20 +15,18 @@ interface BatchOptions {
 }
 export interface BatchParamsProvides {
   fn: (valueBag: ValueBag[]) => unknown[] | Promise<unknown[]>
+  name?: string
   provides: string
   options: BatchOptions
 }
 
 export interface BatchParamsNoProvides {
   fn: (valueBag: ValueBag[]) => void | Promise<void>
+  name?: string
   options: BatchOptions
 }
 
-export function batch(
-  observable: Observable<ValueBag>,
-  params: BatchParams,
-  logger: Logger,
-): Observable<ValueBag> {
+export function batch(params: BatchParams, logger: Logger): Operator[] {
   const getBag = batchHasProvides(params)
     ? valueBagGetterBatchProvides(params.provides)
     : valueBagGetterBatchNoProvides()
@@ -39,13 +37,12 @@ export function batch(
     return getBag(valueBag, values as unknown[])
   }
 
-  return observable
-    .pipe(
-      bufferTime(params.options.batch.timeoutMs, undefined, params.options.batch.maxSize),
-      filter((buffer) => buffer.length > 0),
-    )
-    .pipe(mergeMap(wrappedMapper, params.options.maxConcurrency))
-    .pipe(mergeAll())
+  return [
+    bufferTime(params.options.batch.timeoutMs, undefined, params.options.batch.maxSize),
+    filter((buffer) => buffer.length > 0),
+    mergeMap(wrappedMapper, params.options.maxConcurrency) as Operator,
+    mergeAll() as Operator,
+  ]
 }
 
 export function valueBagGetterBatchNoProvides() {
