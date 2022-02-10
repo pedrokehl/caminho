@@ -1,5 +1,5 @@
 import { Caminho } from '../src/caminho'
-import { sleep } from '../src/helpers/sleep'
+import { sleep } from '../src/utils/sleep'
 import { OperationType, ValueBag } from '../src/types'
 import { getMockedJobGenerator } from './mocks/generator.mock'
 import { mockStepResult } from './mocks/stepResult.mock'

@@ -1,5 +1,5 @@
 import { Accumulator, Caminho } from '../src/caminho'
-import { sleep } from '../src/helpers/sleep'
+import { sleep } from '../src/utils/sleep'
 import { OperationType, ValueBag } from '../src/types'
 import { getNumberedArray } from './mocks/array.mock'
 import { getMockedGenerator, getMockedJobGenerator } from './mocks/generator.mock'

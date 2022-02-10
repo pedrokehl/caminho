@@ -1,6 +1,6 @@
 import { Caminho } from '../src/caminho'
 import { getMockedJobGenerator } from './mocks/generator.mock'
-import { sleep } from '../src/helpers/sleep'
+import { sleep } from '../src/utils/sleep'
 
 test('Should run components in series if maxConcurrency is set to 1', async () => {
   const NUMBER_OF_ITERATIONS = 5

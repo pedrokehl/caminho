@@ -1,6 +1,6 @@
-import { ValueBag, PipeGenericParams } from '../types'
-import { pipeHasProvides } from './operationDiscrimator'
-import { PipeParams, PipeParamsProvides } from './pipe'
+import type { ValueBag, PipeGenericParams } from '../types'
+import type { PipeParams, PipeParamsProvides } from '../operators/pipe'
+import { pipeHasProvides } from '../operators/helpers/operatorHelpers'
 
 export function getNewValueBag(oldValueBag: ValueBag, toProvide: string, newValue: unknown) {
   return { ...oldValueBag, [toProvide]: newValue }

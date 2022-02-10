@@ -1,6 +1,6 @@
-import { Observable, OperatorFunction } from 'rxjs'
-import { BatchParams } from './operations/batch'
-import { PipeParams } from './operations/pipe'
+import type { Observable, OperatorFunction } from 'rxjs'
+import type { BatchParams } from './operators/batch'
+import type { PipeParams } from './operators/pipe'
 
 // TODO: Proper typing for ValueBag!
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,15 +19,10 @@ export interface OnEachStepParams {
   name: string
   type: OperationType
   tookMs: number
-  status: OperationStatus
 }
 
 export enum OperationType {
   GENERATE = 'generate',
   PIPE = 'pipe',
   BATCH = 'batch',
-}
-
-export enum OperationStatus {
-  SUCCESS = 'success'
 }

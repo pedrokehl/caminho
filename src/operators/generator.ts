@@ -1,8 +1,8 @@
 import { ValueBag } from '../types'
-import { sleep } from '../helpers/sleep'
-import { Logger } from './stepLogger'
-import { PendingDataControl } from '../PendingDataControl'
-import { getNewValueBag } from './valueBag'
+import { sleep } from '../utils/sleep'
+import { Logger } from '../utils/stepLogger'
+import { PendingDataControl } from '../utils/PendingDataControl'
+import { getNewValueBag } from '../utils/valueBag'
 
 const SLEEP_FOR_BACKPRESSURE_MS = 10
 

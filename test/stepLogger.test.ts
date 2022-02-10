@@ -1,5 +1,5 @@
 import { Caminho } from '../src/caminho'
-import { OperationStatus, OperationType } from '../src/types'
+import { OperationType } from '../src/types'
 import { getMockedJobGenerator } from './mocks/generator.mock'
 import { mockStepResult } from './mocks/stepResult.mock'
 
@@ -18,18 +18,18 @@ test('Should call onEachStep provided callback with proper values', async () => 
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([
-    [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
-    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
-    [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
-    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
-    [mockStepResult({ type: OperationType.BATCH, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
-    [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
-    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
-    [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
-    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
-    [mockStepResult({ type: OperationType.BATCH, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
-    [mockStepResult({ type: OperationType.GENERATE, status: OperationStatus.SUCCESS, name: 'generator' })],
-    [mockStepResult({ type: OperationType.PIPE, status: OperationStatus.SUCCESS, name: 'fetchSomething' })],
-    [mockStepResult({ type: OperationType.BATCH, status: OperationStatus.SUCCESS, name: 'saveSomething' })],
+    [mockStepResult({ type: OperationType.GENERATE, name: 'generator' })],
+    [mockStepResult({ type: OperationType.PIPE, name: 'fetchSomething' })],
+    [mockStepResult({ type: OperationType.GENERATE, name: 'generator' })],
+    [mockStepResult({ type: OperationType.PIPE, name: 'fetchSomething' })],
+    [mockStepResult({ type: OperationType.BATCH, name: 'saveSomething' })],
+    [mockStepResult({ type: OperationType.GENERATE, name: 'generator' })],
+    [mockStepResult({ type: OperationType.PIPE, name: 'fetchSomething' })],
+    [mockStepResult({ type: OperationType.GENERATE, name: 'generator' })],
+    [mockStepResult({ type: OperationType.PIPE, name: 'fetchSomething' })],
+    [mockStepResult({ type: OperationType.BATCH, name: 'saveSomething' })],
+    [mockStepResult({ type: OperationType.GENERATE, name: 'generator' })],
+    [mockStepResult({ type: OperationType.PIPE, name: 'fetchSomething' })],
+    [mockStepResult({ type: OperationType.BATCH, name: 'saveSomething' })],
   ])
 })

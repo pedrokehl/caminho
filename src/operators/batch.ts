@@ -1,8 +1,9 @@
 import { bufferTime, filter, mergeAll, mergeMap } from 'rxjs'
-import { Operator, ValueBag } from '../types'
-import { batchHasProvides } from './operationDiscrimator'
-import { Logger } from './stepLogger'
-import { getNewValueBag } from './valueBag'
+
+import type { Operator, OperatorApplier, ValueBag } from '../types'
+import type { Logger } from '../utils/stepLogger'
+import { batchHasProvides, applyOperatorsToObservable } from './helpers/operatorHelpers'
+import { getNewValueBag } from '../utils/valueBag'
 
 export type BatchParams = BatchParamsProvides | BatchParamsNoProvides
 
@@ -26,7 +27,7 @@ export interface BatchParamsNoProvides {
   options: BatchOptions
 }
 
-export function batch(params: BatchParams, logger: Logger): Operator[] {
+export function batch(params: BatchParams, logger: Logger): OperatorApplier {
   const getBag = batchHasProvides(params)
     ? valueBagGetterBatchProvides(params.provides)
     : valueBagGetterBatchNoProvides()
@@ -37,12 +38,14 @@ export function batch(params: BatchParams, logger: Logger): Operator[] {
     return getBag(valueBag, values as unknown[])
   }
 
-  return [
+  const operators: Operator[] = [
     bufferTime(params.options.batch.timeoutMs, undefined, params.options.batch.maxSize),
     filter((buffer) => buffer.length > 0),
     mergeMap(wrappedMapper, params.options.maxConcurrency) as Operator,
     mergeAll() as Operator,
   ]
+
+  return (observable) => applyOperatorsToObservable(observable, operators)
 }
 
 export function valueBagGetterBatchNoProvides() {
