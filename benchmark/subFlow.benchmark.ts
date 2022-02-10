@@ -1,5 +1,5 @@
 import { Caminho } from '../src/caminho'
-import { sleep } from '../src/helpers/sleep'
+import { sleep } from '../src/utils/sleep'
 import { getNumberedArray } from '../test/mocks/array.mock'
 import { getMockedGenerator } from '../test/mocks/generator.mock'
 

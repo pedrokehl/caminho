@@ -1,13 +1,16 @@
-import { from, lastValueFrom, map, mergeMap, Observable, reduce, share, tap, zip } from 'rxjs'
-import { ValueBag, OperationType, PipeGenericParams, OnEachStep, Operator, OperatorApplier } from './types'
+import { from, lastValueFrom, map, mergeMap, reduce, tap } from 'rxjs'
+import type { ValueBag, PipeGenericParams, OnEachStep, OperatorApplier } from './types'
 
-import { SourceParams, SourceResult, wrapGenerator } from './operations/generator'
-import { pipe } from './operations/pipe'
-import { batch } from './operations/batch'
-import { isBatch } from './operations/operationDiscrimator'
-import { buildValueBagAccumulator, getNewValueBag } from './operations/valueBag'
-import { getLogger } from './operations/stepLogger'
-import { PendingDataControlInMemory } from './PendingDataControl'
+import { SourceParams, SourceResult, wrapGenerator } from './operators/generator'
+import { pipe } from './operators/pipe'
+import { batch } from './operators/batch'
+import { parallel } from './operators/parallel'
+
+import { applyOperator, isBatch } from './operators/helpers/operatorHelpers'
+import { getNewValueBag } from './utils/valueBag'
+import { getLogger } from './utils/stepLogger'
+import { PendingDataControlInMemory } from './utils/PendingDataControl'
+import { OperationType } from './types'
 
 export interface CaminhoOptions {
   onEachStep?: OnEachStep
@@ -29,29 +32,27 @@ export class Caminho {
 
   constructor(private options?: CaminhoOptions) {
     this.onSourceFinish = this.onSourceFinish.bind(this)
-    this.appendOperator = this.appendOperator.bind(this)
-    this.getOperatorsForPipe = this.getOperatorsForPipe.bind(this)
+    this.addOperatorApplier = this.addOperatorApplier.bind(this)
+    this.getApplierForPipeOrBatch = this.getApplierForPipeOrBatch.bind(this)
   }
 
   source(sourceParams: SourceParams): Caminho {
-    this.generator = this.getGenerator(sourceParams)
+    const name = sourceParams.name ?? sourceParams.fn.name
+    const logger = getLogger(OperationType.GENERATE, name, this.options?.onEachStep)
+    this.generator = wrapGenerator(sourceParams, this.onSourceFinish, this.pendingDataControl, logger)
     return this
   }
 
   pipe(params: PipeGenericParams): Caminho {
-    const operators = this.getOperatorsForPipe(params)
-    operators.forEach(this.appendOperator)
+    const operatorApplier = this.getApplierForPipeOrBatch(params)
+    this.addOperatorApplier(operatorApplier)
     return this
   }
 
   parallel(params: PipeGenericParams[]): Caminho {
-    this.appendOperator(share())
-    const operatorsGroups: Operator[][] = params.map(this.getOperatorsForPipe)
-    function parallelOperatorsApplier(observable: Observable<ValueBag>) {
-      return zip(operatorsGroups.map((operators) => applyOperatorsToObservable(observable, operators)))
-    }
-    this.operators.push(parallelOperatorsApplier)
-    this.appendOperator(map(buildValueBagAccumulator(params)) as Operator)
+    const operatorAppliers: OperatorApplier[] = params.map(this.getApplierForPipeOrBatch)
+    const operatorApplier = parallel(params, operatorAppliers)
+    this.addOperatorApplier(operatorApplier)
     return this
   }
 
@@ -60,12 +61,10 @@ export class Caminho {
     accumulator: Accumulator<T>,
     maxConcurrency?: number,
   ): Caminho {
-    const { options } = this
-
-    const subCaminho = new Caminho(options)
+    const subCaminho = new Caminho(this.options)
     submitSubFlow(subCaminho)
-    subCaminho.appendOperator(subCaminho.finalStep as Operator)
-    subCaminho.appendOperator(reduce(accumulator.fn, accumulator.seed))
+    subCaminho.addOperatorApplier(subCaminho.finalStep as OperatorApplier)
+    subCaminho.addOperatorApplier(reduce(accumulator.fn, accumulator.seed))
 
     function applyChildFlow(parentItem: ValueBag): Promise<ValueBag> {
       return lastValueFrom(
@@ -74,7 +73,7 @@ export class Caminho {
       )
     }
 
-    this.appendOperator(mergeMap(applyChildFlow, maxConcurrency))
+    this.addOperatorApplier(mergeMap(applyChildFlow, maxConcurrency))
     return this
   }
 
@@ -99,17 +98,11 @@ export class Caminho {
     return sourceResult !== null && this.pendingDataControl.size === 0
   }
 
-  private getGenerator(sourceParams: SourceParams) {
-    const name = sourceParams.name ?? sourceParams.fn.name
-    const logger = getLogger(OperationType.GENERATE, name, this.options?.onEachStep)
-    return wrapGenerator(sourceParams, this.onSourceFinish, this.pendingDataControl, logger)
+  private addOperatorApplier(operatorApplier: OperatorApplier) {
+    this.operators.push(operatorApplier)
   }
 
-  private appendOperator(operator: Operator) {
-    this.operators.push(buildOperatorApplier(operator))
-  }
-
-  private getOperatorsForPipe(params: PipeGenericParams): Operator[] {
+  private getApplierForPipeOrBatch(params: PipeGenericParams): OperatorApplier {
     const name = params.name ?? params.fn.name
 
     return isBatch(params)
@@ -120,18 +113,4 @@ export class Caminho {
   private onSourceFinish(sourceResult: SourceResult): void {
     this.sourceResult = sourceResult
   }
-}
-
-function applyOperator(observable: Observable<ValueBag>, operatorApplier: OperatorApplier): Observable<ValueBag> {
-  return operatorApplier(observable)
-}
-
-function buildOperatorApplier(operator: Operator): OperatorApplier {
-  return function operatorApplier(observable: Observable<ValueBag>) {
-    return observable.pipe(operator)
-  }
-}
-
-function applyOperatorsToObservable(observable: Observable<ValueBag>, operators: Operator[]): Observable<ValueBag> {
-  return operators.reduce((newObservable, operator) => newObservable.pipe(operator), observable)
 }

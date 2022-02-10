@@ -1,4 +1,4 @@
-import { PendingDataControlInMemory } from '../src/PendingDataControl'
+import { PendingDataControlInMemory } from '../src/utils/PendingDataControl'
 
 test('PendingDataControl should properly increment 1 value as default and start with zero', async () => {
   const pendingDataControl = new PendingDataControlInMemory()
