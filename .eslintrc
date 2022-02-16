@@ -34,7 +34,8 @@
     "no-plusplus": "off",
     "no-underscore-dangle": ["error"],
     "no-await-in-loop": "off",
-    "complexity": ["error", { "max": 3 }]
+    "complexity": ["error", { "max": 3 }],
+    "class-methods-use-this": "off"
   },
   "env": {
     "es2020": true,
@@ -52,6 +53,6 @@
       "rules": {
           "no-console": "off"
       }
-  }
+    }
   ]
 }

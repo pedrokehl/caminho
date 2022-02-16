@@ -30,7 +30,7 @@ export interface CaminhoOptions {
   onEachStep?: OnEachStep
 }
 
-export interface Accumulator<A> {
+export interface ReduceParams<A> {
   fn: (acc: A, value: ValueBag, index: number) => A,
   seed: A,
   provides: string

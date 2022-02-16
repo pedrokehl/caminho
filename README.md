@@ -17,7 +17,8 @@ Features:
 - [X] Backpressure
 - [X] Parallel execution
 - [X] Subflow - Multiple / Nested
-- [X] Subflow provide aggregated data
+- [X] Subflow - Reducer
+- [ ] Filter data on subFlow - TBD
 - [ ] Error Handling
 - [ ] Type Checking On ValueBags
 - [ ] Documentation

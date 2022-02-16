@@ -27,7 +27,7 @@ test('Should control maxItemsFlowing properly', async () => {
 
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
 
-  await from({ fn: generatorMock, provides: 'job', maxItemsFlowing: 3 })
+  await from({ fn: generatorMock, provides: 'job', maxItemsFlowing: 3 }, { onEachStep: onEachStepMock })
     .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 1 } })
     .run()
 
@@ -56,7 +56,7 @@ test('Should emit values from generator uncontrolably if maxItemsFlowing was not
 
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
 
-  await from({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' }, { onEachStep: onEachStepMock })
     .pipe({ fn: fetchMock, provides: 'rawData' })
     .run()
 
