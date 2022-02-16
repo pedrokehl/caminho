@@ -5,13 +5,13 @@
   "main": "build/caminho.js",
   "types": "./build/caminho.d.ts",
   "scripts": {
-    "test": "jest --coverage",
     "build": "npm run clean && tsc --build",
     "clean": "tsc --build --clean",
+    "test": "jest --coverage",
+    "test:watch": "jest -o --watch",
     "lint": "eslint ./src ./test",
-    "lint-fix": "eslint ./src ./test ./benchmark --fix",
-    "watch-test": "jest -o --watch",
-    "benchmark-subflow": "npx ts-node benchmark/subFlow.benchmark.ts"
+    "lint:fix": "eslint ./src ./test ./benchmark --fix",
+    "benchmark:subflow": "npx ts-node benchmark/subFlow.benchmark.ts"
   },
   "repository": {
     "type": "git",

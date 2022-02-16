@@ -1,8 +1,10 @@
 import type { Observable } from 'rxjs'
-import { ValueBag, Operator, OperatorApplier } from '../../types'
+import { ValueBag, Operator } from '../../types'
 
 import { BatchParams, BatchParamsProvides } from '../batch'
 import { PipeParams, PipeParamsProvides } from '../pipe'
+
+export type OperatorApplier = (observable: Observable<ValueBag>) => Observable<ValueBag>
 
 export function isBatch(params: PipeParams | BatchParams): params is BatchParams {
   return !!(params as BatchParams)?.options?.batch

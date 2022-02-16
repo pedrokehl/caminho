@@ -1,51 +1,41 @@
-import { Caminho } from '../src/caminho'
-import { sleep } from '../src/utils/sleep'
+import { from } from '../src'
 import { getNumberedArray } from '../test/mocks/array.mock'
 import { getMockedGenerator } from '../test/mocks/generator.mock'
 
 async function runSubflowBenchmark(parentItems: number, childItemsPerParent: number) {
   console.log(`Initialized with ${parentItems} parent items, and ${parentItems * childItemsPerParent} child items.`)
-  await sleep(100)
+
   console.time('initialize steps')
   const steps = initializeSteps(parentItems, childItemsPerParent)
-
-  const batchStep = {
-    fn: steps.getBatchSleeper(50),
-    provides: 'batch1',
-    options: { batch: { maxSize: 50, timeoutMs: 5 } },
-  }
-
   console.timeEnd('initialize steps')
+
   console.time('initialize caminho')
-
-  const benchmarkCaminho = new Caminho()
-    .source({ fn: steps.parentGenerator, maxItemsFlowing: 1_000, provides: 'source1' })
-    .pipe({ fn: steps.sleeper, provides: 'pipe1' })
-    .subFlow((caminho) => caminho
-      .source({ fn: steps.childGenerator, maxItemsFlowing: 1_000, provides: 'subSource1' })
-      .pipe(batchStep), steps.accumulator)
-    .pipe({ fn: steps.sleeper, provides: 'pipe2' })
-
+  const benchmarkCaminho = from(steps.parentGenerator)
+    .pipe(steps.pipe1)
+    .subFlow(from(steps.childGenerator)
+      .pipe(steps.batch), steps.accumulator)
+    .pipe(steps.pipe2)
   console.timeEnd('initialize caminho')
+
   console.time('run caminho')
   await benchmarkCaminho.run()
   console.timeEnd('run caminho')
 }
 
 function initializeSteps(parentItems: number, childItemsPerParent: number) {
-  const accumulator = { fn: (acc: number) => acc + 1, seed: 0, provides: 'accumulator1' }
+  const accumulatorFn = (acc: number) => acc + 1
+  const parentGeneratorFn = getMockedGenerator(getNumberedArray(parentItems))
+  const childGeneratorFn = getMockedGenerator(getNumberedArray(childItemsPerParent))
+  const pipeFn = async () => 'something'
+  const batchFn = () => []
 
   return {
-    parentGenerator: getMockedGenerator(getNumberedArray(parentItems)),
-    childGenerator: getMockedGenerator(getNumberedArray(childItemsPerParent)),
-    sleeper: async () => 'something',
-    accumulator,
-    getBatchSleeper(size: number) {
-      const array = getNumberedArray(size)
-      return function batchSleeper() {
-        return array
-      }
-    },
+    parentGenerator: { fn: parentGeneratorFn, maxItemsFlowing: 1_000, provides: 'source1' },
+    childGenerator: { fn: childGeneratorFn, maxItemsFlowing: 1_000, provides: 'subSource1' },
+    batch: { fn: batchFn, provides: 'batch1', options: { batch: { maxSize: 50, timeoutMs: 5 } } },
+    pipe1: { fn: pipeFn, provides: 'pipe1' },
+    pipe2: { fn: pipeFn, provides: 'pipe2' },
+    accumulator: { fn: accumulatorFn, seed: 0, provides: 'accumulator1' }
   }
 }
 

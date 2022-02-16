@@ -1,6 +1,6 @@
-import { Caminho } from '../src/caminho'
-import { getMockedJobGenerator } from './mocks/generator.mock'
-import { getMockedJob } from './mocks/job.mock'
+import { from } from '../../src'
+import { getMockedJobGenerator } from '../mocks/generator.mock'
+import { getMockedJob } from '../mocks/job.mock'
 
 test('Should provide valueBag properly to the flow', async () => {
   const mockedJob = getMockedJob(0)
@@ -12,8 +12,7 @@ test('Should provide valueBag properly to the flow', async () => {
 
   const generatorMock = getMockedJobGenerator(1)
 
-  await new Caminho()
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: fetchMock, provides: 'rawData' })
     .pipe({ fn: mapMock, provides: 'mappedData' })
     .pipe({ fn: saveMock })

@@ -1,20 +1,18 @@
-import { Accumulator, Caminho } from '../src/caminho'
-import { sleep } from '../src/utils/sleep'
-import { OperationType, ValueBag } from '../src/types'
-import { getNumberedArray } from './mocks/array.mock'
-import { getMockedGenerator, getMockedJobGenerator } from './mocks/generator.mock'
-import { mockStepResult } from './mocks/stepResult.mock'
+import { from, Accumulator, OperationType, ValueBag } from '../../src'
+
+import { getMockedGenerator, getMockedJobGenerator } from '../mocks/generator.mock'
+import { getNumberedArray } from '../mocks/array.mock'
+import { mockStepResult } from '../mocks/stepResult.mock'
+import { sleep } from '../../src/utils/sleep'
 
 describe('Sub-Flow', () => {
   test('Should provide the valueBag properly to a child step and the parent next step', async () => {
     const companySteps = getCompanySteps()
     const employeeSteps = getEmployeeSteps()
 
-    await new Caminho()
-      .source(companySteps.generator)
+    await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow((caminho) => caminho
-        .source(employeeSteps.generator)
+      .subFlow(from(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
         .pipe(employeeSteps.saver), employeeSteps.accumulator)
       .pipe(companySteps.saver)
@@ -28,11 +26,9 @@ describe('Sub-Flow', () => {
     const companySteps = getCompanySteps()
     const employeeSteps = getEmployeeSteps()
 
-    await new Caminho()
-      .source(companySteps.generator)
+    await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow((caminho) => caminho
-        .source(employeeSteps.generator)
+      .subFlow(from(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
         .pipe(employeeSteps.saver))
       .pipe(companySteps.saver)
@@ -52,11 +48,9 @@ describe('Sub-Flow', () => {
     const finalStepCompany = { fn: finalStepCompanyFn }
     const finalStepEmployee = { fn: finalStepEmployeeFn }
 
-    await new Caminho()
-      .source({ ...companySteps.generator, maxItemsFlowing: 2 })
+    await from({ ...companySteps.generator, maxItemsFlowing: 2 })
       .pipe(companySteps.fetchStatus)
-      .subFlow((caminho) => caminho
-        .source({ ...employeeSteps.generator, maxItemsFlowing: 1 })
+      .subFlow(from({ ...employeeSteps.generator, maxItemsFlowing: 1 })
         .pipe({ ...employeeSteps.mapper, options: { maxConcurrency: 1 } })
         .pipe({ ...employeeSteps.saver, options: { batch: { maxSize: 10, timeoutMs: 5 } } })
         .pipe(finalStepEmployee), employeeSteps.accumulator)
@@ -73,16 +67,13 @@ describe('Sub-Flow', () => {
     const employeeSteps = getEmployeeSteps()
     const internSteps = getEmployeeSteps()
 
-    await new Caminho()
-      .source(companySteps.generator)
+    await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow((caminho) => caminho
-        .source(employeeSteps.generator)
+      .subFlow(from(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
         .pipe(employeeSteps.saver), employeeSteps.accumulator)
       .pipe(companySteps.saver)
-      .subFlow((caminho) => caminho
-        .source(internSteps.generator)
+      .subFlow(from(internSteps.generator)
         .pipe(internSteps.mapper)
         .pipe(internSteps.saver), internSteps.accumulator)
       .run()
@@ -99,19 +90,15 @@ describe('Sub-Flow', () => {
     const documentSteps = getDocumentSteps()
     const internSteps = getEmployeeSteps()
 
-    await new Caminho()
-      .source(companySteps.generator)
+    await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow((employeeCaminho) => employeeCaminho
-        .source(employeeSteps.generator)
+      .subFlow(from(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
-        .subFlow((documentCaminho) => documentCaminho
-          .source(documentSteps.generator)
+        .subFlow(from(documentSteps.generator)
           .pipe(documentSteps.saver), documentSteps.accumulator)
         .pipe(employeeSteps.saver), employeeSteps.accumulator)
       .pipe(companySteps.saver)
-      .subFlow((caminho) => caminho
-        .source(internSteps.generator)
+      .subFlow(from(internSteps.generator)
         .pipe(internSteps.mapper)
         .pipe(internSteps.saver), internSteps.accumulator)
       .run()
@@ -140,11 +127,9 @@ describe('Sub-Flow', () => {
       name: 'subJobGenerator',
     }
 
-    await new Caminho({ onEachStep: onEachStepMock })
-      .source(generator)
+    await from(generator)
       .pipe({ fn: fetch, name: 'fetch' })
-      .subFlow((caminho) => caminho
-        .source(subFlowGenerator)
+      .subFlow(from(subFlowGenerator)
         .pipe({ fn: subFetch, name: 'subFetch' })
         .pipe({ fn: subSave, name: 'subSave' }), subFlowAccumulator)
       .pipe({ fn: save, name: 'save' })

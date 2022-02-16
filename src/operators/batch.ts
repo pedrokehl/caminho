@@ -1,8 +1,8 @@
 import { bufferTime, filter, mergeAll, mergeMap } from 'rxjs'
 
-import type { Operator, OperatorApplier, ValueBag } from '../types'
+import type { Operator, ValueBag } from '../types'
 import type { Logger } from '../utils/stepLogger'
-import { batchHasProvides, applyOperatorsToObservable } from './helpers/operatorHelpers'
+import { batchHasProvides, applyOperatorsToObservable, OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 
 export type BatchParams = BatchParamsProvides | BatchParamsNoProvides

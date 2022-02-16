@@ -1,7 +1,7 @@
-import { Caminho } from '../src/caminho'
-import { OperationType } from '../src/types'
-import { getMockedJobGenerator } from './mocks/generator.mock'
-import { mockStepResult } from './mocks/stepResult.mock'
+import { from, OperationType } from '../../src'
+
+import { getMockedJobGenerator } from '../mocks/generator.mock'
+import { mockStepResult } from '../mocks/stepResult.mock'
 
 test('Should call onEachStep provided callback with proper values', async () => {
   const NUMBER_OF_ITERATIONS = 5
@@ -11,8 +11,7 @@ test('Should call onEachStep provided callback with proper values', async () => 
   const saveMock = function saveSomething() {}
   const onEachStepMock = jest.fn().mockName('onEachStepLog')
 
-  await new Caminho({ onEachStep: onEachStepMock })
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' }, { onEachStep: onEachStepMock })
     .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 5 } })
     .pipe({ fn: saveMock, options: { batch: { maxSize: 2, timeoutMs: 1 }, maxConcurrency: 5 } })
     .run()

@@ -1,8 +1,8 @@
-import { Caminho } from '../src/caminho'
-import { sleep } from '../src/utils/sleep'
-import { OperationType } from '../src/types'
-import { getMockedJobGenerator } from './mocks/generator.mock'
-import { mockStepResult } from './mocks/stepResult.mock'
+import { from, OperationType } from '../../src'
+import { sleep } from '../../src/utils/sleep'
+
+import { getMockedJobGenerator } from '../mocks/generator.mock'
+import { mockStepResult } from '../mocks/stepResult.mock'
 
 test('Should call generator and run all function provided to the flow', async () => {
   const mapMock = jest.fn()
@@ -11,8 +11,7 @@ test('Should call generator and run all function provided to the flow', async ()
 
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
 
-  await new Caminho()
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: fetchMock, provides: 'rawData' })
     .pipe({ fn: mapMock, provides: 'mappedData' })
     .run()
@@ -28,8 +27,7 @@ test('Should control maxItemsFlowing properly', async () => {
 
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
 
-  await new Caminho({ onEachStep: onEachStepMock })
-    .source({ fn: generatorMock, provides: 'job', maxItemsFlowing: 3 })
+  await from({ fn: generatorMock, provides: 'job', maxItemsFlowing: 3 })
     .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 1 } })
     .run()
 
@@ -58,8 +56,7 @@ test('Should emit values from generator uncontrolably if maxItemsFlowing was not
 
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
 
-  await new Caminho({ onEachStep: onEachStepMock })
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: fetchMock, provides: 'rawData' })
     .run()
 
