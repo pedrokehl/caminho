@@ -1,4 +1,4 @@
-import { ValueBag } from '../types'
+import { CaminhoRunStats, ValueBag } from '../types'
 import { sleep } from '../utils/sleep'
 import { Logger } from '../utils/stepLogger'
 import { PendingDataControl } from '../utils/PendingDataControl'
@@ -13,13 +13,9 @@ export interface SourceParams {
   name?: string
 }
 
-export interface SourceResult {
-  emitted: number
-}
-
 export function wrapGenerator(
   sourceParams: SourceParams,
-  onSourceFinish: (sourceResult: SourceResult) => void,
+  onSourceFinish: (caminhoRunStats: CaminhoRunStats) => void,
   pendingDataControl: PendingDataControl,
   logger: Logger,
 ) {

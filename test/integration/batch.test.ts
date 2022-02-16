@@ -1,7 +1,7 @@
-import { Caminho } from '../src/caminho'
-import { sleep } from '../src/utils/sleep'
-import { ValueBag } from '../src/types'
-import { getMockedJobGenerator } from './mocks/generator.mock'
+import { from, ValueBag } from '../../src'
+import { sleep } from '../../src/utils/sleep'
+
+import { getMockedJobGenerator } from '../mocks/generator.mock'
 
 test('Should emit batch after the "timeoutMs" time has passed if the "maxSize" is not reached', async () => {
   const NUMBER_OF_ITERATIONS = 2
@@ -11,8 +11,7 @@ test('Should emit batch after the "timeoutMs" time has passed if the "maxSize" i
 
   const maxSize = 4
 
-  await new Caminho()
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: saveMock, options: { batch: { maxSize, timeoutMs: 10 } } })
     .run()
 
@@ -28,8 +27,7 @@ test('Should batch events after the provided count is reached from "maxSize"', a
 
   const maxSize = 2
 
-  await new Caminho()
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: saveMock, options: { batch: { maxSize, timeoutMs: 10 }, maxConcurrency: 2 } })
     .run()
 
@@ -55,8 +53,7 @@ test('Should work properly with concurrency', async () => {
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const anotherSaveMock = jest.fn().mockName('anotherSave').mockResolvedValue(null)
 
-  await new Caminho()
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: saveMock, options: { maxConcurrency: CONCURRENCY, batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
     .pipe({ fn: anotherSaveMock })
     .run()
@@ -73,8 +70,7 @@ test('Should call the next operator with the flatten events', async () => {
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
   const anotherSaveMock = jest.fn().mockName('anotherSave').mockResolvedValue(null)
 
-  await new Caminho()
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: saveMock, options: { batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
     .pipe({ fn: anotherSaveMock })
     .run()
@@ -93,8 +89,7 @@ test('Should properly provide values from a batched execution', async () => {
   }
   const anotherSaveMock = jest.fn().mockName('anotherSave')
 
-  await new Caminho()
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: batchMock, provides: 'status', options: { batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
     .pipe({ fn: anotherSaveMock })
     .run()

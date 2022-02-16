@@ -1,4 +1,4 @@
-import type { Observable, OperatorFunction } from 'rxjs'
+import type { OperatorFunction } from 'rxjs'
 import type { BatchParams } from './operators/batch'
 import type { PipeParams } from './operators/pipe'
 
@@ -8,7 +8,6 @@ export type ValueBag = Record<string, any>
 
 type ValueBagOrBatch = ValueBag | ValueBag[]
 
-export type OperatorApplier = (observable: Observable<ValueBag>) => Observable<ValueBag>
 export type Operator = OperatorFunction<ValueBagOrBatch, ValueBagOrBatch>
 
 export type PipeGenericParams = PipeParams | BatchParams
@@ -25,4 +24,18 @@ export enum OperationType {
   GENERATE = 'generate',
   PIPE = 'pipe',
   BATCH = 'batch',
+}
+
+export interface CaminhoOptions {
+  onEachStep?: OnEachStep
+}
+
+export interface Accumulator<A> {
+  fn: (acc: A, value: ValueBag, index: number) => A,
+  seed: A,
+  provides: string
+}
+
+export interface CaminhoRunStats {
+  emitted: number
 }

@@ -1,6 +1,7 @@
-import { Caminho } from '../src/caminho'
-import { getMockedJobGenerator } from './mocks/generator.mock'
-import { sleep } from '../src/utils/sleep'
+import { from } from '../../src'
+import { sleep } from '../../src/utils/sleep'
+
+import { getMockedJobGenerator } from '../mocks/generator.mock'
 
 test('Should run components in series if maxConcurrency is set to 1', async () => {
   const NUMBER_OF_ITERATIONS = 5
@@ -19,8 +20,7 @@ test('Should run components in series if maxConcurrency is set to 1', async () =
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
-  await new Caminho()
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 1 } })
     .pipe({ fn: saveMock })
     .run()
@@ -44,8 +44,7 @@ test('Should run components in concurrency if set', async () => {
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
-  await new Caminho()
-    .source({ fn: generatorMock, provides: 'job' })
+  await from({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 5 } })
     .pipe({ fn: saveMock })
     .run()

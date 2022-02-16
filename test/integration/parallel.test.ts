@@ -1,8 +1,8 @@
-import { Caminho } from '../src/caminho'
-import { sleep } from '../src/utils/sleep'
-import { OperationType, ValueBag } from '../src/types'
-import { getMockedJobGenerator } from './mocks/generator.mock'
-import { mockStepResult } from './mocks/stepResult.mock'
+import { from, ValueBag, OperationType } from '../../src'
+import { sleep } from '../../src/utils/sleep'
+
+import { getMockedJobGenerator } from '../mocks/generator.mock'
+import { mockStepResult } from '../mocks/stepResult.mock'
 
 test('Parallel steps should provide valueBag properly to the following steps', async () => {
   async function fetchStatusFn(valueBags: ValueBag[]) {
@@ -24,8 +24,7 @@ test('Parallel steps should provide valueBag properly to the following steps', a
   const fetchPosition = { fn: fetchPositionFn, provides: 'position', maxConcurrency: 5 }
   const saveAll = { fn: saveAllFn }
 
-  await new Caminho()
-    .source({ fn: getMockedJobGenerator(10), provides: 'job' })
+  await from({ fn: getMockedJobGenerator(10), provides: 'job' })
     .parallel([fetchStatus, fetchPosition])
     .pipe(saveAll)
     .run()
@@ -74,8 +73,7 @@ test('Parallel steps should use the most efficient path for emiting values', asy
     },
   }
 
-  await new Caminho({ onEachStep: onEachStepMock })
-    .source({ fn: generatorMock, provides: 'job', maxItemsFlowing: 2 })
+  await from({ fn: generatorMock, provides: 'job', maxItemsFlowing: 2 }, { onEachStep: onEachStepMock })
     .parallel([fetchStatus, fetchPosition])
     .pipe(saveAll)
     .run()

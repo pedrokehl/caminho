@@ -1,6 +1,6 @@
 import { mergeMap } from 'rxjs'
-import { OperatorApplier, ValueBag } from '../types'
-import { pipeHasProvides } from './helpers/operatorHelpers'
+import { ValueBag } from '../types'
+import { OperatorApplier, pipeHasProvides } from './helpers/operatorHelpers'
 import { Logger } from '../utils/stepLogger'
 import { getNewValueBag } from '../utils/valueBag'
 
