@@ -1,4 +1,4 @@
-import { from, Accumulator, OperationType, ValueBag } from '../../src'
+import { from, OperationType, ReduceParams, ValueBag } from '../../src'
 
 import { getMockedGenerator, getMockedJobGenerator } from '../mocks/generator.mock'
 import { getNumberedArray } from '../mocks/array.mock'
@@ -12,9 +12,10 @@ describe('Sub-Flow', () => {
 
     await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow(from(employeeSteps.generator)
+      .subFlow((sub) => sub(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
-        .pipe(employeeSteps.saver), employeeSteps.accumulator)
+        .pipe(employeeSteps.saver)
+        .reduce(employeeSteps.accumulator))
       .pipe(companySteps.saver)
       .run()
 
@@ -28,7 +29,7 @@ describe('Sub-Flow', () => {
 
     await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow(from(employeeSteps.generator)
+      .subFlow((sub) => sub(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
         .pipe(employeeSteps.saver))
       .pipe(companySteps.saver)
@@ -50,10 +51,11 @@ describe('Sub-Flow', () => {
 
     await from({ ...companySteps.generator, maxItemsFlowing: 2 })
       .pipe(companySteps.fetchStatus)
-      .subFlow(from({ ...employeeSteps.generator, maxItemsFlowing: 1 })
+      .subFlow((sub) => sub({ ...employeeSteps.generator, maxItemsFlowing: 1 })
         .pipe({ ...employeeSteps.mapper, options: { maxConcurrency: 1 } })
         .pipe({ ...employeeSteps.saver, options: { batch: { maxSize: 10, timeoutMs: 5 } } })
-        .pipe(finalStepEmployee), employeeSteps.accumulator)
+        .pipe(finalStepEmployee)
+        .reduce(employeeSteps.accumulator))
       .pipe({ ...companySteps.saver, options: { batch: { maxSize: 2, timeoutMs: 10 } } })
       .pipe(finalStepCompany)
       .run()
@@ -69,13 +71,15 @@ describe('Sub-Flow', () => {
 
     await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow(from(employeeSteps.generator)
+      .subFlow((sub) => sub(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
-        .pipe(employeeSteps.saver), employeeSteps.accumulator)
+        .pipe(employeeSteps.saver)
+        .reduce(employeeSteps.accumulator))
       .pipe(companySteps.saver)
-      .subFlow(from(internSteps.generator)
+      .subFlow((sub) => sub(employeeSteps.generator)
         .pipe(internSteps.mapper)
-        .pipe(internSteps.saver), internSteps.accumulator)
+        .pipe(internSteps.saver)
+        .reduce(internSteps.accumulator))
       .run()
 
     assertCompanySteps(companySteps.saver.fn, { savedEmployees: 3 })
@@ -92,15 +96,18 @@ describe('Sub-Flow', () => {
 
     await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .subFlow(from(employeeSteps.generator)
+      .subFlow((employeeFrom) => employeeFrom(employeeSteps.generator)
         .pipe(employeeSteps.mapper)
-        .subFlow(from(documentSteps.generator)
-          .pipe(documentSteps.saver), documentSteps.accumulator)
-        .pipe(employeeSteps.saver), employeeSteps.accumulator)
+        .subFlow((docFrom) => docFrom(documentSteps.generator)
+          .pipe(documentSteps.saver)
+          .reduce(documentSteps.accumulator))
+        .pipe(employeeSteps.saver)
+        .reduce(employeeSteps.accumulator))
       .pipe(companySteps.saver)
-      .subFlow(from(internSteps.generator)
+      .subFlow((employeeFrom) => employeeFrom(internSteps.generator)
         .pipe(internSteps.mapper)
-        .pipe(internSteps.saver), internSteps.accumulator)
+        .pipe(internSteps.saver)
+        .reduce(internSteps.accumulator))
       .run()
 
     assertCompanySteps(companySteps.saver.fn, { savedEmployees: 3 })
@@ -127,11 +134,12 @@ describe('Sub-Flow', () => {
       name: 'subJobGenerator',
     }
 
-    await from(generator)
+    await from(generator, { onEachStep: onEachStepMock })
       .pipe({ fn: fetch, name: 'fetch' })
-      .subFlow(from(subFlowGenerator)
+      .subFlow((sub) => sub(subFlowGenerator)
         .pipe({ fn: subFetch, name: 'subFetch' })
-        .pipe({ fn: subSave, name: 'subSave' }), subFlowAccumulator)
+        .pipe({ fn: subSave, name: 'subSave' })
+        .reduce(subFlowAccumulator))
       .pipe({ fn: save, name: 'save' })
       .run()
 
@@ -191,7 +199,7 @@ function getEmployeeSteps() {
   const generator = { fn: employeeGeneratorFn, provides: 'employeeName' }
   const mapper = { fn: mapEmployeeFn, provides: 'mappedEmployee' }
   const saver = { fn: saveEmployeeFn }
-  const accumulator: Accumulator<number> = { fn: (acc: number) => acc + 1, seed: 0, provides: 'savedEmployees' }
+  const accumulator: ReduceParams<number> = { fn: (acc: number) => acc + 1, seed: 0, provides: 'savedEmployees' }
 
   return {
     generator,
@@ -207,7 +215,7 @@ function getDocumentSteps() {
 
   const generator = { fn: generatorFn, provides: 'documentId' }
   const saver = { fn: saverFn }
-  const accumulator: Accumulator<number> = { fn: (acc: number) => acc + 1, seed: 0, provides: 'savedDocuments' }
+  const accumulator: ReduceParams<number> = { fn: (acc: number) => acc + 1, seed: 0, provides: 'savedDocuments' }
 
   return {
     generator,

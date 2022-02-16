@@ -12,8 +12,9 @@ async function runSubflowBenchmark(parentItems: number, childItemsPerParent: num
   console.time('initialize caminho')
   const benchmarkCaminho = from(steps.parentGenerator)
     .pipe(steps.pipe1)
-    .subFlow(from(steps.childGenerator)
-      .pipe(steps.batch), steps.accumulator)
+    .subFlow((sub) => sub(steps.childGenerator)
+      .pipe(steps.batch)
+      .reduce(steps.accumulator))
     .pipe(steps.pipe2)
   console.timeEnd('initialize caminho')
 
@@ -35,7 +36,7 @@ function initializeSteps(parentItems: number, childItemsPerParent: number) {
     batch: { fn: batchFn, provides: 'batch1', options: { batch: { maxSize: 50, timeoutMs: 5 } } },
     pipe1: { fn: pipeFn, provides: 'pipe1' },
     pipe2: { fn: pipeFn, provides: 'pipe2' },
-    accumulator: { fn: accumulatorFn, seed: 0, provides: 'accumulator1' }
+    accumulator: { fn: accumulatorFn, seed: 0, provides: 'accumulator1' },
   }
 }
 
