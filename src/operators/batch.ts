@@ -32,8 +32,8 @@ export function batch(params: BatchParams, logger: Logger): OperatorApplier {
     ? valueBagGetterBatchProvides(params.provides)
     : valueBagGetterBatchNoProvides()
 
-  async function wrappedMapper(valueBag: ValueBag[]): Promise<ValueBag[]> {
-    const values = await params.fn(valueBag)
+  async function wrappedStep(valueBag: ValueBag[]): Promise<ValueBag[]> {
+    const values = await params.fn([...valueBag])
     logger()
     return getBag(valueBag, values as unknown[])
   }
@@ -41,7 +41,7 @@ export function batch(params: BatchParams, logger: Logger): OperatorApplier {
   const operators: Operator[] = [
     bufferTime(params.options.batch.timeoutMs, undefined, params.options.batch.maxSize),
     filter((buffer) => buffer.length > 0),
-    mergeMap(wrappedMapper, params.options.maxConcurrency) as Operator,
+    mergeMap(wrappedStep, params.options.maxConcurrency) as Operator,
     mergeAll() as Operator,
   ]
 
@@ -50,7 +50,7 @@ export function batch(params: BatchParams, logger: Logger): OperatorApplier {
 
 export function valueBagGetterBatchNoProvides() {
   return function getValueBag(valueBag: ValueBag[]): ValueBag[] {
-    return [...valueBag]
+    return valueBag
   }
 }
 

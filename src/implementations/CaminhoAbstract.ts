@@ -58,7 +58,7 @@ export abstract class CaminhoAbstract implements Caminho {
   }
 
   protected buildObservable(initialBag: ValueBag) {
-    const initialObservable = from(this.generator(initialBag))
+    const initialObservable = from(this.generator({ ...initialBag }))
     return this.operators.reduce(applyOperator, initialObservable)
   }
 
