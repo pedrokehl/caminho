@@ -12,7 +12,7 @@ test('Should emit batch after the "timeoutMs" time has passed if the "maxSize" i
   const maxSize = 4
 
   await from({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: saveMock, options: { batch: { maxSize, timeoutMs: 10 } } })
+    .pipe({ fn: saveMock, batch: { maxSize, timeoutMs: 10 } })
     .run()
 
   expect(saveMock).toHaveBeenCalledTimes(1)
@@ -28,7 +28,7 @@ test('Should batch events after the provided count is reached from "maxSize"', a
   const maxSize = 2
 
   await from({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: saveMock, options: { batch: { maxSize, timeoutMs: 10 }, maxConcurrency: 2 } })
+    .pipe({ fn: saveMock, batch: { maxSize, timeoutMs: 10 }, maxConcurrency: 2 })
     .run()
 
   expect(saveMock).toHaveBeenCalledTimes(2)
@@ -54,7 +54,7 @@ test('Should work properly with concurrency', async () => {
   const anotherSaveMock = jest.fn().mockName('anotherSave').mockResolvedValue(null)
 
   await from({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: saveMock, options: { maxConcurrency: CONCURRENCY, batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
+    .pipe({ fn: saveMock, maxConcurrency: CONCURRENCY, batch: { maxSize: MAX_SIZE, timeoutMs: 10 } })
     .pipe({ fn: anotherSaveMock })
     .run()
 
@@ -71,7 +71,7 @@ test('Should call the next operator with the flatten events', async () => {
   const anotherSaveMock = jest.fn().mockName('anotherSave').mockResolvedValue(null)
 
   await from({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: saveMock, options: { batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
+    .pipe({ fn: saveMock, batch: { maxSize: MAX_SIZE, timeoutMs: 10 } })
     .pipe({ fn: anotherSaveMock })
     .run()
 
@@ -90,7 +90,7 @@ test('Should properly provide values from a batched execution', async () => {
   const anotherSaveMock = jest.fn().mockName('anotherSave')
 
   await from({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: batchMock, provides: 'status', options: { batch: { maxSize: MAX_SIZE, timeoutMs: 10 } } })
+    .pipe({ fn: batchMock, provides: 'status', batch: { maxSize: MAX_SIZE, timeoutMs: 10 } })
     .pipe({ fn: anotherSaveMock })
     .run()
 

@@ -7,24 +7,21 @@ import { getNewValueBag } from '../utils/valueBag'
 
 export type BatchParams = BatchParamsProvides | BatchParamsNoProvides
 
-interface BatchOptions {
+interface BaseBatchParams {
+  name?: string
   batch: {
     maxSize: number
     timeoutMs: number
   }
   maxConcurrency?: number
 }
-export interface BatchParamsProvides {
+export interface BatchParamsProvides extends BaseBatchParams {
   fn: (valueBag: ValueBag[]) => unknown[] | Promise<unknown[]>
-  name?: string
   provides: string
-  options: BatchOptions
 }
 
-export interface BatchParamsNoProvides {
+export interface BatchParamsNoProvides extends BaseBatchParams {
   fn: (valueBag: ValueBag[]) => void | Promise<void>
-  name?: string
-  options: BatchOptions
 }
 
 export function batch(params: BatchParams, logger: Logger): OperatorApplier {
@@ -39,9 +36,9 @@ export function batch(params: BatchParams, logger: Logger): OperatorApplier {
   }
 
   const operators: Operator[] = [
-    bufferTime(params.options.batch.timeoutMs, undefined, params.options.batch.maxSize),
+    bufferTime(params.batch.timeoutMs, undefined, params.batch.maxSize),
     filter((buffer) => buffer.length > 0),
-    mergeMap(wrappedStep, params.options.maxConcurrency) as Operator,
+    mergeMap(wrappedStep, params.maxConcurrency) as Operator,
     mergeAll() as Operator,
   ]
 

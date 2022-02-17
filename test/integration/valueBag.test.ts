@@ -50,7 +50,7 @@ describe('ValueBag', () => {
     const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
     await from({ fn: getMockedJobGenerator(1), provides: 'job' })
-      .pipe({ fn: mutateValueBag, options: { batch: { maxSize: 1, timeoutMs: 1 } } })
+      .pipe({ fn: mutateValueBag, batch: { maxSize: 1, timeoutMs: 1 } })
       .pipe({ fn: saveMock })
       .run()
 

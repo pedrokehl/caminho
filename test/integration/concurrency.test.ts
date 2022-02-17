@@ -21,7 +21,7 @@ test('Should run components in series if maxConcurrency is set to 1', async () =
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
   await from({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 1 } })
+    .pipe({ fn: fetchMock, provides: 'rawData', maxConcurrency: 1 })
     .pipe({ fn: saveMock })
     .run()
 
@@ -45,7 +45,7 @@ test('Should run components in concurrency if set', async () => {
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
   await from({ fn: generatorMock, provides: 'job' })
-    .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 5 } })
+    .pipe({ fn: fetchMock, provides: 'rawData', maxConcurrency: 5 })
     .pipe({ fn: saveMock })
     .run()
 

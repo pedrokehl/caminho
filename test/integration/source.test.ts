@@ -28,7 +28,7 @@ test('Should control maxItemsFlowing properly', async () => {
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
 
   await from({ fn: generatorMock, provides: 'job', maxItemsFlowing: 3 }, { onEachStep: onEachStepMock })
-    .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 1 } })
+    .pipe({ fn: fetchMock, provides: 'rawData', maxConcurrency: 1 })
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([

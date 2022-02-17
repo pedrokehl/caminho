@@ -6,21 +6,18 @@ import { getNewValueBag } from '../utils/valueBag'
 
 export type PipeParams = PipeParamsProvides | PipeParamsNoProvides
 
-interface PipeOptions {
+interface BasePipeParams {
+  name?: string
   maxConcurrency?: number
 }
 
-export interface PipeParamsProvides {
+export interface PipeParamsProvides extends BasePipeParams {
   fn: (valueBag: ValueBag) => unknown | Promise<unknown>
-  name?: string
   provides: string
-  options?: PipeOptions
 }
 
-export interface PipeParamsNoProvides {
+export interface PipeParamsNoProvides extends BasePipeParams {
   fn: (valueBag: ValueBag) => void | Promise<void>
-  name?: string
-  options?: PipeOptions
 }
 
 export function pipe(params: PipeParams, logger: Logger): OperatorApplier {
@@ -31,7 +28,7 @@ export function pipe(params: PipeParams, logger: Logger): OperatorApplier {
     logger()
     return getBag(valueBag, value)
   }
-  return mergeMap(wrappedStep, params.options?.maxConcurrency)
+  return mergeMap(wrappedStep, params?.maxConcurrency)
 }
 
 export function valueBagGetterNoProvides() {

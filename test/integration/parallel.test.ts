@@ -20,7 +20,7 @@ test('Parallel steps should provide valueBag properly to the following steps', a
 
   const saveAllFn = jest.fn().mockName('save')
 
-  const fetchStatus = { fn: fetchStatusFn, provides: 'status', options: { batch: { maxSize: 3, timeoutMs: 15 } } }
+  const fetchStatus = { fn: fetchStatusFn, provides: 'status', batch: { maxSize: 3, timeoutMs: 15 } }
   const fetchPosition = { fn: fetchPositionFn, provides: 'position', maxConcurrency: 5 }
   const saveAll = { fn: saveAllFn }
 
@@ -57,7 +57,7 @@ test('Parallel steps should use the most efficient path for emiting values', asy
       return valueBag.map(() => 'ok')
     },
     provides: 'status',
-    options: { batch: { maxSize: 3, timeoutMs: 15 } },
+    batch: { maxSize: 3, timeoutMs: 15 },
   }
   const fetchPosition = {
     fn: async function fetchPosition() {
