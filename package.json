@@ -2,8 +2,8 @@
   "name": "caminho",
   "version": "0.0.1",
   "description": "Caminho means path, a new path to your data processing.",
-  "main": "build/caminho.js",
-  "types": "./build/caminho.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "npm run clean && tsc --build",
     "clean": "tsc --build --clean",
@@ -11,6 +11,7 @@
     "test:watch": "jest -o --watch",
     "lint": "eslint ./src ./test",
     "lint:fix": "eslint ./src ./test ./benchmark --fix",
+    "benchmark:parallel": "npx ts-node benchmark/parallel.benchmark.ts",
     "benchmark:subflow": "npx ts-node benchmark/subFlow.benchmark.ts"
   },
   "repository": {
@@ -44,7 +45,7 @@
   ],
   "files": [
     "README.md",
-    "build"
+    "dist/**/*"
   ],
   "author": "Pedro Kehl",
   "license": "ISC",
