@@ -2,7 +2,7 @@ import { from, ValueBag } from '../src'
 import { getNumberedArray } from '../test/mocks/array.mock'
 import { getMockedGenerator } from '../test/mocks/generator.mock'
 
-async function runSubflowBenchmark(parentItems: number, childItemsPerParent: number) {
+async function runParallelBenchmark(parentItems: number, childItemsPerParent: number) {
   const expectedTotalChild = parentItems * childItemsPerParent
   console.log('---- Starting Benchmark ----')
   console.log(`Parent Items: ${parentItems}`)
@@ -21,9 +21,9 @@ async function runSubflowBenchmark(parentItems: number, childItemsPerParent: num
 
   console.time('initialize caminho')
   const benchmarkCaminho = from(steps.parentGenerator)
-    .pipe(steps.pipe1)
+    .parallel([steps.pipe1, steps.pipe2])
     .subFlow((sub) => sub(steps.childGenerator)
-      .pipe(steps.batch)
+      .parallel([steps.pipe3, steps.pipe4])
       .reduce(steps.accumulator))
     .pipe(countSteps)
   console.timeEnd('initialize caminho')
@@ -42,15 +42,16 @@ function initializeSteps(parentItems: number, childItemsPerParent: number) {
   const parentGeneratorFn = getMockedGenerator(getNumberedArray(parentItems))
   const childGeneratorFn = getMockedGenerator(getNumberedArray(childItemsPerParent))
   const pipeFn = async () => 'something'
-  const batchFn = () => []
 
   return {
     parentGenerator: { fn: parentGeneratorFn, maxItemsFlowing: 1_000, provides: 'source1' },
     childGenerator: { fn: childGeneratorFn, maxItemsFlowing: 1_000, provides: 'subSource1' },
-    batch: { fn: batchFn, provides: 'batch1', options: { batch: { maxSize: 50, timeoutMs: 5 } } },
     pipe1: { fn: pipeFn, provides: 'pipe1' },
+    pipe2: { fn: pipeFn, provides: 'pipe2' },
+    pipe3: { fn: pipeFn, provides: 'pipe3' },
+    pipe4: { fn: pipeFn, provides: 'pipe4' },
     accumulator: { fn: accumulatorFn, seed: 0, provides: 'accumulator1' },
   }
 }
 
-runSubflowBenchmark(50_000, 1_000)
+runParallelBenchmark(5_000, 1_000)
