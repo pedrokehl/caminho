@@ -15,8 +15,7 @@ export class SubCaminhoImpl extends CaminhoAbstract implements SubCaminho {
 
   constructor(sourceOptions: SourceParams, protected options?: CaminhoOptions) {
     super(sourceOptions, options)
-    this.subCaminhoFrom = this.subCaminhoFrom.bind(this)
-    this.getObservable = this.getObservable.bind(this)
+    this.run = this.run.bind(this)
   }
 
   public reduce<T>(reduceParams: ReduceParams<T>): this {
@@ -27,12 +26,12 @@ export class SubCaminhoImpl extends CaminhoAbstract implements SubCaminho {
     return this
   }
 
-  public getObservable(parentItem: ValueBag): Promise<ValueBag> {
-    return lastValueFrom(
-      this.buildObservable(parentItem)
-        .pipe(this.finalStep)
-        .pipe(this.aggregator)
-        .pipe(map((child: ValueBag) => this.parentItemMapper(parentItem, child))),
-    )
+  public run(initialBag: ValueBag): Promise<ValueBag> {
+    const observable$ = this.buildObservable(initialBag)
+      .pipe(this.finalStep)
+      .pipe(this.aggregator)
+      .pipe(map((child: ValueBag) => this.parentItemMapper(initialBag, child)))
+
+    return lastValueFrom(observable$)
   }
 }

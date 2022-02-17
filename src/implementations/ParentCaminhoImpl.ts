@@ -1,4 +1,5 @@
-import { CaminhoOptions, CaminhoRunStats, ValueBag } from '../types'
+import { lastValueFrom } from 'rxjs'
+import { CaminhoOptions, ValueBag } from '../types'
 import { SourceParams } from '../operators/generator'
 import { ParentCaminho } from '../interfaces/ParentCaminho'
 import { CaminhoAbstract } from './CaminhoAbstract'
@@ -9,22 +10,13 @@ export class ParentCaminhoImpl extends CaminhoAbstract implements ParentCaminho 
 
   constructor(sourceOptions: SourceParams, protected options?: CaminhoOptions) {
     super(sourceOptions, options)
-    this.subCaminhoFrom = this.subCaminhoFrom.bind(this)
+    this.run = this.run.bind(this)
   }
 
-  public async run(initialBag: ValueBag = {}): Promise<CaminhoRunStats> {
-    return new Promise((resolve) => {
-      this.buildObservable(initialBag)
-        .pipe(this.finalStep)
-        .subscribe(() => {
-          if (this.hasFinished(this.runStats)) {
-            resolve(this.runStats as CaminhoRunStats)
-          }
-        })
-    })
-  }
+  public async run(initialBag: ValueBag = {}) {
+    const observable$ = this.buildObservable(initialBag)
+      .pipe(this.finalStep)
 
-  private hasFinished(runStats: CaminhoRunStats | null): boolean {
-    return runStats !== null && this.pendingDataControl.size === 0
+    await lastValueFrom(observable$)
   }
 }

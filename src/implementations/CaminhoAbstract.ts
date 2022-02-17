@@ -1,6 +1,6 @@
 import { from, mergeMap, tap } from 'rxjs'
 
-import type { ValueBag, PipeGenericParams, CaminhoRunStats, CaminhoOptions, Operator } from '../types'
+import type { ValueBag, PipeGenericParams, CaminhoOptions, Operator } from '../types'
 import { OperationType } from '../types'
 
 import { SourceParams, wrapGenerator } from '../operators/generator'
@@ -17,14 +17,11 @@ import { SubCaminho } from '../interfaces/SubCaminho'
 
 export abstract class CaminhoAbstract implements Caminho {
   protected pendingDataControl = new PendingDataControlInMemory()
-  protected runStats: CaminhoRunStats | null = null
-
   private generator!: (initialBag: ValueBag) => AsyncGenerator<ValueBag>
   private operators: OperatorApplier[] = []
   protected finalStep: Operator = tap(() => this.pendingDataControl.decrement())
 
   constructor(sourceOptions: SourceParams, protected options?: CaminhoOptions) {
-    this.onSourceFinish = this.onSourceFinish.bind(this)
     this.addOperatorApplier = this.addOperatorApplier.bind(this)
     this.getApplierForPipeOrBatch = this.getApplierForPipeOrBatch.bind(this)
 
@@ -49,14 +46,14 @@ export abstract class CaminhoAbstract implements Caminho {
     maxConcurrency?: number,
   ): this {
     const subCaminho = submitSubFlow(this.subCaminhoFrom)
-    this.addOperatorApplier(mergeMap(subCaminho.getObservable, maxConcurrency))
+    this.addOperatorApplier(mergeMap(subCaminho.run, maxConcurrency))
     return this
   }
 
   private source(sourceParams: SourceParams): Caminho {
     const name = sourceParams.name ?? sourceParams.fn.name
     const logger = getLogger(OperationType.GENERATE, name, this.options?.onEachStep)
-    this.generator = wrapGenerator(sourceParams, this.onSourceFinish, this.pendingDataControl, logger)
+    this.generator = wrapGenerator(sourceParams, this.pendingDataControl, logger)
     return this
   }
 
@@ -75,10 +72,6 @@ export abstract class CaminhoAbstract implements Caminho {
     return isBatch(params)
       ? batch(params, getLogger(OperationType.BATCH, name, this.options?.onEachStep))
       : pipe(params, getLogger(OperationType.PIPE, name, this.options?.onEachStep))
-  }
-
-  private onSourceFinish(runStats: CaminhoRunStats): void {
-    this.runStats = runStats
   }
 
   protected subCaminhoFrom(sourceParams: SourceParams): SubCaminho {

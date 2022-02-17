@@ -1,6 +1,6 @@
-import { CaminhoRunStats, ValueBag } from '../types'
+import { ValueBag } from '../types'
 import { Caminho } from './Caminho'
 
 export interface ParentCaminho extends Caminho {
-  run(initialBag?: ValueBag): Promise<CaminhoRunStats>
+  run(initialBag?: ValueBag): Promise<void>
 }

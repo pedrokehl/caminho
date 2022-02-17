@@ -35,7 +35,3 @@ export interface ReduceParams<A> {
   seed: A,
   provides: string
 }
-
-export interface CaminhoRunStats {
-  emitted: number
-}
