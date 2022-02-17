@@ -41,13 +41,14 @@ function initializeSteps(parentItems: number, childItemsPerParent: number) {
   const accumulatorFn = (acc: number) => acc + 1
   const parentGeneratorFn = getMockedGenerator(getNumberedArray(parentItems))
   const childGeneratorFn = getMockedGenerator(getNumberedArray(childItemsPerParent))
-  const pipeFn = async () => 'something'
-  const batchFn = () => []
+  const pipeFn = (valueBag) => ({ id: valueBag.source1, name: 'pipe1' })
+  const mapBagForBatch = () => (valueBag) => ({ parentId: valueBag.source1, id: valueBag.subSource1, name: 'batch1' })
+  const batchFn = (valueBags) => valueBags.map(mapBagForBatch)
 
   return {
     parentGenerator: { fn: parentGeneratorFn, maxItemsFlowing: 1_000, provides: 'source1' },
     childGenerator: { fn: childGeneratorFn, maxItemsFlowing: 1_000, provides: 'subSource1' },
-    batch: { fn: batchFn, provides: 'batch1', options: { batch: { maxSize: 50, timeoutMs: 5 } } },
+    batch: { fn: batchFn, provides: 'batch1', batch: { maxSize: 50, timeoutMs: 5 } },
     pipe1: { fn: pipeFn, provides: 'pipe1' },
     accumulator: { fn: accumulatorFn, seed: 0, provides: 'accumulator1' },
   }

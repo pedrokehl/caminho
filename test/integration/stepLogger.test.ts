@@ -12,8 +12,8 @@ test('Should call onEachStep provided callback with proper values', async () => 
   const onEachStepMock = jest.fn().mockName('onEachStepLog')
 
   await from({ fn: generatorMock, provides: 'job' }, { onEachStep: onEachStepMock })
-    .pipe({ fn: fetchMock, provides: 'rawData', options: { maxConcurrency: 5 } })
-    .pipe({ fn: saveMock, options: { batch: { maxSize: 2, timeoutMs: 1 }, maxConcurrency: 5 } })
+    .pipe({ fn: fetchMock, provides: 'rawData', maxConcurrency: 5 })
+    .pipe({ fn: saveMock, batch: { maxSize: 2, timeoutMs: 1 }, maxConcurrency: 5 })
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([

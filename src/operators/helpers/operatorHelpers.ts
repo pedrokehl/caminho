@@ -7,7 +7,7 @@ import { PipeParams, PipeParamsProvides } from '../pipe'
 export type OperatorApplier = (observable: Observable<ValueBag>) => Observable<ValueBag>
 
 export function isBatch(params: PipeParams | BatchParams): params is BatchParams {
-  return !!(params as BatchParams)?.options?.batch
+  return !!(params as BatchParams)?.batch
 }
 
 export function pipeHasProvides(params: PipeParams): params is PipeParamsProvides {
