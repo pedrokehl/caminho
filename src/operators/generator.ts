@@ -1,4 +1,4 @@
-import { CaminhoRunStats, ValueBag } from '../types'
+import { ValueBag } from '../types'
 import { sleep } from '../utils/sleep'
 import { Logger } from '../utils/stepLogger'
 import { PendingDataControl } from '../utils/PendingDataControl'
@@ -15,25 +15,21 @@ export interface SourceParams {
 
 export function wrapGenerator(
   sourceParams: SourceParams,
-  onSourceFinish: (caminhoRunStats: CaminhoRunStats) => void,
   pendingDataControl: PendingDataControl,
   logger: Logger,
 ) {
   const checksForBackpressure = getNeedsToWaitForBackpressure(sourceParams.maxItemsFlowing)
 
   return async function* wrappedGenerator(initialBag: ValueBag) {
-    let count = 0
     for await (const value of sourceParams.fn()) {
       if (checksForBackpressure(pendingDataControl)) {
         await waitOnBackpressure(sourceParams.maxItemsFlowing as number, pendingDataControl)
       }
 
-      count++
       pendingDataControl.increment()
       logger()
       yield getNewValueBag(initialBag, sourceParams.provides, value)
     }
-    onSourceFinish({ emitted: count })
   }
 }
 
