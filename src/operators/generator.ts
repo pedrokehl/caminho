@@ -7,7 +7,7 @@ import { getNewValueBag } from '../utils/valueBag'
 const SLEEP_FOR_BACKPRESSURE_MS = 10
 
 export interface SourceParams {
-  fn: () => AsyncGenerator
+  fn: (initialBag: ValueBag) => AsyncGenerator
   provides: string
   maxItemsFlowing?: number
   name?: string
@@ -21,7 +21,7 @@ export function wrapGenerator(
   const checksForBackpressure = getNeedsToWaitForBackpressure(sourceParams.maxItemsFlowing)
 
   return async function* wrappedGenerator(initialBag: ValueBag) {
-    for await (const value of sourceParams.fn()) {
+    for await (const value of sourceParams.fn(initialBag)) {
       if (checksForBackpressure(pendingDataControl)) {
         await waitOnBackpressure(sourceParams.maxItemsFlowing as number, pendingDataControl)
       }

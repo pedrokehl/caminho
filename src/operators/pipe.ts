@@ -26,17 +26,17 @@ export interface PipeParamsNoProvides {
 export function pipe(params: PipeParams, logger: Logger): OperatorApplier {
   const getBag = pipeHasProvides(params) ? valueBagGetterProvides(params.provides) : valueBagGetterNoProvides()
 
-  async function wrappedMapper(valueBag: ValueBag): Promise<ValueBag> {
-    const value = await params.fn(valueBag)
+  async function wrappedStep(valueBag: ValueBag): Promise<ValueBag> {
+    const value = await params.fn({ ...valueBag })
     logger()
     return getBag(valueBag, value)
   }
-  return mergeMap(wrappedMapper, params.options?.maxConcurrency)
+  return mergeMap(wrappedStep, params.options?.maxConcurrency)
 }
 
 export function valueBagGetterNoProvides() {
   return function getValueBagWithProvides(valueBag: ValueBag) {
-    return { ...valueBag }
+    return valueBag
   }
 }
 
