@@ -116,11 +116,17 @@ await from(generateCars)
 
 #### Parallelism
 
-TODO
+`parallel()` receives an array of StepFunctions and each provided step has the same parameters and behavior as a `pipe`.  
+Useful only for **Asynchronous** operations, comparable to a `Promise.all`.
 
-#### Backpressure
-
-TODO
+```typescript
+await from({ fn: generateCars, provides: 'carId' })
+  .parallel([
+    { fn: fetchPrice, provides: 'price', maxConcurrency: 100 },
+    { fn: fetchSpecs, provides: 'specs', maxConcurrency: 5, batch: { maxSize: 20, timeoutMs: 100 } },
+  ])
+  .run()
+```
 
 #### Sub Flows
 
@@ -132,7 +138,7 @@ TODO
 
 ## Contributing
 
-#### Setup the library
+#### Setup
 ```bash
 git clone https://github.com/pedrokehl/caminho
 cd caminho
