@@ -41,7 +41,7 @@ A Caminho instance can be reused for multiple runs.
 Example of using Caminho:
 
 ```typescript
-import { from, ValueBag } from 'caminho'
+import { from } from 'caminho'
 
 const caminho = from({ fn: generateCars, provides: 'carId', maxItemsFlowing: 1_000 })
   .parallel([
@@ -56,10 +56,34 @@ const caminho = from({ fn: generateCars, provides: 'carId', maxItemsFlowing: 1_0
 await caminho.run({ manufacturer: 'subaru' })
 ```
 
+#### Generator
+`from` receives an AsyncGenerators that provides any amount of items to the subsequent steps.  
+Features lossless backpressure by using `maxItemsFlowing`, which limits the amount of data concurrently in a caminho flow, it is useful to avoid memory overflow.
+
+```typescript
+import { from, ValueBag } from 'caminho'
+
+async function* generateCars(valueBag: ValueBag) {
+  let page = 1
+  while(true) {
+    const cars = await getCarsByManufacturer(valueBag.manufacturer, { page, limit: 100 })
+    if (!cars.length) {
+      break
+    }
+    for (carId of cars) yield carId
+    page++
+  }
+}
+
+await from({ fn: generateCars, provides: 'carId', maxItemsFlowing: 1_000 })
+  .pipe( fn: doSomething })
+  .run({ manufacturer: 'nissan' })
+```
+
 #### Concurrency
 
-Concurrency is unlimited by default, which means a step function can be dispatched concurrently as many times as the number of items the generator provides.
-You can limit the concurrency by providing `maxConcurrency` value to the `.pipe` as demonstrated below:
+Concurrency is unlimited by default, which means a step function can be dispatched concurrently as many times as the number of items the generator provides.  
+You can limit the concurrency by providing `maxConcurrency` option on a step definition, this is useful when you use an API that can't handle too many concurrent requests.  
 
 ```typescript
 await from(generator)
@@ -78,13 +102,15 @@ A batch configuration consists of two parameters:
 Your batch step can also provide values to the ValueBag, but keep in mind that the order of the returned values must be the same order you received the ValueBag, so it gets merged and is properly assigned to the next `pipe`.  
 
 ```typescript
-async function saveDataFn(valueBags: ValueBag[]): string[] {
-  const saveResponse = await callApi(valueBags.map((valueBag) => valueBag.name))
-  return saveResponse.ids
+async function saveCars(valueBags: ValueBag[]): string[] {
+  const cars = valueBags.map((valueBag) => valueBag.car)
+  const response = await saveManyCars(cars)
+  return response.ids
 }
 
-await from(generator)
-  .pipe({ fn:saveDataFn, batch: { maxSize: 50, timeoutMs: 500 }, provides: 'id' })
+await from(generateCars)
+  .pipe({ fn: saveCars, batch: { maxSize: 50, timeoutMs: 500 }, provides: 'id' })
+  .pipe({ fn: doSomethingWithCarId })
   .run()
 ```
 
