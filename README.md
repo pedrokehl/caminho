@@ -30,7 +30,7 @@ npm install caminho
 
 #### Basic Usage
 
-`from()`: The starting point of Caminho, based on the provided Generator and its options it returns an instance of `Caminho`.  
+`from()`: The starting point of Caminho, based on a provided AsyncGenerator it returns a `Caminho` instance.
 `.pipe(..)`: Receives a StepFunction definition, provided function will receive a `ValueBag`, which holds the values provided from all the previous steps, including the generator.
 `.parallel(..)` Receives StepFunction[], which will execute the steps in parallel, has the same abilities as pipe  
 `.subFlow()` Enables the ability to have sub generators that can access the `parent` valueBag.  
@@ -43,21 +43,17 @@ Example of using Caminho:
 ```typescript
 import { from, ValueBag } from 'caminho'
 
-async function* generateCars(valueBag: ValueBag): AsyncGenerator<number> {
-  for await (const carId of generateCarsByManufacturer(valueBag.manufacturer)) yield carId
-}
-
-const caminho = from({ fn: generateCars, provides: 'carId' })
+const caminho = from({ fn: generateCars, provides: 'carId', maxItemsFlowing: 1_000 })
   .parallel([
     { fn: fetchPrice, maxConcurrency: 100, provides: 'price' },
-    { fn: fetchSpecs, maxConcurrency: 10, provides: 'specs' },
+    { fn: fetchSpecs, maxConcurrency: 20, provides: 'specs' },
   ])
-  .pipe({ fn: mapForSave })
+  .subFlow((subFrom) => subFrom({ generateDealersByCarId, provides: 'dealer' })
+    .reduce({ fn: sumCarsAvailable, seed: 0, provides: 'carsAvailable' }))
+  .pipe({ fn: mapForSaveWithTotals })
   .pipe({ fn: saveCarInfo, batch: { maxSize: 50, timeoutMs: 100 } })
 
-// Just to illustrate using the same Caminho for multiple runs:
-await caminho.run({ manufacturer: 'Subaru' })
-await caminho.run({ manufacturer: 'Nissan' })
+await caminho.run({ manufacturer: 'subaru' })
 ```
 
 #### Concurrency
