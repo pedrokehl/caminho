@@ -36,23 +36,29 @@ npm install caminho
 `.subFlow()` Enables the ability to have sub generators that can access the `parent` valueBag.  
 `.run()`: Returns a Promise which is fulfilled when the Generator has finished providing values and the items have been processed by all the steps.  
 
-Below is a simple usage of Caminho
+A Caminho instance can be reused for multiple runs.
+
+Example of using Caminho:
 
 ```typescript
 import { from, ValueBag } from 'caminho'
 
-async function* generator(): AsyncGenerator<number> {
-  for await (const value of [1, 2, 3]) yield value
+async function* generateCars(valueBag: ValueBag): AsyncGenerator<number> {
+  for await (const carId of generateCarsByManufacturer(valueBag.manufacturer)) yield carId
 }
 
-await from({ fn: generator, provides: 'someNumber' })
-  .pipe({ fn: (valueBag: ValueBag) => console.log(valueBag.someNumber) })
-  .run()
+const caminho = from({ fn: generateCars, provides: 'carId' })
+  .parallel([
+    { fn: fetchPrice, maxConcurrency: 100, provides: 'price' },
+    { fn: fetchSpecs, maxConcurrency: 10, provides: 'specs' },
+  ])
+  .pipe({ fn: mapForSave })
+  .pipe({ fn: saveCarInfo, batch: { maxSize: 50, timeoutMs: 100 } })
+
+// Just to illustrate using the same Caminho for multiple runs:
+await caminho.run({ manufacturer: 'Subaru' })
+await caminho.run({ manufacturer: 'Nissan' })
 ```
-
-#### From / Generator
-
-TODO
 
 #### Concurrency
 
@@ -67,7 +73,24 @@ await from(generator)
 
 #### Batching
 
-TODO
+Batching can be achieved by providing the batch option on a StepFunction, it works in combination with concurrency, and can be used both in the `pipe` or `parallel` methods.  
+
+A batch configuration consists of two parameters:  
+`maxSize`: Defines the maximum number of items that a batch can contain.  
+`timeoutMs`: Time for a batch to be dispatched if the maxSize is not achieved before.  
+
+Your batch step can also provide values to the ValueBag, but keep in mind that the order of the returned values must be the same order you received the ValueBag, so it gets merged and is properly assigned to the next `pipe`.  
+
+```typescript
+async function saveDataFn(valueBags: ValueBag[]): string[] {
+  const saveResponse = await callApi(valueBags.map((valueBag) => valueBag.name))
+  return saveResponse.ids
+}
+
+await from(generator)
+  .pipe({ fn:saveDataFn, batch: { maxSize: 50, timeoutMs: 500 }, provides: 'id' })
+  .run()
+```
 
 #### Parallelism
 
