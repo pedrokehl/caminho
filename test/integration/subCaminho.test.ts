@@ -58,12 +58,12 @@ describe('Sub-Caminho', () => {
     const finalStepCompany = { fn: finalStepCompanyFn }
     const finalStepEmployee = { fn: finalStepEmployeeFn }
 
-    const employeeCaminho = from({ ...employeeSteps.generator, maxItemsFlowing: 1 })
+    const employeeCaminho = from({ ...employeeSteps.generator }, { maxItemsFlowing: 1 })
       .pipe({ ...employeeSteps.mapper, maxConcurrency: 1 })
       .pipe({ ...employeeSteps.saver, batch: { maxSize: 10, timeoutMs: 5 } })
       .pipe(finalStepEmployee)
 
-    await from({ ...companySteps.generator, maxItemsFlowing: 2 })
+    await from({ ...companySteps.generator }, { maxItemsFlowing: 2 })
       .pipe(companySteps.fetchStatus)
       .pipe(getStepForSubCaminho(employeeCaminho, employeeSteps.accumulator, 'savedEmployees'))
       .pipe({ ...companySteps.saver, batch: { maxSize: 2, timeoutMs: 10 } })

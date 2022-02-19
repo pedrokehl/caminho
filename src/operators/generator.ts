@@ -9,21 +9,28 @@ const SLEEP_FOR_BACKPRESSURE_MS = 10
 export interface SourceParams {
   fn: (initialBag: ValueBag) => AsyncGenerator
   provides: string
-  maxItemsFlowing?: number
   name?: string
 }
 
-export function wrapGenerator(
+export function wrapGenerator(sourceParams: SourceParams, logger: Logger) {
+  return async function* wrappedGenerator(initialBag: ValueBag) {
+    for await (const value of sourceParams.fn(initialBag)) {
+      logger()
+      yield getNewValueBag(initialBag, sourceParams.provides, value)
+    }
+  }
+}
+
+export function wrapGeneratorWithBackPressure(
   sourceParams: SourceParams,
+  maxItemsFlowing: number,
   pendingDataControl: PendingDataControl,
   logger: Logger,
 ) {
-  const checksForBackpressure = getNeedsToWaitForBackpressure(sourceParams.maxItemsFlowing)
-
   return async function* wrappedGenerator(initialBag: ValueBag) {
     for await (const value of sourceParams.fn(initialBag)) {
-      if (checksForBackpressure(pendingDataControl)) {
-        await waitOnBackpressure(sourceParams.maxItemsFlowing as number, pendingDataControl)
+      if (needsToWaitForBackpressure(pendingDataControl, maxItemsFlowing)) {
+        await waitOnBackpressure(maxItemsFlowing, pendingDataControl)
       }
 
       pendingDataControl.increment()
@@ -33,14 +40,8 @@ export function wrapGenerator(
   }
 }
 
-function getNeedsToWaitForBackpressure(maxItemsFlowing: number | undefined) {
-  if (maxItemsFlowing === undefined) {
-    return () => false
-  }
-
-  return function needsToWaitForBackpressure(pendingDataControl: PendingDataControl) {
-    return pendingDataControl.size >= maxItemsFlowing
-  }
+function needsToWaitForBackpressure(pendingDataControl: PendingDataControl, maxItemsFlowing: number) {
+  return pendingDataControl.size >= maxItemsFlowing
 }
 
 async function waitOnBackpressure(maxItemsFlowing: number, pendingDataControl: PendingDataControl): Promise<void> {

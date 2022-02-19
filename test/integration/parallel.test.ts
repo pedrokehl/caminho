@@ -73,7 +73,7 @@ test('Parallel steps should use the most efficient path for emiting values', asy
     },
   }
 
-  await from({ fn: generatorMock, provides: 'job', maxItemsFlowing: 2 }, { onEachStep: onEachStepMock })
+  await from({ fn: generatorMock, provides: 'job' }, { onEachStep: onEachStepMock, maxItemsFlowing: 2 })
     .parallel([fetchStatus, fetchPosition])
     .pipe(saveAll)
     .run()

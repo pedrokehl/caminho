@@ -28,6 +28,7 @@ export enum OperationType {
 
 export interface CaminhoOptions {
   onEachStep?: OnEachStep
+  maxItemsFlowing?: number
 }
 
 export interface Accumulator<A> {
