@@ -18,13 +18,13 @@ async function runParallelBenchmark(parentItems: number, childItemsPerParent: nu
   }
   console.timeEnd('initialize steps')
 
-  const childCaminho = from(steps.childGenerator)
+  const childCaminho = from(steps.childGenerator, { maxItemsFlowing: 1_000 })
     .parallel([steps.pipe3, steps.pipe4])
 
   const childStep = { fn: (valueBag) => childCaminho.run(valueBag, steps.accumulator), provides: 'accumulator1' }
 
   console.time('initialize caminho')
-  const benchmarkCaminho = from(steps.parentGenerator)
+  const benchmarkCaminho = from(steps.parentGenerator, { maxItemsFlowing: 1_000 })
     .parallel([steps.pipe1, steps.pipe2])
     .pipe(childStep)
     .pipe(countSteps)
@@ -46,8 +46,8 @@ function initializeSteps(parentItems: number, childItemsPerParent: number) {
   const pipeFn = async () => 'something'
 
   return {
-    parentGenerator: { fn: parentGeneratorFn, maxItemsFlowing: 1_000, provides: 'source1' },
-    childGenerator: { fn: childGeneratorFn, maxItemsFlowing: 1_000, provides: 'subSource1' },
+    parentGenerator: { fn: parentGeneratorFn, provides: 'source1' },
+    childGenerator: { fn: childGeneratorFn, provides: 'subSource1' },
     pipe1: { fn: pipeFn, provides: 'pipe1' },
     pipe2: { fn: pipeFn, provides: 'pipe2' },
     pipe3: { fn: pipeFn, provides: 'pipe3' },

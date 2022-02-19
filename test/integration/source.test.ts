@@ -21,10 +21,10 @@ test('Should call generator and run all function provided to the flow', async ()
 })
 
 test('Should not emit more than maxItemsFlowing value concurrently', async () => {
-  const options = { onEachStep: jest.fn() }
+  const options = { onEachStep: jest.fn(), maxItemsFlowing: 3 }
   const NUMBER_OF_ITERATIONS = 7
 
-  const generatorStep = { fn: getMockedJobGenerator(NUMBER_OF_ITERATIONS), provides: 'job', maxItemsFlowing: 3 }
+  const generatorStep = { fn: getMockedJobGenerator(NUMBER_OF_ITERATIONS), provides: 'job' }
 
   await from(generatorStep, options)
     .pipe({ fn: function fetchMock() { return sleep(10) }, provides: 'rawData', maxConcurrency: 1 })
