@@ -3,6 +3,7 @@ import { getNumberedArray } from '../test/mocks/array.mock'
 import { getMockedGenerator } from '../test/mocks/generator.mock'
 
 async function runParallelBenchmark(parentItems: number, childItemsPerParent: number) {
+  let childProcessed = 0
   const expectedTotalChild = parentItems * childItemsPerParent
   console.log('---- Starting Benchmark ----')
   console.log(`Parent Items: ${parentItems}`)
@@ -17,14 +18,15 @@ async function runParallelBenchmark(parentItems: number, childItemsPerParent: nu
   }
   console.timeEnd('initialize steps')
 
-  let childProcessed = 0
+  const childCaminho = from(steps.childGenerator)
+    .parallel([steps.pipe3, steps.pipe4])
+
+  const childStep = { fn: (valueBag) => childCaminho.run(valueBag, steps.accumulator), provides: 'accumulator1' }
 
   console.time('initialize caminho')
   const benchmarkCaminho = from(steps.parentGenerator)
     .parallel([steps.pipe1, steps.pipe2])
-    .subFlow((sub) => sub(steps.childGenerator)
-      .parallel([steps.pipe3, steps.pipe4])
-      .reduce(steps.accumulator))
+    .pipe(childStep)
     .pipe(countSteps)
   console.timeEnd('initialize caminho')
 
@@ -50,7 +52,7 @@ function initializeSteps(parentItems: number, childItemsPerParent: number) {
     pipe2: { fn: pipeFn, provides: 'pipe2' },
     pipe3: { fn: pipeFn, provides: 'pipe3' },
     pipe4: { fn: pipeFn, provides: 'pipe4' },
-    accumulator: { fn: accumulatorFn, seed: 0, provides: 'accumulator1' },
+    accumulator: { fn: accumulatorFn, seed: 0 },
   }
 }
 

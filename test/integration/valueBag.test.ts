@@ -57,20 +57,13 @@ describe('ValueBag', () => {
     expect(saveMock.mock.calls[0][0]).toEqual({ job: getMockedJob(0) })
   })
 
-  test('Should not be able to mutate valueBag from a subFlow generator', async () => {
-    async function* mutateValueBag(initialBag: ValueBag): AsyncGenerator {
-      initialBag.job = 'mutated'
-      for await (const value of [1]) {
-        yield value
-      }
-    }
+  test('Should correctly receive the initial value provided on run', async () => {
     const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
     await from({ fn: getMockedJobGenerator(1), provides: 'job' })
-      .subFlow((sub) => sub({ fn: mutateValueBag, provides: 'sub' }))
       .pipe({ fn: saveMock })
-      .run()
+      .run({ initial: true })
 
-    expect(saveMock.mock.calls[0][0]).toEqual({ job: getMockedJob(0) })
+    expect(saveMock.mock.calls[0][0]).toEqual({ job: getMockedJob(0), initial: true })
   })
 })

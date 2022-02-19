@@ -1,21 +1,18 @@
-import { from, mergeMap, tap } from 'rxjs'
+import { from, lastValueFrom, reduce, tap } from 'rxjs'
 
-import type { ValueBag, PipeGenericParams, CaminhoOptions, Operator } from '../types'
-import { OperationType } from '../types'
+import type { ValueBag, PipeGenericParams, CaminhoOptions, Operator, Accumulator } from './types'
+import { OperationType } from './types'
 
-import { SourceParams, wrapGenerator } from '../operators/generator'
-import { pipe } from '../operators/pipe'
-import { batch } from '../operators/batch'
-import { parallel } from '../operators/parallel'
+import { SourceParams, wrapGenerator } from './operators/generator'
+import { pipe } from './operators/pipe'
+import { batch } from './operators/batch'
+import { parallel } from './operators/parallel'
 
-import { applyOperator, isBatch, OperatorApplier } from '../operators/helpers/operatorHelpers'
-import { getLogger } from '../utils/stepLogger'
-import { PendingDataControlInMemory } from '../utils/PendingDataControl'
+import { applyOperator, isBatch, OperatorApplier } from './operators/helpers/operatorHelpers'
+import { getLogger } from './utils/stepLogger'
+import { PendingDataControlInMemory } from './utils/PendingDataControl'
 
-import { Caminho } from '../interfaces/Caminho'
-import { SubCaminho } from '../interfaces/SubCaminho'
-
-export abstract class CaminhoAbstract implements Caminho {
+export class Caminho {
   protected pendingDataControl = new PendingDataControlInMemory()
   private generator!: (initialBag: ValueBag) => AsyncGenerator<ValueBag>
   private operators: OperatorApplier[] = []
@@ -24,6 +21,7 @@ export abstract class CaminhoAbstract implements Caminho {
   constructor(sourceOptions: SourceParams, protected options?: CaminhoOptions) {
     this.addOperatorApplier = this.addOperatorApplier.bind(this)
     this.getApplierForPipeOrBatch = this.getApplierForPipeOrBatch.bind(this)
+    this.run = this.run.bind(this)
 
     this.source(sourceOptions)
   }
@@ -38,15 +36,6 @@ export abstract class CaminhoAbstract implements Caminho {
     const operatorAppliers: OperatorApplier[] = params.map(this.getApplierForPipeOrBatch)
     const operatorApplier = parallel(params, operatorAppliers)
     this.addOperatorApplier(operatorApplier)
-    return this
-  }
-
-  public subFlow(
-    submitSubFlow: (from: (sourceParams: SourceParams) => SubCaminho) => SubCaminho,
-    maxConcurrency?: number,
-  ): this {
-    const subCaminho = submitSubFlow(this.subCaminhoFrom)
-    this.addOperatorApplier(mergeMap(subCaminho.run, maxConcurrency))
     return this
   }
 
@@ -74,7 +63,18 @@ export abstract class CaminhoAbstract implements Caminho {
       : pipe(params, getLogger(OperationType.PIPE, name, this.options?.onEachStep))
   }
 
-  protected subCaminhoFrom(sourceParams: SourceParams): SubCaminho {
-    throw new Error(`Not implemented, called subCaminho for ${sourceParams.provides}`)
+  public async run<T = undefined>(initialBag?: ValueBag, resultAggregator?: Accumulator<T>): Promise<T | undefined> {
+    const observable$ = this.buildObservable(initialBag ?? {})
+      .pipe(this.finalStep)
+
+    if (resultAggregator) {
+      const aggregateObservable$ = observable$
+        .pipe(reduce(resultAggregator.fn, resultAggregator.seed))
+
+      return lastValueFrom(aggregateObservable$)
+    }
+
+    await lastValueFrom(observable$)
+    return undefined
   }
 }

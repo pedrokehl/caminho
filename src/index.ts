@@ -1,7 +1,5 @@
-export type { Caminho } from './interfaces/Caminho'
-export type { ParentCaminho } from './interfaces/ParentCaminho'
-export type { SubCaminho } from './interfaces/SubCaminho'
-export type { ValueBag, PipeGenericParams, OnEachStep, CaminhoOptions, ReduceParams } from './types'
+export type { ValueBag, PipeGenericParams, OnEachStep, CaminhoOptions, Accumulator as ReduceParams } from './types'
+export type { Caminho } from './Caminho'
 
 export type { SourceParams } from './operators/generator'
 export type { BatchParams, BatchParamsNoProvides, BatchParamsProvides } from './operators/batch'
