@@ -3,6 +3,7 @@ import { getNumberedArray } from '../test/mocks/array.mock'
 import { getMockedGenerator } from '../test/mocks/generator.mock'
 
 async function runSubflowBenchmark(parentItems: number, childItemsPerParent: number) {
+  let childProcessed = 0
   const expectedTotalChild = parentItems * childItemsPerParent
   console.log('---- Starting Benchmark ----')
   console.log(`Parent Items: ${parentItems}`)
@@ -15,21 +16,21 @@ async function runSubflowBenchmark(parentItems: number, childItemsPerParent: num
       childProcessed += valueBag.accumulator1
     },
   }
+  const childStep = { fn: (valueBag) => childCaminho.run(valueBag, steps.accumulator), provides: 'accumulator1' }
   console.timeEnd('initialize steps')
-
-  let childProcessed = 0
-
   console.time('initialize caminho')
-  const benchmarkCaminho = from(steps.parentGenerator)
+
+  const childCaminho = from(steps.childGenerator)
+    .pipe(steps.batch)
+
+  const parentCaminho = from(steps.parentGenerator)
     .pipe(steps.pipe1)
-    .subFlow((sub) => sub(steps.childGenerator)
-      .pipe(steps.batch)
-      .reduce(steps.accumulator))
+    .pipe(childStep)
     .pipe(countSteps)
   console.timeEnd('initialize caminho')
 
   console.time('run caminho')
-  await benchmarkCaminho.run()
+  await parentCaminho.run()
   console.timeEnd('run caminho')
 
   if (childProcessed !== expectedTotalChild) {
@@ -50,7 +51,7 @@ function initializeSteps(parentItems: number, childItemsPerParent: number) {
     childGenerator: { fn: childGeneratorFn, maxItemsFlowing: 1_000, provides: 'subSource1' },
     batch: { fn: batchFn, provides: 'batch1', batch: { maxSize: 50, timeoutMs: 5 } },
     pipe1: { fn: pipeFn, provides: 'pipe1' },
-    accumulator: { fn: accumulatorFn, seed: 0, provides: 'accumulator1' },
+    accumulator: { fn: accumulatorFn, seed: 0 },
   }
 }
 

@@ -1,8 +1,7 @@
-import { ParentCaminhoImpl } from './implementations/ParentCaminhoImpl'
+import { Caminho } from './Caminho'
 import type { SourceParams } from './operators/generator'
 import type { CaminhoOptions } from './types'
-import { ParentCaminho } from './interfaces/ParentCaminho'
 
-export function from(sourceParams: SourceParams, caminhoOptions?: CaminhoOptions): ParentCaminho {
-  return new ParentCaminhoImpl(sourceParams, caminhoOptions)
+export function from(sourceParams: SourceParams, caminhoOptions?: CaminhoOptions): Caminho {
+  return new Caminho(sourceParams, caminhoOptions)
 }
