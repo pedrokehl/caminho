@@ -30,11 +30,13 @@ npm install caminho
 `from()` is the starting point of Caminho, which returns a `Caminho` instance based on the provided AsyncGenerator.  
 
 *A Caminho instance contains the following methods to define the flow:*  
-`pipe`: Receives a StepFunction definition, provided function will receive a `ValueBag`, which holds the values provided from all the previous steps, including the generator, if the step has `provides`, the value will be added to the `ValueBag` accordingly.  
-`parallel`: Receives StepFunction[], which will execute the steps in parallel, has the same abilities as pipe.  
 
-*After the steps are all defined execute your Caminho flow by calling `.run()`.*   
-`run`: Receives an optional Initial Bag, and optional aggregator. Returns a Promise which is fulfilled when the Generator has finished providing values and the items have been processed by all the defined steps in the Caminho instance.
+`pipe` receives a StepFunction definition, provided function will receive a `ValueBag`, which holds the values provided from all the previous steps, including the generator, if the step has `provides`, the value will be added to the `ValueBag` accordingly.  
+`parallel` receives StepFunction[], which will execute the steps in parallel, has the same abilities as pipe.  
+
+*After the steps are all defined execute your Caminho flow by calling `.run()`.*  
+
+`run` receives an optional Initial Bag, and optional aggregator. Returns a Promise which is fulfilled when the Generator has finished providing values and the items have been processed by all the defined steps in the Caminho instance.
 
 Simple flow:
 
