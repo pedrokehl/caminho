@@ -1,4 +1,4 @@
-import { from, lastValueFrom, reduce, tap } from 'rxjs'
+import { filter, from, lastValueFrom, reduce, tap } from 'rxjs'
 
 import type { ValueBag, PipeGenericParams, CaminhoOptions, Accumulator } from './types'
 import { OperationType } from './types'
@@ -38,6 +38,25 @@ export class Caminho {
     return this
   }
 
+  public filter(predicate: (valueBag: ValueBag, index: number) => boolean): this {
+    this.addOperatorApplier(filter(predicate))
+    return this
+  }
+
+  public async run<T = undefined>(initialBag?: ValueBag, resultAggregator?: Accumulator<T>): Promise<T | undefined> {
+    const observable$ = this.buildObservable(initialBag)
+
+    if (resultAggregator) {
+      const aggregateObservable$ = observable$
+        .pipe(reduce(resultAggregator.fn, resultAggregator.seed))
+
+      return lastValueFrom(aggregateObservable$, { defaultValue: resultAggregator.seed })
+    }
+
+    await lastValueFrom(observable$, { defaultValue: undefined })
+    return undefined
+  }
+
   private getGenerator(sourceParams: SourceParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {
     const name = sourceParams.name ?? sourceParams.fn.name
     const logger = getLogger(OperationType.GENERATE, name, this.options?.onEachStep)
@@ -73,19 +92,5 @@ export class Caminho {
     return isBatch(params)
       ? batch(params, getLogger(OperationType.BATCH, name, this.options?.onEachStep))
       : pipe(params, getLogger(OperationType.PIPE, name, this.options?.onEachStep))
-  }
-
-  public async run<T = undefined>(initialBag?: ValueBag, resultAggregator?: Accumulator<T>): Promise<T | undefined> {
-    const observable$ = this.buildObservable(initialBag)
-
-    if (resultAggregator) {
-      const aggregateObservable$ = observable$
-        .pipe(reduce(resultAggregator.fn, resultAggregator.seed))
-
-      return lastValueFrom(aggregateObservable$)
-    }
-
-    await lastValueFrom(observable$)
-    return undefined
   }
 }
