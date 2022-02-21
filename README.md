@@ -6,7 +6,7 @@
 
 # Caminho
 Caminho is intended to be used for Data-Intensive Computing.  
-The motivation behind Caminho is from an increased demand for data Processing systems in combination with the mainstream usage of NodeJS. The JavaScript Ecosystem urges for a tool that offers *Concurrency, Batching, Parallelism and Backpressure* in a simple and efficient manner.
+The motivation behind Caminho is from an increased demand for data processing systems in combination with the mainstream usage of NodeJS. The JavaScript Ecosystem urges for a tool that offers *Concurrency, Batching, Parallelism and Backpressure* in a simple and efficient manner.
 
 ### Features
 
@@ -15,11 +15,9 @@ The motivation behind Caminho is from an increased demand for data Processing sy
 - [X] Parallelism
 - [X] Backpressure
 - [X] Logging
-- [X] Subflow
-- [X] Reducer on subFlow
+- [X] Aggregation
 - [ ] Filtering
 - [ ] Error Handling
-- [X] Documentation
 
 ## Usage Instructions
 
@@ -29,12 +27,12 @@ npm install caminho
 ```
 
 #### Basic Usage
-
 `from()`: The starting point of Caminho, based on a provided AsyncGenerator it returns a `Caminho` instance.
-`.pipe(..)`: Receives a StepFunction definition, provided function will receive a `ValueBag`, which holds the values provided from all the previous steps, including the generator.
+
+A Caminho instance contains the following methods:  
+`.pipe(..)`: Receives a StepFunction definition, provided function will receive a `ValueBag`, which holds the values provided from all the previous steps, including the generator, if the step has `provides`, the value will be added to the `ValueBag` accordingly.  
 `.parallel(..)` Receives StepFunction[], which will execute the steps in parallel, has the same abilities as pipe  
-`.subFlow()` Enables the ability to have sub generators that can access the `parent` valueBag.  
-`.run()`: Returns a Promise which is fulfilled when the Generator has finished providing values and the items have been processed by all the steps.  
+`.run()`: Receives an optional Initial Bag, and optional aggregator. Returns a Promise which is fulfilled when the Generator has finished providing values and the items have been processed by all the defined steps in the Caminho instance.
 
 A Caminho instance can be reused for multiple runs.
 
@@ -43,13 +41,11 @@ Example of using Caminho:
 ```typescript
 import { from } from 'caminho'
 
-const caminho = from({ fn: generateCars, provides: 'carId', maxItemsFlowing: 1_000 })
+const caminho = from({ fn: generateCars, provides: 'carId' })
   .parallel([
     { fn: fetchPrice, maxConcurrency: 100, provides: 'price' },
     { fn: fetchSpecs, maxConcurrency: 20, provides: 'specs' },
   ])
-  .subFlow((subFrom) => subFrom({ generateDealersByCarId, provides: 'dealer' })
-    .reduce({ fn: sumCarsAvailable, seed: 0, provides: 'carsAvailable' }))
   .pipe({ fn: mapForSaveWithTotals })
   .pipe({ fn: saveCarInfo, batch: { maxSize: 50, timeoutMs: 100 } })
 
@@ -57,8 +53,8 @@ await caminho.run({ manufacturer: 'subaru' })
 ```
 
 #### Generator
-`from` receives an AsyncGenerators that provides any amount of items to the subsequent steps.  
-Features lossless backpressure by using `maxItemsFlowing`, which limits the amount of data concurrently in a caminho flow, it is useful to avoid memory overflow.
+`from` receives an AsyncGenerator that provides any amount of items to the subsequent steps.  
+Use `maxItemsFlowing` for lossless backpressure, it limits the amount of data concurrently in the flow, useful to avoid memory overflow.  
 
 ```typescript
 import { from, ValueBag } from 'caminho'
@@ -75,13 +71,12 @@ async function* generateCars(valueBag: ValueBag) {
   }
 }
 
-await from({ fn: generateCars, provides: 'carId', maxItemsFlowing: 1_000 })
+await from({ fn: generateCars, provides: 'carId' }, { maxItemsFlowing: 1_000 })
   .pipe( fn: doSomething })
   .run({ manufacturer: 'nissan' })
 ```
 
 #### Concurrency
-
 Concurrency is unlimited by default, which means a step function can be dispatched concurrently as many times as the number of items the generator provides.  
 You can limit the concurrency by providing `maxConcurrency` option on a step definition, this is useful when you use an API that can't handle too many concurrent requests.  
 
@@ -92,7 +87,6 @@ await from(generator)
 ```
 
 #### Batching
-
 Batching can be achieved by providing the batch option on a StepFunction, it works in combination with concurrency, and can be used both in the `pipe` or `parallel` methods.  
 
 A batch configuration consists of two parameters:  
@@ -115,9 +109,10 @@ await from(generateCars)
 ```
 
 #### Parallelism
-
 `parallel()` receives an array of StepFunctions and each provided step has the same parameters and behavior as a `pipe`.  
-Useful only for **Asynchronous** operations, comparable to a `Promise.all`.
+Useful only for **Asynchronous** operations.
+
+Comparable to [`Promise.all`](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)
 
 ```typescript
 await from({ fn: generateCars, provides: 'carId' })
@@ -128,13 +123,60 @@ await from({ fn: generateCars, provides: 'carId' })
   .run()
 ```
 
-#### Sub Flows
+#### Nested Caminhos
+You can combine multiple instances of Caminho in the same execution for nested generators.  
+This approach works with Parallelism, Concurrency and Batching, since the run function will be treated as a normal step.  
 
-TODO
+```typescript
+const childCaminho = from({ generateItemsByCarId, provides: 'carItem' })
+  .pipe({ fn: saveItem })
+
+const caminho = from({ fn: generateCars, provides: 'carId' })
+  .pipe({ fn: childCaminho.run })
+
+await caminho.run({ manufacturer: 'subaru' })
+```
+#### Aggregation
+Caminho features a simple aggregation for a Caminho execution, which can be different for each `run` call.  
+
+It consists of two properties:   
+- `fn: (acc: A, value: ValueBag, index: number) => A`, Similar to a callback provided to Array.reduce, where the first parameter is the aggregated value, value is the item received from the flow, and index is the position of the item received.  
+- `seed: A`: Which defines the initial value received on your aggregator function
+
+Comparable to [`Array.reduce`](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
+
+```typescript
+function sumPrice(acc: number, item: ValueBag) {
+  return acc + item.price
+}
+const sumPriceAggregator = { fn: sumPrice, seed: 0 }
+
+await from({ fn: generateCars, provides: 'carId' })
+  .pipe({ fn: fetchPrice, provides: 'price' })
+  .run({}, sumPriceAggregator)
+```
 
 #### Logging
+Caminho features a simple log mechanism which executes a syncronous callback function on every step executed.  
+The function needs to be defined via the `onEachStep` parameter on the `from`.
 
-TODO
+Every step execution, calls the `onEachStep` step, it provides the callback with the following information:
+
+- `name: string` - The `name` parameter on the step definition, defaults to the step function name - `step.fn.name`.  
+- `tookMs: number` - Time for the step to execute.  
+- `type: 'generate' | 'pipe' | 'batch'`  
+
+Example of how the calls to `onEachStep` looks like:
+
+```typescript
+// { name: 'generateCars', tookMs: number, type: 'generate' }
+await from({ fn: generateCars, provides: 'carId' }, { onEachStep: console.log })
+  // { name: 'customName', tookMs: number, type: 'pipe' }
+  .pipe({ fn: fetchPrice, provides: 'price', name: 'customName' })
+  // { name: 'fetchSpecs', tookMs: number, type: 'batch' }
+  .pipe({ fn: fetchSpecs, provides: 'specs', batch: { maxSize: 50, timeoutMs: 500 } })
+  .run()
+```
 
 ## Contributing
 
