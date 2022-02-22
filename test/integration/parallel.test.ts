@@ -1,4 +1,4 @@
-import { from, ValueBag, OperationType } from '../../src'
+import { from, ValueBag } from '../../src'
 import { sleep } from '../../src/utils/sleep'
 
 import { getMockedJobGenerator } from '../mocks/generator.mock'
@@ -79,23 +79,23 @@ test('Parallel steps should use the most efficient path for emiting values', asy
     .run()
 
   expect(onEachStepMock.mock.calls).toEqual([
-    [mockStepResult({ name: 'generator', type: OperationType.GENERATE })],
-    [mockStepResult({ name: 'generator', type: OperationType.GENERATE })],
-    [mockStepResult({ name: 'fetchPosition', type: OperationType.PIPE })],
-    [mockStepResult({ name: 'fetchPosition', type: OperationType.PIPE })],
-    [mockStepResult({ name: 'fetchStatus', type: OperationType.BATCH })],
-    [mockStepResult({ name: 'saveSomething', type: OperationType.PIPE })],
-    [mockStepResult({ name: 'saveSomething', type: OperationType.PIPE })],
-    [mockStepResult({ name: 'generator', type: OperationType.GENERATE })],
-    [mockStepResult({ name: 'generator', type: OperationType.GENERATE })],
-    [mockStepResult({ name: 'fetchPosition', type: OperationType.PIPE })],
-    [mockStepResult({ name: 'fetchPosition', type: OperationType.PIPE })],
-    [mockStepResult({ name: 'fetchStatus', type: OperationType.BATCH })],
-    [mockStepResult({ name: 'saveSomething', type: OperationType.PIPE })],
-    [mockStepResult({ name: 'saveSomething', type: OperationType.PIPE })],
-    [mockStepResult({ name: 'generator', type: OperationType.GENERATE })],
-    [mockStepResult({ name: 'fetchPosition', type: OperationType.PIPE })],
-    [mockStepResult({ name: 'fetchStatus', type: OperationType.BATCH })],
-    [mockStepResult({ name: 'saveSomething', type: OperationType.PIPE })],
+    [mockStepResult({ name: 'generator' })],
+    [mockStepResult({ name: 'generator' })],
+    [mockStepResult({ name: 'fetchPosition' })],
+    [mockStepResult({ name: 'fetchPosition' })],
+    [mockStepResult({ name: 'fetchStatus' })],
+    [mockStepResult({ name: 'saveSomething' })],
+    [mockStepResult({ name: 'saveSomething' })],
+    [mockStepResult({ name: 'generator' })],
+    [mockStepResult({ name: 'generator' })],
+    [mockStepResult({ name: 'fetchPosition' })],
+    [mockStepResult({ name: 'fetchPosition' })],
+    [mockStepResult({ name: 'fetchStatus' })],
+    [mockStepResult({ name: 'saveSomething' })],
+    [mockStepResult({ name: 'saveSomething' })],
+    [mockStepResult({ name: 'generator' })],
+    [mockStepResult({ name: 'fetchPosition' })],
+    [mockStepResult({ name: 'fetchStatus' })],
+    [mockStepResult({ name: 'saveSomething' })],
   ])
 })

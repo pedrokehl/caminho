@@ -1,7 +1,6 @@
 import { filter, from, lastValueFrom, reduce, tap } from 'rxjs'
 
 import type { ValueBag, PipeGenericParams, CaminhoOptions, Accumulator } from './types'
-import { OperationType } from './types'
 
 import { SourceParams, wrapGenerator, wrapGeneratorWithBackPressure } from './operators/generator'
 import { pipe } from './operators/pipe'
@@ -58,9 +57,7 @@ export class Caminho {
   }
 
   private getGenerator(sourceParams: SourceParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {
-    const name = sourceParams.name ?? sourceParams.fn.name
-    const logger = getLogger(OperationType.GENERATE, name, this.options?.onEachStep)
-
+    const logger = this.getLogger(sourceParams)
     if (this.options?.maxItemsFlowing) {
       const pendingDataControl = new PendingDataControlInMemory()
       this.finalStep = tap(() => pendingDataControl.decrement())
@@ -87,10 +84,13 @@ export class Caminho {
   }
 
   private getApplierForPipeOrBatch(params: PipeGenericParams): OperatorApplier {
-    const name = params.name ?? params.fn.name
-
     return isBatch(params)
-      ? batch(params, getLogger(OperationType.BATCH, name, this.options?.onEachStep))
-      : pipe(params, getLogger(OperationType.PIPE, name, this.options?.onEachStep))
+      ? batch(params, this.getLogger(params))
+      : pipe(params, this.getLogger(params))
+  }
+
+  private getLogger(params: SourceParams | PipeGenericParams) {
+    const name = params.name ?? params.fn.name
+    return getLogger(name, this.options?.onEachStep)
   }
 }

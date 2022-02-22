@@ -6,4 +6,3 @@ export type { BatchParams, BatchParamsNoProvides, BatchParamsProvides } from './
 export type { PipeParams, PipeParamsNoProvides, PipeParamsProvides } from './operators/pipe'
 
 export { from } from './from'
-export { OperationType } from './types'

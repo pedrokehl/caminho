@@ -180,7 +180,7 @@ Every step execution, calls the `onEachStep` step, it provides the callback with
 
 - `name: string` - The `name` parameter on the step definition, defaults to the step function name - `step.fn.name`.  
 - `tookMs: number` - Time for the step to execute.  
-- `type: 'generate' | 'pipe' | 'batch'`  
+- `processed: number` - Number of items processed, useful for batch operations
 
 Example of how the calls to `onEachStep` looks like:
 

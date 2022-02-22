@@ -16,14 +16,8 @@ export type OnEachStep = (params: OnEachStepParams) => void
 
 export interface OnEachStepParams {
   name: string
-  type: OperationType
   tookMs: number
-}
-
-export enum OperationType {
-  GENERATE = 'generate',
-  PIPE = 'pipe',
-  BATCH = 'batch',
+  emitted: number
 }
 
 export interface CaminhoOptions {
