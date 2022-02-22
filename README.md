@@ -10,14 +10,13 @@ The motivation behind Caminho is from an increased demand for data processing sy
 
 ### Features
 
-- [X] Concurrency
-- [X] Batching
-- [X] Parallelism
-- [X] Backpressure
-- [X] Logging
-- [X] Aggregation
-- [X] Filtering
-- [ ] Error Handling
+- [Concurrency](#concurrency)
+- [Batching](#batching)
+- [Parallelism](#parallelism)
+- [Backpressure](#generator)
+- [Filtering](#filtering)
+- [Aggregation](#aggregation)
+- [Logging](#logging)
 
 ## Usage Instructions
 
@@ -180,17 +179,19 @@ Every step execution, calls the `onEachStep` step, it provides the callback with
 
 - `name: string` - The `name` parameter on the step definition, defaults to the step function name - `step.fn.name`.  
 - `tookMs: number` - Time for the step to execute.  
-- `processed: number` - Number of items processed, useful for batch operations
+- `emitted: number` - Number of items processed, useful for batch operations
 
 Example of how the calls to `onEachStep` looks like:
 
 ```typescript
-// { name: 'generateCars', tookMs: number, type: 'generate' }
 await from({ fn: generateCars, provides: 'carId' }, { onEachStep: console.log })
-  // { name: 'customName', tookMs: number, type: 'pipe' }
+  // { name: 'generateCars', tookMs: number, emitted: 1 }
+  // { name: 'generateCars', tookMs: number, emitted: 1 }
   .pipe({ fn: fetchPrice, provides: 'price', name: 'customName' })
-  // { name: 'fetchSpecs', tookMs: number, type: 'batch' }
+  // { name: 'customName', tookMs: number, emitted: 1 }
+  // { name: 'customName', tookMs: number, emitted: 1 }
   .pipe({ fn: fetchSpecs, provides: 'specs', batch: { maxSize: 50, timeoutMs: 500 } })
+  // { name: 'fetchSpecs', tookMs: number, emitted: 2 }
   .run()
 ```
 
