@@ -48,8 +48,8 @@ const caminho = from({ fn: generateCars, provides: 'carId' })
     { fn: fetchPrice, maxConcurrency: 100, provides: 'price' },
     { fn: fetchSpecs, maxConcurrency: 20, provides: 'specs' },
   ])
-  .pipe({ fn: mapForSaveWithTotals })
-  .pipe({ fn: saveCarInfo, batch: { maxSize: 50, timeoutMs: 100 } })
+  .pipe({ fn: mapCar, provides: 'mappedCar' })
+  .pipe({ fn: saveCar, batch: { maxSize: 50, timeoutMs: 100 } })
 
 await caminho.run({ manufacturer: 'subaru' })
 ```
@@ -62,13 +62,14 @@ Use `maxItemsFlowing` for lossless backpressure, it limits the amount of data co
 import { from, ValueBag } from 'caminho'
 
 async function* generateCars(valueBag: ValueBag) {
+  const limit = 50
   let page = 1
   while(true) {
-    const cars = await getCarsByManufacturer(valueBag.manufacturer, { page, limit: 100 })
-    if (!cars.length) {
+    const cars = await getCarsByManufacturer(valueBag.manufacturer, { page, limit })
+    for (carId of cars) yield carId
+    if (cars.length < limit) {
       break
     }
-    for (carId of cars) yield carId
     page++
   }
 }
@@ -104,7 +105,7 @@ async function saveCars(valueBags: ValueBag[]): string[] {
   return response.ids
 }
 
-await from(generateCars)
+await from({ fn: generateCars, provides: 'car' })
   .pipe({ fn: saveCars, batch: { maxSize: 50, timeoutMs: 500 }, provides: 'id' })
   .pipe({ fn: doSomethingWithCarId })
   .run()
@@ -117,7 +118,7 @@ Useful only for **Asynchronous** operations.
 Comparable to [Promise.all](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)
 
 ```typescript
-await from({ fn: generateCars, provides: 'carId' })
+await from({ fn: generateCars, provides: 'car' })
   .parallel([
     { fn: fetchPrice, provides: 'price', maxConcurrency: 100 },
     { fn: fetchSpecs, provides: 'specs', maxConcurrency: 5, batch: { maxSize: 20, timeoutMs: 100 } },
@@ -132,7 +133,7 @@ Comparable to [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaSc
 
 ```typescript
 
-await from({ fn: generateCars, provides: 'carId' })
+await from({ fn: generateCarIds, provides: 'carId' })
   .filter((valueBag: ValueBag) => valueBag.carId % 2 === 0)
   .pipe(processCarsWithEvenId)
   .run()
@@ -151,11 +152,10 @@ Comparable to [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaSc
 function sumPrice(acc: number, item: ValueBag) {
   return acc + item.price
 }
-const sumPriceAggregator = { fn: sumPrice, seed: 0 }
 
 await from({ fn: generateCars, provides: 'carId' })
   .pipe({ fn: fetchPrice, provides: 'price' })
-  .run({}, sumPriceAggregator)
+  .run({}, { fn: sumPrice, seed: 0 })
 ```
 
 #### Nested Caminhos
@@ -208,5 +208,5 @@ npm install
 ```bash
 npm test
 or
-npm test:watch
+npm run test:watch
 ```
