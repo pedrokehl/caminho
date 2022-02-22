@@ -16,7 +16,7 @@ The motivation behind Caminho is from an increased demand for data processing sy
 - [X] Backpressure
 - [X] Logging
 - [X] Aggregation
-- [ ] Filtering
+- [X] Filtering
 - [ ] Error Handling
 
 ## Usage Instructions
@@ -33,6 +33,7 @@ npm install caminho
 
 `pipe` receives a StepFunction definition, provided function will receive a `ValueBag`, which holds the values provided from all the previous steps, including the generator, if the step has `provides`, the value will be added to the `ValueBag` accordingly.  
 `parallel` receives StepFunction[], which will execute the steps in parallel, has the same abilities as pipe.  
+`filter` Filter items emitted by the previous step by only emitting those that satisfy the specified predicate, so the subsequent steps won't receive it.
 
 *After the steps are all defined execute your Caminho flow by calling `.run()`.*  
 
@@ -114,7 +115,7 @@ await from(generateCars)
 `parallel()` receives an array of StepFunctions and each provided step has the same parameters and behavior as a `pipe`.  
 Useful only for **Asynchronous** operations.
 
-Comparable to [`Promise.all`](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)
+Comparable to [Promise.all](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)
 
 ```typescript
 await from({ fn: generateCars, provides: 'carId' })
@@ -125,19 +126,19 @@ await from({ fn: generateCars, provides: 'carId' })
   .run()
 ```
 
-#### Nested Caminhos
-You can combine multiple instances of Caminho in the same execution for nested generators.  
-This approach works with Parallelism, Concurrency and Batching, since the run function will be treated as a normal step.  
+#### Filtering
+`filter()` receives a predicate, to test item of the Flow, the predicate should return a value that coerces to true to keep the element, or to false otherwise.
+
+Comparable to [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
 
 ```typescript
-const childCaminho = from({ generateItemsByCarId, provides: 'carItem' })
-  .pipe({ fn: saveItem })
 
-const caminho = from({ fn: generateCars, provides: 'carId' })
-  .pipe({ fn: childCaminho.run })
-
-await caminho.run({ manufacturer: 'subaru' })
+await from({ fn: generateCars, provides: 'carId' })
+  .filter((valueBag: ValueBag) => valueBag.carId % 2 === 0)
+  .pipe(processCarsWithEvenId)
+  .run()
 ```
+
 #### Aggregation
 Caminho features a simple aggregation for a Caminho execution, which can be different for each `run` call.  
 
@@ -145,7 +146,7 @@ It consists of two properties:
 - `fn: (acc: A, value: ValueBag, index: number) => A`, Similar to a callback provided to Array.reduce, where the first parameter is the aggregated value, value is the item received from the flow, and index is the position of the item received.  
 - `seed: A`: Which defines the initial value received on your aggregator function
 
-Comparable to [`Array.reduce`](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
+Comparable to [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
 
 ```typescript
 function sumPrice(acc: number, item: ValueBag) {
@@ -156,6 +157,19 @@ const sumPriceAggregator = { fn: sumPrice, seed: 0 }
 await from({ fn: generateCars, provides: 'carId' })
   .pipe({ fn: fetchPrice, provides: 'price' })
   .run({}, sumPriceAggregator)
+```
+
+#### Nested Caminhos
+You can combine multiple instances of Caminho in the same execution for nested generators.  
+This approach works with Parallelism, Concurrency and Batching, since the run function will be treated as a normal step.  
+
+```typescript
+const childCaminho = from({ generateItemsByCarId, provides: 'carItem' })
+  .pipe({ fn: saveItem })
+
+await from({ fn: generateCars, provides: 'carId' })
+  .pipe({ fn: childCaminho.run })
+  .run()
 ```
 
 #### Logging
