@@ -24,7 +24,7 @@ describe('Filter', () => {
       .pipe({ fn: saveJob })
       .run()
 
-    expect(saveJob).toHaveBeenCalledTimes(0)
+    expect(saveJob).not.toHaveBeenCalled()
   })
 
   test('Should properly keep all values if predicate return only true', async () => {
@@ -37,5 +37,17 @@ describe('Filter', () => {
       .run()
 
     expect(saveJob).toHaveBeenCalledTimes(2)
+  })
+
+  test('Should properly work with backPressure if values are being filtered out', async () => {
+    const generatorMock = getMockedJobGenerator(3)
+    const saveJob = jest.fn()
+
+    await from({ fn: generatorMock, provides: 'job' }, { maxItemsFlowing: 2 })
+      .filter(() => false)
+      .pipe({ fn: saveJob })
+      .run()
+
+    expect(saveJob).not.toHaveBeenCalled()
   })
 })

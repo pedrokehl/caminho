@@ -1,4 +1,4 @@
-import { filter, from, lastValueFrom, reduce, tap } from 'rxjs'
+import { from, lastValueFrom, reduce, tap } from 'rxjs'
 
 import type { ValueBag, PipeGenericParams, CaminhoOptions, Accumulator } from './types'
 
@@ -6,20 +6,26 @@ import { SourceParams, wrapGenerator, wrapGeneratorWithBackPressure } from './op
 import { pipe } from './operators/pipe'
 import { batch } from './operators/batch'
 import { parallel } from './operators/parallel'
+import { filter, FilterPredicate } from './operators/filter'
 
 import { applyOperator, isBatch, OperatorApplier } from './operators/helpers/operatorHelpers'
 import { getLogger } from './utils/stepLogger'
-import { PendingDataControlInMemory } from './utils/PendingDataControl'
+import { PendingDataControl, PendingDataControlInMemory } from './utils/PendingDataControl'
 
 export class Caminho {
   private generator: (initialBag: ValueBag) => AsyncGenerator<ValueBag>
   private operators: OperatorApplier[] = []
   private finalStep?: OperatorApplier
+  private pendingDataControl?: PendingDataControl
 
   constructor(sourceParams: SourceParams, private options?: CaminhoOptions) {
     this.addOperatorApplier = this.addOperatorApplier.bind(this)
     this.getApplierForPipeOrBatch = this.getApplierForPipeOrBatch.bind(this)
     this.run = this.run.bind(this)
+
+    if (options?.maxItemsFlowing) {
+      this.pendingDataControl = new PendingDataControlInMemory()
+    }
 
     this.generator = this.getGenerator(sourceParams)
   }
@@ -37,8 +43,8 @@ export class Caminho {
     return this
   }
 
-  public filter(predicate: (valueBag: ValueBag, index: number) => boolean): this {
-    this.addOperatorApplier(filter(predicate))
+  public filter(predicate: FilterPredicate): this {
+    this.addOperatorApplier(filter(predicate, this.pendingDataControl))
     return this
   }
 
@@ -59,7 +65,7 @@ export class Caminho {
   private getGenerator(sourceParams: SourceParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {
     const logger = this.getLogger(sourceParams)
     if (this.options?.maxItemsFlowing) {
-      const pendingDataControl = new PendingDataControlInMemory()
+      const pendingDataControl = this.pendingDataControl as PendingDataControl
       this.finalStep = tap(() => pendingDataControl.decrement())
       return wrapGeneratorWithBackPressure(sourceParams, this.options.maxItemsFlowing, pendingDataControl, logger)
     }
