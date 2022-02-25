@@ -1,6 +1,6 @@
 {
   "name": "caminho",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Caminho means path, a new path to your data processing.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,7 +12,8 @@
     "lint": "eslint ./src ./test",
     "lint:fix": "eslint ./src ./test ./benchmark --fix",
     "benchmark:parallel": "npx ts-node benchmark/parallel.benchmark.ts",
-    "benchmark:subflow": "npx ts-node benchmark/subFlow.benchmark.ts"
+    "benchmark:subflow": "npx ts-node benchmark/subFlow.benchmark.ts",
+    "publish": "npm test && npm run build && npm publish"
   },
   "repository": {
     "type": "git",
