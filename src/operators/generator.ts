@@ -6,36 +6,36 @@ import { getNewValueBag } from '../utils/valueBag'
 
 const SLEEP_FOR_BACKPRESSURE_MS = 10
 
-export interface SourceParams {
+export interface GeneratorParams {
   fn: (initialBag: ValueBag) => AsyncGenerator
   provides: string
   name?: string
 }
 
-export function wrapGenerator(sourceParams: SourceParams, logger: Logger) {
+export function wrapGenerator(generatorParams: GeneratorParams, logger: Logger) {
   return async function* wrappedGenerator(initialBag: ValueBag) {
-    for await (const value of sourceParams.fn(initialBag)) {
+    for await (const value of generatorParams.fn(initialBag)) {
       logger()
-      yield getNewValueBag(initialBag, sourceParams.provides, value)
+      yield getNewValueBag(initialBag, generatorParams.provides, value)
     }
   }
 }
 
 export function wrapGeneratorWithBackPressure(
-  sourceParams: SourceParams,
+  generatorParams: GeneratorParams,
   maxItemsFlowing: number,
   pendingDataControl: PendingDataControl,
   logger: Logger,
 ) {
   return async function* wrappedGenerator(initialBag: ValueBag) {
-    for await (const value of sourceParams.fn(initialBag)) {
+    for await (const value of generatorParams.fn(initialBag)) {
       if (needsToWaitForBackpressure(pendingDataControl, maxItemsFlowing)) {
         await waitOnBackpressure(maxItemsFlowing, pendingDataControl)
       }
 
       pendingDataControl.increment()
       logger()
-      yield getNewValueBag(initialBag, sourceParams.provides, value)
+      yield getNewValueBag(initialBag, generatorParams.provides, value)
     }
   }
 }
