@@ -2,7 +2,7 @@ import { from, lastValueFrom, reduce, tap } from 'rxjs'
 
 import type { ValueBag, PipeGenericParams, CaminhoOptions, Accumulator } from './types'
 
-import { SourceParams, wrapGenerator, wrapGeneratorWithBackPressure } from './operators/generator'
+import { GeneratorParams, wrapGenerator, wrapGeneratorWithBackPressure } from './operators/generator'
 import { pipe } from './operators/pipe'
 import { batch } from './operators/batch'
 import { parallel } from './operators/parallel'
@@ -18,7 +18,7 @@ export class Caminho {
   private finalStep?: OperatorApplier
   private pendingDataControl?: PendingDataControl
 
-  constructor(sourceParams: SourceParams, private options?: CaminhoOptions) {
+  constructor(generatorParams: GeneratorParams, private options?: CaminhoOptions) {
     this.addOperatorApplier = this.addOperatorApplier.bind(this)
     this.getApplierForPipeOrBatch = this.getApplierForPipeOrBatch.bind(this)
     this.run = this.run.bind(this)
@@ -27,7 +27,7 @@ export class Caminho {
       this.pendingDataControl = new PendingDataControlInMemory()
     }
 
-    this.generator = this.getGenerator(sourceParams)
+    this.generator = this.getGenerator(generatorParams)
   }
 
   public pipe(params: PipeGenericParams): this {
@@ -62,15 +62,15 @@ export class Caminho {
     return undefined
   }
 
-  private getGenerator(sourceParams: SourceParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {
-    const logger = this.getLogger(sourceParams)
+  private getGenerator(generatorParams: GeneratorParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {
+    const logger = this.getLogger(generatorParams)
     if (this.options?.maxItemsFlowing) {
       const pendingDataControl = this.pendingDataControl as PendingDataControl
       this.finalStep = tap(() => pendingDataControl.decrement())
-      return wrapGeneratorWithBackPressure(sourceParams, this.options.maxItemsFlowing, pendingDataControl, logger)
+      return wrapGeneratorWithBackPressure(generatorParams, this.options.maxItemsFlowing, pendingDataControl, logger)
     }
 
-    return wrapGenerator(sourceParams, logger)
+    return wrapGenerator(generatorParams, logger)
   }
 
   private buildObservable(initialBag: ValueBag = {}) {
@@ -95,7 +95,7 @@ export class Caminho {
       : pipe(params, this.getLogger(params))
   }
 
-  private getLogger(params: SourceParams | PipeGenericParams) {
+  private getLogger(params: GeneratorParams | PipeGenericParams) {
     const name = params.name ?? params.fn.name
     return getLogger(name, this.options?.onEachStep)
   }
