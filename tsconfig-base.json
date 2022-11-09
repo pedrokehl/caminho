@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "composite": true,
     "lib": ["ES2020"],
     "module": "commonjs",
     "target": "es2020",

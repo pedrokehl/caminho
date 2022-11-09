@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "npm run clean && tsc --build",
-    "clean": "tsc --build --clean",
+    "clean": "rm -rf ./dist",
     "test": "jest --coverage",
     "test:watch": "jest -o --watch",
     "lint": "eslint ./src ./test",
