@@ -13,9 +13,9 @@ export interface FromItemParams {
   name?: string
 }
 
-export function fromItem(fromItemParams: FromItemParams, caminhoOptions?: CaminhoOptions): Caminho {
-  const generator = getAsyncGeneratorFromArray([fromItemParams.item])
-  return new Caminho({ fn: generator, name: fromItemParams.name, provides: fromItemParams.provides }, caminhoOptions)
+export function fromItem({ item, name, provides }: FromItemParams, caminhoOptions?: CaminhoOptions): Caminho {
+  const generator = getAsyncGeneratorFromArray([item])
+  return new Caminho({ fn: generator, name, provides }, caminhoOptions)
 }
 
 export interface FromArrayParams {
@@ -24,9 +24,9 @@ export interface FromArrayParams {
   name?: string
 }
 
-export function fromArray(fromArrayParams: FromArrayParams, caminhoOptions?: CaminhoOptions): Caminho {
-  const generator = getAsyncGeneratorFromArray(fromArrayParams.items)
-  return new Caminho({ fn: generator, name: fromArrayParams.name, provides: fromArrayParams.provides }, caminhoOptions)
+export function fromArray({ items, provides, name }: FromArrayParams, caminhoOptions?: CaminhoOptions): Caminho {
+  const generator = getAsyncGeneratorFromArray(items)
+  return new Caminho({ fn: generator, name, provides }, caminhoOptions)
 }
 
 export interface FromFnParams {
@@ -35,7 +35,7 @@ export interface FromFnParams {
   name?: string
 }
 
-export function fromFn(fromFnParams: FromFnParams, caminhoOptions?: CaminhoOptions): Caminho {
-  const generator = getAsyncGeneratorFromFn(fromFnParams.fn)
-  return new Caminho({ fn: generator, name: fromFnParams.name, provides: fromFnParams.provides }, caminhoOptions)
+export function fromFn({ fn, provides, name }: FromFnParams, caminhoOptions?: CaminhoOptions): Caminho {
+  const generator = getAsyncGeneratorFromFn(fn)
+  return new Caminho({ fn: generator, name: name ?? fn.name, provides }, caminhoOptions)
 }

@@ -1,4 +1,4 @@
-import { from } from '../../src'
+import { from, fromFn } from '../../src'
 
 import { getMockedJobGenerator } from '../mocks/generator.mock'
 import { mockStepResult } from '../mocks/stepResult.mock'
@@ -46,4 +46,11 @@ test('Should call onEachStep with the number of values emitted by batch operatio
     [mockStepResult({ emitted: 1 })],
     [mockStepResult({ emitted: 2 })],
   ])
+})
+
+test('Should properly handle step.name fallback on "fromFn" ', async () => {
+  const onEachStepMock = jest.fn()
+  async function getJob() { return { id: '123' } }
+  await fromFn({ fn: getJob, provides: 'job' }, { onEachStep: onEachStepMock }).run()
+  expect(onEachStepMock.mock.calls).toEqual([[mockStepResult({ name: 'getJob', emitted: 1 })]])
 })
