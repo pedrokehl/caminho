@@ -9,3 +9,4 @@ export { from } from './from'
 
 export { fromItem, type FromItemParams } from './from'
 export { fromArray, type FromArrayParams } from './from'
+export { fromFn, type FromFnParams } from './from'
