@@ -7,6 +7,8 @@ export function from(fromParams: GeneratorParams, caminhoOptions?: CaminhoOption
   return new Caminho(fromParams, caminhoOptions)
 }
 
+export type From = typeof from
+
 export interface FromItemParams {
   item: unknown
   provides: string
@@ -17,6 +19,8 @@ export function fromItem({ item, name, provides }: FromItemParams, caminhoOption
   const generator = getAsyncGeneratorFromArray([item])
   return new Caminho({ fn: generator, name, provides }, caminhoOptions)
 }
+
+export type FromItem = typeof fromItem
 
 export interface FromArrayParams {
   items: unknown[]
@@ -29,6 +33,8 @@ export function fromArray({ items, provides, name }: FromArrayParams, caminhoOpt
   return new Caminho({ fn: generator, name, provides }, caminhoOptions)
 }
 
+export type FromArray = typeof fromArray
+
 export interface FromFnParams {
   fn: (initialBag: ValueBag) => unknown
   provides: string
@@ -39,3 +45,5 @@ export function fromFn({ fn, provides, name }: FromFnParams, caminhoOptions?: Ca
   const generator = getAsyncGeneratorFromFn(fn)
   return new Caminho({ fn: generator, name: name ?? fn.name, provides }, caminhoOptions)
 }
+
+export type FromFn = typeof fromFn
