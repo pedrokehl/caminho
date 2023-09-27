@@ -24,9 +24,11 @@ export function pipe(params: PipeParams, logger: Logger): OperatorApplier {
   const getBag = pipeHasProvides(params) ? valueBagGetterProvides(params.provides) : valueBagGetterNoProvides()
 
   async function wrappedStep(valueBag: ValueBag): Promise<ValueBag> {
+    const startTime = new Date()
     const value = await params.fn({ ...valueBag })
-    logger()
-    return getBag(valueBag, value)
+    const newBag = getBag(valueBag, value)
+    logger([newBag], startTime)
+    return newBag
   }
   return mergeMap(wrappedStep, params?.maxConcurrency)
 }
