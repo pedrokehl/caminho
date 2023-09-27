@@ -210,3 +210,11 @@ npm test
 or
 npm run test:watch
 ```
+
+## Roadmap
+
+- Add "onStartStep" callback for logging
+- Wrap steps in a try catch so we can call logger with the step error.
+- Proper typing on ValueBag and how it's handled in child steps
+- Built-in Retry system
+- Should step errors continue the flow?
