@@ -1,6 +1,6 @@
 {
   "name": "caminho",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Caminho means path, a new path to your data processing.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
