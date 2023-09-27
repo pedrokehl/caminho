@@ -30,9 +30,11 @@ export function batch(params: BatchParams, logger: Logger): OperatorApplier {
     : valueBagGetterBatchNoProvides()
 
   async function wrappedStep(valueBag: ValueBag[]): Promise<ValueBag[]> {
+    const startTime = new Date()
     const values = await params.fn([...valueBag])
-    logger(valueBag.length)
-    return getBag(valueBag, values as unknown[])
+    const newValueBags = getBag(valueBag, values as unknown[])
+    logger(newValueBags, startTime)
+    return newValueBags
   }
 
   const operators: Operator[] = [

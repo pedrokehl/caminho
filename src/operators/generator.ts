@@ -14,9 +14,12 @@ export interface GeneratorParams {
 
 export function wrapGenerator(generatorParams: GeneratorParams, logger: Logger) {
   return async function* wrappedGenerator(initialBag: ValueBag) {
+    let startTime = new Date()
     for await (const value of generatorParams.fn(initialBag)) {
-      logger()
-      yield getNewValueBag(initialBag, generatorParams.provides, value)
+      const newValueBag = getNewValueBag(initialBag, generatorParams.provides, value)
+      logger([newValueBag], startTime)
+      yield newValueBag
+      startTime = new Date()
     }
   }
 }
@@ -28,14 +31,17 @@ export function wrapGeneratorWithBackPressure(
   logger: Logger,
 ) {
   return async function* wrappedGenerator(initialBag: ValueBag) {
+    let startTime = new Date()
     for await (const value of generatorParams.fn(initialBag)) {
       if (needsToWaitForBackpressure(pendingDataControl, maxItemsFlowing)) {
         await waitOnBackpressure(maxItemsFlowing, pendingDataControl)
       }
 
       pendingDataControl.increment()
-      logger()
-      yield getNewValueBag(initialBag, generatorParams.provides, value)
+      const newValueBag = getNewValueBag(initialBag, generatorParams.provides, value)
+      logger([newValueBag], startTime)
+      yield newValueBag
+      startTime = new Date()
     }
   }
 }

@@ -18,6 +18,7 @@ export interface OnEachStepParams {
   name: string
   tookMs: number
   emitted: number
+  valueBags: ValueBag[]
 }
 
 export interface CaminhoOptions {
