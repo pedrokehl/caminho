@@ -1,10 +1,10 @@
-import { Caminho, from, ReduceParams, ValueBag } from '../../src'
+import { Caminho, from, Accumulator, ValueBag } from '../../src'
 
 import { getMockedGenerator } from '../mocks/generator.mock'
 import { getNumberedArray } from '../mocks/array.mock'
 
 describe('Sub-Caminho', () => {
-  function getStepForSubCaminho<T>(subCaminho: Caminho, accumulator: ReduceParams<T>, provides: string) {
+  function getStepForSubCaminho<T>(subCaminho: Caminho, accumulator: Accumulator<T>, provides: string) {
     return {
       fn: (valueBag: ValueBag) => subCaminho.run(valueBag, accumulator),
       provides,
@@ -158,7 +158,7 @@ function getEmployeeSteps() {
   const generator = { fn: employeeGeneratorFn, provides: 'employeeName' }
   const mapper = { fn: mapEmployeeFn, provides: 'mappedEmployee' }
   const saver = { fn: saveEmployeeFn }
-  const accumulator: ReduceParams<number> = { fn: (acc: number) => acc + 1, seed: 0 }
+  const accumulator: Accumulator<number> = { fn: (acc: number) => acc + 1, seed: 0 }
 
   return {
     generator,
@@ -174,7 +174,7 @@ function getDocumentSteps() {
 
   const generator = { fn: generatorFn, provides: 'documentId' }
   const saver = { fn: saverFn }
-  const accumulator: ReduceParams<number> = { fn: (acc: number) => acc + 1, seed: 0 }
+  const accumulator: Accumulator<number> = { fn: (acc: number) => acc + 1, seed: 0 }
 
   return {
     generator,

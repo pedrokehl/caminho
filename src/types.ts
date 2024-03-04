@@ -1,6 +1,8 @@
 import type { OperatorFunction } from 'rxjs'
 import type { BatchParams } from './operators/batch'
 import type { PipeParams } from './operators/pipe'
+import { InternalOnStepFinished } from './utils/onStepFinished'
+import { InternalOnStepStarted } from './utils/onStepStarted'
 
 // TODO: Proper typing for ValueBag!
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -12,21 +14,31 @@ export type Operator = OperatorFunction<ValueBagOrBatch, ValueBagOrBatch>
 
 export type PipeGenericParams = PipeParams | BatchParams
 
-export type OnEachStep = (params: OnEachStepParams) => void
+export type onStepStarted = (params: onStepStartedParams) => void
+export type onStepFinished = (params: onStepFinishedParams) => void
 
-export interface OnEachStepParams {
+export interface onStepStartedParams {
+  name: string
+  received: number
+  valueBags: ValueBag[]
+}
+
+export interface onStepFinishedParams {
   name: string
   tookMs: number
   emitted: number
   valueBags: ValueBag[]
 }
 
+export type Loggers = { onStepFinished: InternalOnStepFinished; onStepStarted: InternalOnStepStarted }
+
 export interface CaminhoOptions {
-  onEachStep?: OnEachStep
+  onStepFinished?: onStepFinished
+  onStepStarted?: onStepStarted
   maxItemsFlowing?: number
 }
 
 export interface Accumulator<A> {
-  fn: (acc: A, value: ValueBag, index: number) => A,
-  seed: A,
+  fn: (acc: A, value: ValueBag, index: number) => A
+  seed: A
 }

@@ -16,7 +16,10 @@ async function runSubflowBenchmark(parentItems: number, childItemsPerParent: num
       childProcessed += valueBag.accumulator1
     },
   }
-  const childStep = { fn: (valueBag) => childCaminho.run(valueBag, steps.accumulator), provides: 'accumulator1' }
+  const childStep = {
+    fn: (valueBag: ValueBag) => childCaminho.run(valueBag, steps.accumulator),
+    provides: 'accumulator1',
+  }
   console.timeEnd('initialize steps')
   console.time('initialize caminho')
 
@@ -42,9 +45,8 @@ function initializeSteps(parentItems: number, childItemsPerParent: number) {
   const accumulatorFn = (acc: number) => acc + 1
   const parentGeneratorFn = getMockedGenerator(getNumberedArray(parentItems))
   const childGeneratorFn = getMockedGenerator(getNumberedArray(childItemsPerParent))
-  const pipeFn = (valueBag) => ({ id: valueBag.source1, name: 'pipe1' })
-  const mapBagForBatch = () => (valueBag) => ({ parentId: valueBag.source1, id: valueBag.subSource1, name: 'batch1' })
-  const batchFn = (valueBags) => valueBags.map(mapBagForBatch)
+  const pipeFn = (valueBag: ValueBag) => ({ id: valueBag.source1, name: 'pipe1' })
+  const batchFn = (valueBags: ValueBag[]) => valueBags.map(mapBagForBatch)
 
   return {
     parentGenerator: { fn: parentGeneratorFn, provides: 'source1' },
@@ -53,6 +55,10 @@ function initializeSteps(parentItems: number, childItemsPerParent: number) {
     pipe1: { fn: pipeFn, provides: 'pipe1' },
     accumulator: { fn: accumulatorFn, seed: 0 },
   }
+}
+
+function mapBagForBatch() {
+  return (valueBag: ValueBag) => ({ parentId: valueBag.source1, id: valueBag.subSource1, name: 'batch1' })
 }
 
 runSubflowBenchmark(50_000, 1_000)

@@ -21,7 +21,10 @@ async function runParallelBenchmark(parentItems: number, childItemsPerParent: nu
   const childCaminho = from(steps.childGenerator, { maxItemsFlowing: 1_000 })
     .parallel([steps.pipe3, steps.pipe4])
 
-  const childStep = { fn: (valueBag) => childCaminho.run(valueBag, steps.accumulator), provides: 'accumulator1' }
+  const childStep = {
+    fn: (valueBag: ValueBag) => childCaminho.run(valueBag, steps.accumulator),
+    provides: 'accumulator1',
+  }
 
   console.time('initialize caminho')
   const benchmarkCaminho = from(steps.parentGenerator, { maxItemsFlowing: 1_000 })

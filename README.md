@@ -172,26 +172,44 @@ await from({ fn: generateCars, provides: 'carId' })
 ```
 
 #### Logging
-Caminho features a simple log mechanism which executes a syncronous callback function on every step executed.  
-The function needs to be defined via the `onEachStep` parameter on the `from`.
+Caminho features a simple log mechanism which executes a syncronous callback function on every step start and finish.  
+The functions can be defined with the `onStepStart` and `onStepFinished` parameter on one of the `from` flow initializers.
 
-Every step execution, calls the `onEachStep` step, it provides the callback with the following information:
+The **onStepStart** provides the callback with the following information:
 
-- `name: string` - The `name` parameter on the step definition, defaults to the step function name - `step.fn.name`.  
-- `tookMs: number` - Time for the step to execute.  
-- `emitted: number` - Number of items processed, useful for batch operations
+- *name: string* - The name provided on the step definition, fallback to the name of the step function.
+- *valueBags: ValueBag[]* - Array of value bags at the moment this was executed.
+- *received: number* - Time of items received (this will only be greater than 1 in case it's a batch).
 
-Example of how the calls to `onEachStep` looks like:
+The **onStepFinished** provides the callback with the following information:
+
+- *name: string* - The name provided on the step definition, fallback to the name of the step function.
+- *valueBags: ValueBag[]* - Array of value bags at the moment this was executed.
+- *emitted: number* - Number of items processed (this will only be greater than 1 in case it's a batch).
+- *tookMs: number* - Time for the step to execute.
+
+Example:
 
 ```typescript
-await from({ fn: generateCars, provides: 'carId' }, { onEachStep: console.log })
-  // { name: 'generateCars', tookMs: number, emitted: 1 }
-  // { name: 'generateCars', tookMs: number, emitted: 1 }
+await from(
+    { fn: generateCars, provides: 'carId' },
+    {
+      onStepStarted: (log) => console.log('stepStarted', log),
+      onStepFinished: (log) => console.log('stepFinished', log),
+    }
+  )
+  // stepStarted { name: 'generateCars', received: 1, valueBags: [{}}] }
+  // stepFinished { name: 'generateCars', tookMs: number, emitted: 1, valueBags: [{ carId: "1" }] }
+  // stepStarted { name: 'generateCars', received: 1, valueBags: [{}] }
+  // stepFinished { name: 'generateCars', tookMs: number, emitted: 1, valueBags: [{ carId: "2" }] }
   .pipe({ fn: fetchPrice, provides: 'price', name: 'customName' })
-  // { name: 'customName', tookMs: number, emitted: 1 }
-  // { name: 'customName', tookMs: number, emitted: 1 }
+  // stepStarted { name: 'customName', received: 1, valueBags: [{ carId: "1" }] }
+  // stepFinished { name: 'customName', tookMs: number, emitted: 1, valueBags: [{ carId: "1", customName: "car-1" }] }
+  // stepStarted { name: 'customName', received: 1, valueBags: [{ carId: "2" }] }
+  // stepFinished { name: 'customName', tookMs: number, emitted: 1, valueBags: [{ carId: "2", customName: "car-2" }] }
   .pipe({ fn: fetchSpecs, provides: 'specs', batch: { maxSize: 50, timeoutMs: 500 } })
-  // { name: 'fetchSpecs', tookMs: number, emitted: 2 }
+  // stepStarted { name: 'fetchSpecs', received: 2, valueBags: [{ carId: "1", customName: "car-1" }, { carId: "2", customName: "car-2" } }] }
+  // stepFinished { name: 'fetchSpecs', tookMs: number, emitted: 2, valueBags: [{ carId: "1", customName: "car-1", specs: { engineSize: 1600 } }, { carId: "2", customName: "car-2", specs: { engineSize: 2000 } }] }
   .run()
 ```
 
@@ -213,8 +231,6 @@ npm run test:watch
 
 ## Roadmap
 
-- Add "onStartStep" callback for logging
 - Wrap steps in a try catch so we can call logger with the step error.
 - Proper typing on ValueBag and how it's handled in child steps
-- Built-in Retry system
 - Should step errors continue the flow?
