@@ -36,10 +36,10 @@ npm install caminho
 
 *After the steps are all defined execute your Caminho flow by calling `.run()`.*  
 
-`run` receives an optional Initial Bag, and optional aggregator. It Returns a Promise which is fulfilled when the Generator has finished providing values and all the items have been processed by all the defined steps in the Caminho instance. The function accepts two parameters:
-
-`initialValueBag: ValueBag`: An initial valueBag, which is passed through all steps.  
-`pickLastValues: string[]`: List of properties you want to be returned by run execution, only last values are executed, useful mainly for data that got aggregated with reduce.
+`run`: Returns a Promise which is fulfilled when the Generator has finished providing values and all the items have been processed by all the defined steps in the Caminho flow.  
+The function takes two parameters:  
+- `initialValueBag: ValueBag`: An initial valueBag, which is passed through all steps.  
+- `pickLastValues: string[]`: List of properties you want to be returned by run execution, only last values are executed, useful mainly for data that got aggregated with reduce.  
 
 Simple flow:
 
@@ -143,14 +143,12 @@ await from({ fn: generateCarIds, provides: 'carId' })
 ```
 
 #### Reduce
-Caminho features a reduce implementation in its flows, it allows to reduce through all records of the flow and produce an aggregated property.  
-To use it, call `reduce()` with the follow properties:   
-- `fn: (acc: A, value: ValueBag, index: number) => A`, Similar to a callback provided to Array.reduce, where the first parameter is the aggregated value, value is the item received from the flow, and index is the position of the item received.  
-- `seed: A`: Defines the initial value received on your aggregator function
-- `provides: string`: The property name to be appended to the valueBag
-- `keep: string[]`: List of properties you want to keep the last known value in the valueBag after the reduce is executed, useful in child flows.
-
-Comparable to [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce)
+Caminho features a reduce implementation in its flows, it allows to reduce through **all** records of the flow and produce an aggregated property.  
+To use it, call `reduce()` with the following properties:   
+- `fn: (acc: A, value: ValueBag, index: number) => A`, Similar to a callback provided to [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce).
+- `seed: A`: Defines the initial `acc` value received on your aggregator function.
+- `provides: string`: The property name to be appended to the valueBag with the value returned from the reducer.
+- `keep: string[]`: List of the properties that you want to keep the last known value in the valueBag for following steps, useful for child flows.
 
 ```typescript
 function sumPrice(acc: number, item: ValueBag) {
