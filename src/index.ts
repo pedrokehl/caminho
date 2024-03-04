@@ -1,10 +1,13 @@
 export type {
   ValueBag,
   PipeGenericParams,
-  OnEachStep,
   CaminhoOptions,
-  Accumulator as ReduceParams,
-  OnEachStepParams,
+  Accumulator,
+
+  onStepStartedParams,
+  onStepFinishedParams,
+  onStepStarted,
+  onStepFinished,
 } from './types'
 export type { Caminho } from './Caminho'
 

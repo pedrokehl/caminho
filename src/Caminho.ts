@@ -1,6 +1,6 @@
 import { from, lastValueFrom, reduce, tap } from 'rxjs'
 
-import type { ValueBag, PipeGenericParams, CaminhoOptions, Accumulator } from './types'
+import type { ValueBag, PipeGenericParams, CaminhoOptions, Accumulator, Loggers } from './types'
 
 import { GeneratorParams, wrapGenerator, wrapGeneratorWithBackPressure } from './operators/generator'
 import { pipe } from './operators/pipe'
@@ -9,8 +9,10 @@ import { parallel } from './operators/parallel'
 import { filter, FilterPredicate } from './operators/filter'
 
 import { applyOperator, isBatch, OperatorApplier } from './operators/helpers/operatorHelpers'
-import { getLogger } from './utils/stepLogger'
 import { PendingDataControl, PendingDataControlInMemory } from './utils/PendingDataControl'
+
+import { getOnStepFinished } from './utils/onStepFinished'
+import { getOnStepStarted } from './utils/onStepStarted'
 
 export class Caminho {
   private generator: (initialBag: ValueBag) => AsyncGenerator<ValueBag>
@@ -63,14 +65,14 @@ export class Caminho {
   }
 
   private getGenerator(generatorParams: GeneratorParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {
-    const logger = this.getLogger(generatorParams)
+    const loggers = this.getLoggers(generatorParams)
     if (this.options?.maxItemsFlowing) {
       const pendingDataControl = this.pendingDataControl as PendingDataControl
       this.finalStep = tap(() => pendingDataControl.decrement())
-      return wrapGeneratorWithBackPressure(generatorParams, this.options.maxItemsFlowing, pendingDataControl, logger)
+      return wrapGeneratorWithBackPressure(generatorParams, this.options.maxItemsFlowing, pendingDataControl, loggers)
     }
 
-    return wrapGenerator(generatorParams, logger)
+    return wrapGenerator(generatorParams, loggers)
   }
 
   private buildObservable(initialBag: ValueBag = {}) {
@@ -91,12 +93,14 @@ export class Caminho {
 
   private getApplierForPipeOrBatch(params: PipeGenericParams): OperatorApplier {
     return isBatch(params)
-      ? batch(params, this.getLogger(params))
-      : pipe(params, this.getLogger(params))
+      ? batch(params, this.getLoggers(params))
+      : pipe(params, this.getLoggers(params))
   }
 
-  private getLogger(params: GeneratorParams | PipeGenericParams) {
-    const name = params.name ?? params.fn.name
-    return getLogger(name, this.options?.onEachStep)
+  private getLoggers(params: GeneratorParams | PipeGenericParams): Loggers {
+    const stepName = params.name ?? params.fn.name
+    const onStepStarted = getOnStepStarted(stepName, this.options?.onStepStarted)
+    const onStepFinished = getOnStepFinished(stepName, this.options?.onStepFinished)
+    return { onStepFinished, onStepStarted }
   }
 }

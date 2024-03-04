@@ -2,7 +2,7 @@ import { from, ValueBag } from '../../src'
 import { sleep } from '../../src/utils/sleep'
 
 import { getMockedJobGenerator } from '../mocks/generator.mock'
-import { mockStepResult } from '../mocks/stepResult.mock'
+import { getOnStepFinishedParamsFixture } from '../mocks/stepResult.mock'
 
 test('Parallel steps should provide valueBag properly to the following steps', async () => {
   async function fetchStatusFn(valueBags: ValueBag[]) {
@@ -49,7 +49,7 @@ test('Parallel steps should use the most efficient path for emiting values', asy
   const NUMBER_OF_ITERATIONS = 5
 
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
-  const onEachStepMock = jest.fn().mockName('onEachStepLog')
+  const onStepFinishedMock = jest.fn().mockName('onStepFinishedLog')
 
   const fetchStatus = {
     fn: async function fetchStatus(valueBag: ValueBag[]) {
@@ -73,29 +73,29 @@ test('Parallel steps should use the most efficient path for emiting values', asy
     },
   }
 
-  await from({ fn: generatorMock, provides: 'job' }, { onEachStep: onEachStepMock, maxItemsFlowing: 2 })
+  await from({ fn: generatorMock, provides: 'job' }, { onStepFinished: onStepFinishedMock, maxItemsFlowing: 2 })
     .parallel([fetchStatus, fetchPosition])
     .pipe(saveAll)
     .run()
 
-  expect(onEachStepMock.mock.calls).toEqual([
-    [mockStepResult({ name: 'generator' })],
-    [mockStepResult({ name: 'generator' })],
-    [mockStepResult({ name: 'fetchPosition' })],
-    [mockStepResult({ name: 'fetchPosition' })],
-    [mockStepResult({ name: 'fetchStatus' })],
-    [mockStepResult({ name: 'saveSomething' })],
-    [mockStepResult({ name: 'saveSomething' })],
-    [mockStepResult({ name: 'generator' })],
-    [mockStepResult({ name: 'generator' })],
-    [mockStepResult({ name: 'fetchPosition' })],
-    [mockStepResult({ name: 'fetchPosition' })],
-    [mockStepResult({ name: 'fetchStatus' })],
-    [mockStepResult({ name: 'saveSomething' })],
-    [mockStepResult({ name: 'saveSomething' })],
-    [mockStepResult({ name: 'generator' })],
-    [mockStepResult({ name: 'fetchPosition' })],
-    [mockStepResult({ name: 'fetchStatus' })],
-    [mockStepResult({ name: 'saveSomething' })],
+  expect(onStepFinishedMock.mock.calls).toEqual([
+    [getOnStepFinishedParamsFixture({ name: 'generator' })],
+    [getOnStepFinishedParamsFixture({ name: 'generator' })],
+    [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],
+    [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],
+    [getOnStepFinishedParamsFixture({ name: 'fetchStatus' })],
+    [getOnStepFinishedParamsFixture({ name: 'saveSomething' })],
+    [getOnStepFinishedParamsFixture({ name: 'saveSomething' })],
+    [getOnStepFinishedParamsFixture({ name: 'generator' })],
+    [getOnStepFinishedParamsFixture({ name: 'generator' })],
+    [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],
+    [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],
+    [getOnStepFinishedParamsFixture({ name: 'fetchStatus' })],
+    [getOnStepFinishedParamsFixture({ name: 'saveSomething' })],
+    [getOnStepFinishedParamsFixture({ name: 'saveSomething' })],
+    [getOnStepFinishedParamsFixture({ name: 'generator' })],
+    [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],
+    [getOnStepFinishedParamsFixture({ name: 'fetchStatus' })],
+    [getOnStepFinishedParamsFixture({ name: 'saveSomething' })],
   ])
 })

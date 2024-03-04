@@ -1,7 +1,6 @@
 import { bufferTime, filter, mergeAll, mergeMap } from 'rxjs'
 
-import type { Operator, ValueBag } from '../types'
-import type { Logger } from '../utils/stepLogger'
+import type { Loggers, Operator, ValueBag } from '../types'
 import { batchHasProvides, applyOperatorsToObservable, OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 
@@ -24,16 +23,17 @@ export interface BatchParamsNoProvides extends BaseBatchParams {
   fn: (valueBag: ValueBag[]) => void | Promise<void>
 }
 
-export function batch(params: BatchParams, logger: Logger): OperatorApplier {
+export function batch(params: BatchParams, loggers: Loggers): OperatorApplier {
   const getBag = batchHasProvides(params)
     ? valueBagGetterBatchProvides(params.provides)
     : valueBagGetterBatchNoProvides()
 
   async function wrappedStep(valueBag: ValueBag[]): Promise<ValueBag[]> {
+    loggers.onStepStarted(valueBag)
     const startTime = new Date()
     const values = await params.fn([...valueBag])
     const newValueBags = getBag(valueBag, values as unknown[])
-    logger(newValueBags, startTime)
+    loggers.onStepFinished(newValueBags, startTime)
     return newValueBags
   }
 
