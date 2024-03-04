@@ -1,17 +1,9 @@
-import { Caminho, from, Accumulator, ValueBag } from '../../src'
+import { from, ReduceParams, ValueBag } from '../../src'
 
 import { getMockedGenerator } from '../mocks/generator.mock'
 import { getNumberedArray } from '../mocks/array.mock'
 
 describe('Sub-Caminho', () => {
-  function getStepForSubCaminho<T>(subCaminho: Caminho, accumulator: Accumulator<T>, provides: string) {
-    return {
-      fn: (valueBag: ValueBag) => subCaminho.run(valueBag, accumulator),
-      provides,
-      name: 'subCaminho',
-    }
-  }
-
   test('Should provide the Accumulated Value to the next parent step', async () => {
     const companySteps = getCompanySteps()
     const employeeSteps = getEmployeeSteps()
@@ -19,14 +11,15 @@ describe('Sub-Caminho', () => {
     const employeeCaminho = from(employeeSteps.generator)
       .pipe(employeeSteps.mapper)
       .pipe(employeeSteps.saver)
+      .reduce(employeeSteps.accumulator)
 
     await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .pipe(getStepForSubCaminho(employeeCaminho, employeeSteps.accumulator, 'savedEmployees'))
+      .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'employees' })
       .pipe(companySteps.saver)
       .run()
 
-    assertCompanySteps(companySteps.saver.fn, { savedEmployees: 3 })
+    assertCompanySteps(companySteps.saver.fn, { employees: { count: 3 } })
     assertEmployeeSteps(employeeSteps.saver.fn)
   })
 
@@ -62,15 +55,16 @@ describe('Sub-Caminho', () => {
       .pipe({ ...employeeSteps.mapper, maxConcurrency: 1 })
       .pipe({ ...employeeSteps.saver, batch: { maxSize: 10, timeoutMs: 5 } })
       .pipe(finalStepEmployee)
+      .reduce(employeeSteps.accumulator)
 
     await from({ ...companySteps.generator }, { maxItemsFlowing: 2 })
       .pipe(companySteps.fetchStatus)
-      .pipe(getStepForSubCaminho(employeeCaminho, employeeSteps.accumulator, 'savedEmployees'))
+      .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'employees' })
       .pipe({ ...companySteps.saver, batch: { maxSize: 2, timeoutMs: 10 } })
       .pipe(finalStepCompany)
       .run()
 
-    assertCompanySteps(finalStepCompany.fn, { savedEmployees: 3 })
+    assertCompanySteps(finalStepCompany.fn, { employees: { count: 3 } })
     assertEmployeeSteps(finalStepEmployee.fn)
   })
 
@@ -82,21 +76,23 @@ describe('Sub-Caminho', () => {
     const internCaminho = from(internSteps.generator)
       .pipe(internSteps.mapper)
       .pipe(internSteps.saver)
+      .reduce(internSteps.accumulator)
 
     const employeeCaminho = from(employeeSteps.generator)
       .pipe(employeeSteps.mapper)
       .pipe(employeeSteps.saver)
+      .reduce(employeeSteps.accumulator)
 
     await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .pipe(getStepForSubCaminho(employeeCaminho, employeeSteps.accumulator, 'savedEmployees'))
-      .pipe(getStepForSubCaminho(internCaminho, internSteps.accumulator, 'savedInterns'))
+      .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'employees' })
+      .pipe({ fn: (bag: ValueBag) => internCaminho.run(bag, ['count']), provides: 'interns' })
       .pipe(companySteps.saver)
       .run()
 
     assertEmployeeSteps(employeeSteps.saver.fn)
-    assertEmployeeSteps(internSteps.saver.fn, { savedEmployees: 3 })
-    assertCompanySteps(companySteps.saver.fn, { savedEmployees: 3, savedInterns: 3 })
+    assertEmployeeSteps(internSteps.saver.fn, { employees: { count: 3 } })
+    assertCompanySteps(companySteps.saver.fn, { employees: { count: 3 }, interns: { count: 3 } })
   })
 
   test('Should process multiple nested Caminhos', async () => {
@@ -106,21 +102,23 @@ describe('Sub-Caminho', () => {
 
     const documentsCaminho = from(documentSteps.generator)
       .pipe(documentSteps.saver)
+      .reduce(documentSteps.accumulator)
 
     const employeeCaminho = from(employeeSteps.generator)
       .pipe(employeeSteps.mapper)
-      .pipe(getStepForSubCaminho(documentsCaminho, documentSteps.accumulator, 'savedDocuments'))
+      .pipe({ fn: (bag: ValueBag) => documentsCaminho.run(bag, ['count']), provides: 'savedDocuments' })
       .pipe(employeeSteps.saver)
+      .reduce(employeeSteps.accumulator)
 
     await from(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .pipe(getStepForSubCaminho(employeeCaminho, employeeSteps.accumulator, 'savedEmployees'))
+      .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'savedEmployees' })
       .pipe(companySteps.saver)
       .run()
 
     assertDocumentSteps(documentSteps.saver.fn)
-    assertEmployeeSteps(employeeSteps.saver.fn, { savedDocuments: 2 })
-    assertCompanySteps(companySteps.saver.fn, { savedEmployees: 3 })
+    assertEmployeeSteps(employeeSteps.saver.fn, { savedDocuments: { count: 2 } })
+    assertCompanySteps(companySteps.saver.fn, { savedEmployees: { count: 3 } })
   })
 })
 
@@ -158,7 +156,7 @@ function getEmployeeSteps() {
   const generator = { fn: employeeGeneratorFn, provides: 'employeeName' }
   const mapper = { fn: mapEmployeeFn, provides: 'mappedEmployee' }
   const saver = { fn: saveEmployeeFn }
-  const accumulator: Accumulator<number> = { fn: (acc: number) => acc + 1, seed: 0 }
+  const accumulator: ReduceParams<number> = { fn: (acc: number) => acc + 1, seed: 0, provides: 'count' }
 
   return {
     generator,
@@ -174,7 +172,7 @@ function getDocumentSteps() {
 
   const generator = { fn: generatorFn, provides: 'documentId' }
   const saver = { fn: saverFn }
-  const accumulator: Accumulator<number> = { fn: (acc: number) => acc + 1, seed: 0 }
+  const accumulator: ReduceParams<number> = { fn: (acc: number) => acc + 1, seed: 0, provides: 'count' }
 
   return {
     generator,

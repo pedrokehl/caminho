@@ -1,11 +1,12 @@
-import { from, lastValueFrom, reduce, tap } from 'rxjs'
+import { from, lastValueFrom, tap } from 'rxjs'
 
-import type { ValueBag, PipeGenericParams, CaminhoOptions, Accumulator, Loggers } from './types'
+import type { ValueBag, PipeGenericParams, CaminhoOptions, Loggers } from './types'
 
 import { GeneratorParams, wrapGenerator, wrapGeneratorWithBackPressure } from './operators/generator'
 import { pipe } from './operators/pipe'
 import { batch } from './operators/batch'
 import { parallel } from './operators/parallel'
+import { reduce, ReduceParams } from './operators/reduce'
 import { filter, FilterPredicate } from './operators/filter'
 
 import { applyOperator, isBatch, OperatorApplier } from './operators/helpers/operatorHelpers'
@@ -13,6 +14,7 @@ import { PendingDataControl, PendingDataControlInMemory } from './utils/PendingD
 
 import { getOnStepFinished } from './utils/onStepFinished'
 import { getOnStepStarted } from './utils/onStepStarted'
+import { pick } from './utils/pick'
 
 export class Caminho {
   private generator: (initialBag: ValueBag) => AsyncGenerator<ValueBag>
@@ -50,18 +52,18 @@ export class Caminho {
     return this
   }
 
-  public async run<T = undefined>(initialBag?: ValueBag, resultAggregator?: Accumulator<T>): Promise<T | undefined> {
+  public reduce<T>(reduceParams: ReduceParams<T>): this {
+    const loggers = this.getLoggers(reduceParams)
+    this.addOperatorApplier(reduce(reduceParams, loggers, this.pendingDataControl))
+    return this
+  }
+
+  public run(initialBag: ValueBag, pickLastValues: string[]): Promise<unknown>
+  public run(initialBag?: ValueBag): Promise<undefined>
+  public async run(initialBag?: ValueBag, pickLastValues?: string[]): Promise<unknown | undefined> {
     const observable$ = this.buildObservable(initialBag)
-
-    if (resultAggregator) {
-      const aggregateObservable$ = observable$
-        .pipe(reduce(resultAggregator.fn, resultAggregator.seed))
-
-      return lastValueFrom(aggregateObservable$, { defaultValue: resultAggregator.seed })
-    }
-
-    await lastValueFrom(observable$, { defaultValue: undefined })
-    return undefined
+    const lastValue = await lastValueFrom(observable$, { defaultValue: undefined })
+    return pickLastValues && lastValue ? pick(lastValue, pickLastValues) : undefined
   }
 
   private getGenerator(generatorParams: GeneratorParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {
@@ -97,7 +99,7 @@ export class Caminho {
       : pipe(params, this.getLoggers(params))
   }
 
-  private getLoggers(params: GeneratorParams | PipeGenericParams): Loggers {
+  private getLoggers<T>(params: GeneratorParams | PipeGenericParams | ReduceParams<T>): Loggers {
     const stepName = params.name ?? params.fn.name
     const onStepStarted = getOnStepStarted(stepName, this.options?.onStepStarted)
     const onStepFinished = getOnStepFinished(stepName, this.options?.onStepFinished)

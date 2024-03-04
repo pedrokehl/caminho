@@ -2,7 +2,6 @@ export type {
   ValueBag,
   PipeGenericParams,
   CaminhoOptions,
-  Accumulator,
 
   onStepStartedParams,
   onStepFinishedParams,
@@ -15,6 +14,7 @@ export type { BatchParams, BatchParamsNoProvides, BatchParamsProvides } from './
 export type { PipeParams, PipeParamsNoProvides, PipeParamsProvides } from './operators/pipe'
 
 export type { GeneratorParams as FromParams } from './operators/generator'
+export type { ReduceParams } from './operators/reduce'
 
 export { from, From } from './from'
 export { fromItem, type FromItemParams, FromItem } from './from'
