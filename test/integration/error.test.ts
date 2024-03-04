@@ -29,13 +29,14 @@ describe('Error Handling', () => {
     return expect(caminho.run()).rejects.toMatchObject({ message: 'Filter error' })
   })
 
-  test('Should pass accumulator error to run call stack', () => {
-    const accumulator = {
-      fn: () => { throw new Error('Accumulator error') },
-      seed: 0,
-    }
+  test('Should pass reduce error to run call stack', () => {
     const caminho = from({ fn: getMockedGenerator([1, 2]), provides: 'number' })
+      .reduce({
+        fn: () => { throw new Error('Reduce error') },
+        seed: 0,
+        provides: 'doesntMatter',
+      })
 
-    return expect(caminho.run({}, accumulator)).rejects.toMatchObject({ message: 'Accumulator error' })
+    return expect(caminho.run({})).rejects.toMatchObject({ message: 'Reduce error' })
   })
 })

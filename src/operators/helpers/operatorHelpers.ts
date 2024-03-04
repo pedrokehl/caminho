@@ -1,5 +1,5 @@
 import type { Observable } from 'rxjs'
-import { ValueBag, Operator } from '../../types'
+import { ValueBag } from '../../types'
 
 import { BatchParams, BatchParamsProvides } from '../batch'
 import { PipeParams, PipeParamsProvides } from '../pipe'
@@ -23,11 +23,4 @@ export function applyOperator(
   operatorApplier: OperatorApplier,
 ): Observable<ValueBag> {
   return operatorApplier(observable)
-}
-
-export function applyOperatorsToObservable(
-  observable: Observable<ValueBag>,
-  operators: Operator[],
-): Observable<ValueBag> {
-  return operators.reduce((newObservable, operator) => newObservable.pipe(operator), observable)
 }

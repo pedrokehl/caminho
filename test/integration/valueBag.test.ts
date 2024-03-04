@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { from, ValueBag } from '../../src'
 import { getMockedJobGenerator } from '../mocks/generator.mock'
 import { getMockedJob } from '../mocks/job.mock'

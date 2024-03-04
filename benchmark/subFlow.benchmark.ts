@@ -3,7 +3,6 @@ import { getNumberedArray } from '../test/mocks/array.mock'
 import { getMockedGenerator } from '../test/mocks/generator.mock'
 
 async function runSubflowBenchmark(parentItems: number, childItemsPerParent: number) {
-  let childProcessed = 0
   const expectedTotalChild = parentItems * childItemsPerParent
   console.log('---- Starting Benchmark ----')
   console.log(`Parent Items: ${parentItems}`)
@@ -11,29 +10,25 @@ async function runSubflowBenchmark(parentItems: number, childItemsPerParent: num
 
   console.time('initialize steps')
   const steps = initializeSteps(parentItems, childItemsPerParent)
-  const countSteps = {
-    fn: (valueBag: ValueBag) => {
-      childProcessed += valueBag.accumulator1
-    },
-  }
-  const childStep = {
-    fn: (valueBag: ValueBag) => childCaminho.run(valueBag, steps.accumulator),
-    provides: 'accumulator1',
-  }
   console.timeEnd('initialize steps')
-  console.time('initialize caminho')
 
+  console.time('initialize caminho')
   const childCaminho = from(steps.childGenerator, { maxItemsFlowing: 1_000 })
-    .pipe(steps.batch)
+    .pipe({ fn: steps.batchFn, provides: 'batch1', batch: { maxSize: 50, timeoutMs: 5 } })
+    .reduce({ fn: steps.accumulatorFn, seed: 0, provides: 'count' })
 
   const parentCaminho = from(steps.parentGenerator, { maxItemsFlowing: 1_000 })
-    .pipe(steps.pipe1)
-    .pipe(childStep)
-    .pipe(countSteps)
+    .pipe({ fn: steps.pipeFn, provides: 'pipe1' })
+    .pipe({ fn: (bag: ValueBag) => childCaminho.run(bag, ['count']), provides: 'child' })
+    .reduce({
+      fn: (acc: number, bag: ValueBag) => acc + bag.child.count,
+      seed: 0,
+      provides: 'count',
+    })
   console.timeEnd('initialize caminho')
 
   console.time('run caminho')
-  await parentCaminho.run()
+  const { count: childProcessed } = await parentCaminho.run({}, ['count']) as { count: number }
   console.timeEnd('run caminho')
 
   if (childProcessed !== expectedTotalChild) {
@@ -51,9 +46,9 @@ function initializeSteps(parentItems: number, childItemsPerParent: number) {
   return {
     parentGenerator: { fn: parentGeneratorFn, provides: 'source1' },
     childGenerator: { fn: childGeneratorFn, provides: 'subSource1' },
-    batch: { fn: batchFn, provides: 'batch1', batch: { maxSize: 50, timeoutMs: 5 } },
-    pipe1: { fn: pipeFn, provides: 'pipe1' },
-    accumulator: { fn: accumulatorFn, seed: 0 },
+    batchFn,
+    pipeFn,
+    accumulatorFn,
   }
 }
 
