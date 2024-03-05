@@ -13,14 +13,12 @@ interface BaseBatchParams {
     timeoutMs: number
   }
   maxConcurrency?: number
-}
-export interface BatchParamsProvides extends BaseBatchParams {
   fn: (valueBag: ValueBag[]) => unknown[] | Promise<unknown[]>
-  provides: string
 }
 
-export interface BatchParamsNoProvides extends BaseBatchParams {
-  fn: (valueBag: ValueBag[]) => void | Promise<void>
+export type BatchParamsNoProvides = BaseBatchParams
+export interface BatchParamsProvides extends BaseBatchParams {
+  provides: string
 }
 
 export function batch(params: BatchParams, loggers: Loggers): OperatorApplier {
