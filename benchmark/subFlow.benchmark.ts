@@ -18,7 +18,7 @@ async function runSubflowBenchmark(parentItems: number, childItemsPerParent: num
     .reduce({ fn: steps.accumulatorFn, seed: 0, provides: 'count' })
 
   const parentCaminho = from(steps.parentGenerator, { maxItemsFlowing: 1_000 })
-    .pipe({ fn: steps.pipeFn, provides: 'pipe1' })
+    .pipe({ fn: steps.pipeFn })
     .pipe({ fn: (bag: ValueBag) => childCaminho.run(bag, ['count']), provides: 'child' })
     .reduce({
       fn: (acc: number, bag: ValueBag) => acc + bag.child.count,

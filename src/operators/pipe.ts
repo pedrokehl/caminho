@@ -8,15 +8,12 @@ export type PipeParams = PipeParamsProvides | PipeParamsNoProvides
 interface BasePipeParams {
   name?: string
   maxConcurrency?: number
-}
-
-export interface PipeParamsProvides extends BasePipeParams {
   fn: (valueBag: ValueBag) => unknown | Promise<unknown>
-  provides: string
 }
 
-export interface PipeParamsNoProvides extends BasePipeParams {
-  fn: (valueBag: ValueBag) => void | Promise<void>
+export type PipeParamsNoProvides = BasePipeParams
+export interface PipeParamsProvides extends BasePipeParams {
+  provides: string
 }
 
 export function pipe(params: PipeParams, loggers: Loggers): OperatorApplier {
