@@ -5,20 +5,20 @@ import { InternalOnStepStarted } from './utils/onStepStarted'
 
 // TODO: Proper typing for ValueBag!
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ValueBag = Record<string, any>
+export type ValueBag = any
 
 export type PipeGenericParams = PipeParams | BatchParams
 
-export type onStepStarted = (params: onStepStartedParams) => void
-export type onStepFinished = (params: onStepFinishedParams) => void
+export type onStepStarted = (params: OnStepStartedParams) => void
+export type onStepFinished = (params: OnStepFinishedParams) => void
 
-export interface onStepStartedParams {
+export interface OnStepStartedParams {
   name: string
   received: number
   valueBags: ValueBag[]
 }
 
-export interface onStepFinishedParams {
+export interface OnStepFinishedParams {
   name: string
   tookMs: number
   emitted: number
