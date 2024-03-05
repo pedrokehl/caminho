@@ -3,8 +3,8 @@ export type {
   PipeGenericParams,
   CaminhoOptions,
 
-  onStepStartedParams,
-  onStepFinishedParams,
+  OnStepStartedParams,
+  OnStepFinishedParams,
   onStepStarted,
   onStepFinished,
 } from './types'
