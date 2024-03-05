@@ -170,7 +170,7 @@ You can combine multiple instances of Caminho in the same execution for nested g
 This approach works with Parallelism, Concurrency and Batching, since the run function will be treated as a normal step.  
 
 ```typescript
-const childCaminho = from({ generateItemsByCarId, provides: 'carItem' })
+const childCaminho = from({ fn: generateItemsByCarId, provides: 'carItem' })
   .pipe({ fn: saveItem })
 
 await from({ fn: generateCars, provides: 'carId' })
