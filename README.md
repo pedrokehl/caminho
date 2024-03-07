@@ -23,6 +23,8 @@ The motivation behind Caminho is from an increased demand for data processing sy
 #### Installation
 ```bash
 npm install caminho
+# or
+deno add @pedrokehl/caminho
 ```
 
 #### Basic Usage
