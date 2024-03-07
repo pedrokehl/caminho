@@ -239,5 +239,5 @@ npm run test:watch
 ## Roadmap
 
 - Wrap steps in a try catch so we can call logger with the step error.
-- Proper typing on ValueBag and how it's handled in child steps
-- Should step errors continue the flow?
+- Optional parameter in step to allow error without interrupting flow.
+- Proper typing on ValueBag and how it's handled in child steps.
