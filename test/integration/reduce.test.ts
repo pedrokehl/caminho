@@ -1,4 +1,4 @@
-import { from } from '../../src'
+import { fromGenerator } from '../../src'
 import { sleep } from '../../src/utils/sleep'
 import { getMockedJobGenerator } from '../mocks/generator.mock'
 import { getOnStepFinishedParamsFixture } from '../mocks/stepResult.mock'
@@ -9,7 +9,7 @@ describe('Reduce', () => {
     const saveJob = jest.fn()
     const reduceFn = jest.fn().mockImplementation((acc) => (acc + 1))
 
-    const result = await from({ fn: generatorMock, provides: 'job' })
+    const result = await fromGenerator({ fn: generatorMock, provides: 'job' })
       .pipe({ fn: saveJob })
       .reduce({ fn: reduceFn, provides: 'count', seed: 100 })
       .run({}, ['count'])
@@ -22,7 +22,7 @@ describe('Reduce', () => {
     const saveJob = jest.fn()
     const reduceFn = jest.fn().mockImplementation((acc) => (acc + 1))
 
-    await from({ fn: generatorMock, provides: 'job' })
+    await fromGenerator({ fn: generatorMock, provides: 'job' })
       .pipe({ fn: saveJob })
       .reduce({ fn: reduceFn, provides: 'count', seed: 100 })
       .run({ initial: true })
@@ -37,7 +37,7 @@ describe('Reduce', () => {
     const saveJob = jest.fn()
     const reduceFn = jest.fn().mockImplementation((acc, bag) => (acc + Number(bag.job.job_id)))
 
-    const result = await from({ fn: generatorMock, provides: 'job' })
+    const result = await fromGenerator({ fn: generatorMock, provides: 'job' })
       .pipe({ fn: saveJob })
       .reduce({ fn: reduceFn, provides: 'count', seed: 0, keep: ['initial', 'job'] })
       .run({ initial: true }, ['initial', 'job', 'count'])
@@ -50,7 +50,7 @@ describe('Reduce', () => {
     const saveCount = jest.fn()
     const reduceFn = jest.fn().mockImplementation((acc, bag) => (acc + Number(bag.job.job_id)))
 
-    await from({ fn: generatorMock, provides: 'job' })
+    await fromGenerator({ fn: generatorMock, provides: 'job' })
       .reduce({ fn: reduceFn, provides: 'count', seed: 0, keep: ['initial', 'job'] })
       .pipe({ fn: saveCount })
       .run({ initial: true }, ['initial', 'job', 'count'])
@@ -68,7 +68,7 @@ describe('Reduce', () => {
     const onStep = jest.fn()
     const reduceFn = jest.fn().mockImplementation((acc, bag) => (acc + Number(bag.job.job_id))).mockName('reduceFn')
 
-    await from({
+    await fromGenerator({
       name: 'generator',
       fn: generatorMock,
       provides: 'job',

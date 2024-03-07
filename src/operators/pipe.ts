@@ -1,23 +1,17 @@
 import { mergeMap } from 'rxjs'
 import type { ValueBag, Loggers } from '../types'
-import { OperatorApplier, pipeHasProvides } from './helpers/operatorHelpers'
+import { OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 
-export type PipeParams = PipeParamsProvides | PipeParamsNoProvides
-
-interface BasePipeParams {
+export type PipeParams = {
   name?: string
   maxConcurrency?: number
   fn: (valueBag: ValueBag) => unknown | Promise<unknown>
-}
-
-export type PipeParamsNoProvides = BasePipeParams
-export interface PipeParamsProvides extends BasePipeParams {
-  provides: string
+  provides?: string
 }
 
 export function pipe(params: PipeParams, loggers: Loggers): OperatorApplier {
-  const getBag = pipeHasProvides(params) ? valueBagGetterProvides(params.provides) : valueBagGetterNoProvides()
+  const getBag = params.provides ? valueBagGetterProvides(params.provides) : valueBagGetterNoProvides()
 
   async function wrappedStep(valueBag: ValueBag): Promise<ValueBag> {
     loggers.onStepStarted([valueBag])

@@ -1,4 +1,4 @@
-import { from } from '../../src'
+import { fromGenerator } from '../../src'
 import { getMockedJobGenerator } from '../mocks/generator.mock'
 
 describe('Filter', () => {
@@ -6,7 +6,7 @@ describe('Filter', () => {
     const generatorMock = getMockedJobGenerator(2)
     const saveJob = jest.fn()
 
-    await from({ fn: generatorMock, provides: 'job' })
+    await fromGenerator({ fn: generatorMock, provides: 'job' })
       .filter((valueBag) => valueBag.job.job_id === '2')
       .pipe({ fn: saveJob })
       .run()
@@ -19,7 +19,7 @@ describe('Filter', () => {
     const generatorMock = getMockedJobGenerator(2)
     const saveJob = jest.fn()
 
-    await from({ fn: generatorMock, provides: 'job' })
+    await fromGenerator({ fn: generatorMock, provides: 'job' })
       .filter(() => false)
       .pipe({ fn: saveJob })
       .run()
@@ -31,7 +31,7 @@ describe('Filter', () => {
     const generatorMock = getMockedJobGenerator(2)
     const saveJob = jest.fn()
 
-    await from({ fn: generatorMock, provides: 'job' })
+    await fromGenerator({ fn: generatorMock, provides: 'job' })
       .filter(() => true)
       .pipe({ fn: saveJob })
       .run()
@@ -43,7 +43,7 @@ describe('Filter', () => {
     const generatorMock = getMockedJobGenerator(3)
     const saveJob = jest.fn()
 
-    await from({ fn: generatorMock, provides: 'job' }, { maxItemsFlowing: 2 })
+    await fromGenerator({ fn: generatorMock, provides: 'job' }, { maxItemsFlowing: 2 })
       .filter(() => false)
       .pipe({ fn: saveJob })
       .run()

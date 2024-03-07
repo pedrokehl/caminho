@@ -5,7 +5,7 @@ import { OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 import { pick } from '../utils/pick'
 
-export interface ReduceParams<A> {
+export type ReduceParams<A> = {
   name?: string
   fn: (acc: A, value: ValueBag, index: number) => A
   // Properties to keep in the bag after reducing, keep in mind only last value of current flow will be computed

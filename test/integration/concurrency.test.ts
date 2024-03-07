@@ -1,4 +1,4 @@
-import { from } from '../../src'
+import { fromGenerator } from '../../src'
 import { sleep } from '../../src/utils/sleep'
 
 import { getMockedJobGenerator } from '../mocks/generator.mock'
@@ -20,7 +20,7 @@ test('Should run components in series if maxConcurrency is set to 1', async () =
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
-  await from({ fn: generatorMock, provides: 'job' })
+  await fromGenerator({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: fetchMock, provides: 'rawData', maxConcurrency: 1 })
     .pipe({ fn: saveMock })
     .run()
@@ -44,7 +44,7 @@ test('Should run components in concurrency if set', async () => {
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
   const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
-  await from({ fn: generatorMock, provides: 'job' })
+  await fromGenerator({ fn: generatorMock, provides: 'job' })
     .pipe({ fn: fetchMock, provides: 'rawData', maxConcurrency: 5 })
     .pipe({ fn: saveMock })
     .run()

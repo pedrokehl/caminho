@@ -1,22 +1,18 @@
 export type {
-  ValueBag,
-  PipeGenericParams,
+  Caminho,
   CaminhoOptions,
-
+  PipeGenericParams,
   OnStepStartedParams,
   OnStepFinishedParams,
-  onStepStarted,
-  onStepFinished,
+  ValueBag,
 } from './types'
-export type { Caminho } from './Caminho'
 
-export type { BatchParams, BatchParamsNoProvides, BatchParamsProvides } from './operators/batch'
-export type { PipeParams, PipeParamsNoProvides, PipeParamsProvides } from './operators/pipe'
-
-export type { GeneratorParams as FromParams } from './operators/generator'
+export type { BatchParams } from './operators/batch'
+export type { PipeParams } from './operators/pipe'
 export type { ReduceParams } from './operators/reduce'
+export type { FilterPredicate } from './operators/filter'
 
-export { from, From } from './from'
-export { fromItem, type FromItemParams, FromItem } from './from'
-export { fromArray, type FromArrayParams, FromArray } from './from'
-export { fromFn, type FromFnParams, FromFn } from './from'
+export { fromGenerator, type FromGeneratorParams } from './from'
+export { fromValue, type fromValueParams } from './from'
+export { fromArray, type FromArrayParams } from './from'
+export { fromFn, type FromFnParams } from './from'

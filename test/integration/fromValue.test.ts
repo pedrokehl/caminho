@@ -1,11 +1,11 @@
-import { fromItem } from '../../src'
+import { fromValue } from '../../src'
 
-describe('fromItem', () => {
+describe('fromValue', () => {
   test('Should call the subsequent functions of the flow with the provided item', async () => {
     const mapMock = jest.fn().mockReturnValue({ mappedData: 1 })
     const fetchMock = jest.fn().mockResolvedValue({ dataId: '1' })
 
-    await fromItem({ item: { foo: 'bar' }, provides: 'item' })
+    await fromValue({ item: { foo: 'bar' }, provides: 'item' })
       .pipe({ fn: fetchMock, provides: 'rawData' })
       .pipe({ fn: mapMock, provides: 'mappedData' })
       .run()

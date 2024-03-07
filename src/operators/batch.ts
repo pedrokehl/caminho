@@ -1,12 +1,10 @@
 import { Observable, bufferTime, filter, mergeAll, mergeMap } from 'rxjs'
 
 import type { Loggers, ValueBag } from '../types'
-import { batchHasProvides, OperatorApplier } from './helpers/operatorHelpers'
+import { OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 
-export type BatchParams = BatchParamsProvides | BatchParamsNoProvides
-
-interface BaseBatchParams {
+export type BatchParams = {
   name?: string
   batch: {
     maxSize: number
@@ -14,15 +12,11 @@ interface BaseBatchParams {
   }
   maxConcurrency?: number
   fn: (valueBag: ValueBag[]) => unknown[] | Promise<unknown[]>
-}
-
-export type BatchParamsNoProvides = BaseBatchParams
-export interface BatchParamsProvides extends BaseBatchParams {
-  provides: string
+  provides?: string
 }
 
 export function batch(params: BatchParams, loggers: Loggers): OperatorApplier {
-  const getBag = batchHasProvides(params)
+  const getBag = params.provides
     ? valueBagGetterBatchProvides(params.provides)
     : valueBagGetterBatchNoProvides()
 

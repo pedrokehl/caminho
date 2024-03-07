@@ -10,7 +10,7 @@ export class PendingDataControlInMemory implements PendingDataControl {
   }
 }
 
-export interface PendingDataControl {
+export type PendingDataControl = {
   size: number
   increment: (value?: number) => void
   decrement: (value?: number) => void

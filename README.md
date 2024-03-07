@@ -26,7 +26,7 @@ npm install caminho
 ```
 
 #### Basic Usage
-`from()` is the starting point of Caminho, which returns a `Caminho` instance based on the provided AsyncGenerator.  
+`fromGenerator()` is the starting point of Caminho, which returns a `Caminho` instance based on the provided AsyncGenerator.  
 
 *A Caminho instance contains the following methods to define the flow:*  
 
@@ -44,9 +44,9 @@ The function takes two parameters:
 Simple flow:
 
 ```typescript
-import { from } from 'caminho'
+import { fromGenerator } from 'caminho'
 
-const caminho = from({ fn: generateCars, provides: 'carId' })
+const caminho = fromGenerator({ fn: generateCars, provides: 'carId' })
   .parallel([
     { fn: fetchPrice, maxConcurrency: 100, provides: 'price' },
     { fn: fetchSpecs, maxConcurrency: 20, provides: 'specs' },
@@ -62,7 +62,7 @@ await caminho.run({ manufacturer: 'subaru' })
 Use `maxItemsFlowing` for lossless backpressure, it limits the amount of data concurrently in the flow, useful to avoid memory overflow.  
 
 ```typescript
-import { from, ValueBag } from 'caminho'
+import { fromGenerator, ValueBag } from 'caminho'
 
 async function* generateCars(valueBag: ValueBag) {
   const limit = 50
@@ -77,7 +77,7 @@ async function* generateCars(valueBag: ValueBag) {
   }
 }
 
-await from({ fn: generateCars, provides: 'carId' }, { maxItemsFlowing: 1_000 })
+await fromGenerator({ fn: generateCars, provides: 'carId' }, { maxItemsFlowing: 1_000 })
   .pipe( fn: doSomething })
   .run({ manufacturer: 'nissan' })
 ```
@@ -87,7 +87,7 @@ Concurrency is unlimited by default, which means a step function can be dispatch
 You can limit the concurrency by providing `maxConcurrency` option on a step definition, this is useful when you use an API that can't handle too many concurrent requests.  
 
 ```typescript
-await from(generator)
+await fromGenerator(generator)
   .pipe({ fn: (valueBag: ValueBag) => {}, maxConcurrency: 5 })
   .run()
 ```
@@ -108,7 +108,7 @@ async function saveCars(valueBags: ValueBag[]): string[] {
   return response.ids
 }
 
-await from({ fn: generateCars, provides: 'car' })
+await fromGenerator({ fn: generateCars, provides: 'car' })
   .pipe({ fn: saveCars, batch: { maxSize: 50, timeoutMs: 500 }, provides: 'id' })
   .pipe({ fn: doSomethingWithCarId })
   .run()
@@ -121,7 +121,7 @@ Useful only for **Asynchronous** operations.
 Comparable to [Promise.all](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)
 
 ```typescript
-await from({ fn: generateCars, provides: 'car' })
+await fromGenerator({ fn: generateCars, provides: 'car' })
   .parallel([
     { fn: fetchPrice, provides: 'price', maxConcurrency: 100 },
     { fn: fetchSpecs, provides: 'specs', maxConcurrency: 5, batch: { maxSize: 20, timeoutMs: 100 } },
@@ -136,7 +136,7 @@ Comparable to [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaSc
 
 ```typescript
 
-await from({ fn: generateCarIds, provides: 'carId' })
+await fromGenerator({ fn: generateCarIds, provides: 'carId' })
   .filter((valueBag: ValueBag) => valueBag.carId % 2 === 0)
   .pipe(processCarsWithEvenId)
   .run()
@@ -155,7 +155,7 @@ function sumPrice(acc: number, item: ValueBag) {
   return acc + item.price
 }
 
-const result = await from({ fn: generateCars, provides: 'carId' })
+const result = await fromGenerator({ fn: generateCars, provides: 'carId' })
   .pipe({ fn: fetchPrice, provides: 'price' })
   .reduce({ fn: sumPrice, seed: 0, provides: 'sum', keep: ['manufacturer'] })
   .pipe( { fn: saveTotalForManufacturer })
@@ -170,10 +170,10 @@ You can combine multiple instances of Caminho in the same execution for nested g
 This approach works with Parallelism, Concurrency and Batching, since the run function will be treated as a normal step.  
 
 ```typescript
-const childCaminho = from({ fn: generateItemsByCarId, provides: 'carItem' })
+const childCaminho = fromGenerator({ fn: generateItemsByCarId, provides: 'carItem' })
   .pipe({ fn: saveItem })
 
-await from({ fn: generateCars, provides: 'carId' })
+await fromGenerator({ fn: generateCars, provides: 'carId' })
   .pipe({ fn: childCaminho.run })
   .run()
 ```
@@ -198,7 +198,7 @@ The **onStepFinished** provides the callback with the following information:
 Example:
 
 ```typescript
-await from(
+await fromGenerator(
     { fn: generateCars, provides: 'carId' },
     {
       onStepStarted: (log) => console.log('stepStarted', log),

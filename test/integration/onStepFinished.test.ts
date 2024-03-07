@@ -1,4 +1,4 @@
-import { from, fromFn } from '../../src'
+import { fromGenerator, fromFn } from '../../src'
 
 import { getMockedJobGenerator } from '../mocks/generator.mock'
 import { getOnStepFinishedParamsFixture } from '../mocks/stepResult.mock'
@@ -12,7 +12,7 @@ describe('onStepFinished', () => {
     const saveMock = function saveSomething() {}
     const onStepFinishedMock = jest.fn().mockName('onStepFinishedLog')
 
-    await from({ fn: generatorMock, provides: 'job' }, { onStepFinished: onStepFinishedMock })
+    await fromGenerator({ fn: generatorMock, provides: 'job' }, { onStepFinished: onStepFinishedMock })
       .pipe({ fn: fetchMock, provides: 'rawData', maxConcurrency: 5 })
       .pipe({ fn: saveMock, batch: { maxSize: 2, timeoutMs: 1 }, maxConcurrency: 5 })
       .run()
@@ -38,7 +38,7 @@ describe('onStepFinished', () => {
     const onStepFinishedMock = jest.fn()
     const fetchSomething = jest.fn().mockName('fetchSomething')
 
-    await from({ fn: getMockedJobGenerator(2), provides: 'job' }, { onStepFinished: onStepFinishedMock })
+    await fromGenerator({ fn: getMockedJobGenerator(2), provides: 'job' }, { onStepFinished: onStepFinishedMock })
       .pipe({ name: 'fetchSomething', fn: fetchSomething, batch: { maxSize: 2, timeoutMs: 100 }, maxConcurrency: 1 })
       .run()
 
