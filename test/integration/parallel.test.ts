@@ -1,4 +1,4 @@
-import { from, ValueBag } from '../../src'
+import { fromGenerator, ValueBag } from '../../src'
 import { sleep } from '../../src/utils/sleep'
 
 import { getMockedJobGenerator } from '../mocks/generator.mock'
@@ -24,7 +24,7 @@ test('Parallel steps should provide valueBag properly to the following steps', a
   const fetchPosition = { fn: fetchPositionFn, provides: 'position', maxConcurrency: 5 }
   const saveAll = { fn: saveAllFn }
 
-  await from({ fn: getMockedJobGenerator(10), provides: 'job' })
+  await fromGenerator({ fn: getMockedJobGenerator(10), provides: 'job' })
     .parallel([fetchStatus, fetchPosition])
     .pipe(saveAll)
     .run()
@@ -49,7 +49,7 @@ test('Parallel steps should use the most efficient path for emiting values', asy
   const NUMBER_OF_ITERATIONS = 5
 
   const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
-  const onStepFinishedMock = jest.fn().mockName('onStepFinishedLog')
+  const onStepFinished = jest.fn().mockName('onStepFinishedLog')
 
   const fetchStatus = {
     fn: async function fetchStatus(valueBag: ValueBag[]) {
@@ -73,12 +73,12 @@ test('Parallel steps should use the most efficient path for emiting values', asy
     },
   }
 
-  await from({ fn: generatorMock, provides: 'job' }, { onStepFinished: onStepFinishedMock, maxItemsFlowing: 2 })
+  await fromGenerator({ fn: generatorMock, provides: 'job' }, { onStepFinished, maxItemsFlowing: 2 })
     .parallel([fetchStatus, fetchPosition])
     .pipe(saveAll)
     .run()
 
-  expect(onStepFinishedMock.mock.calls).toEqual([
+  expect(onStepFinished.mock.calls).toEqual([
     [getOnStepFinishedParamsFixture({ name: 'generator' })],
     [getOnStepFinishedParamsFixture({ name: 'generator' })],
     [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],

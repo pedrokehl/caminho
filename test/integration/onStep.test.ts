@@ -1,4 +1,4 @@
-import { from } from '../../src'
+import { fromGenerator } from '../../src'
 
 import { getMockedJobGenerator } from '../mocks/generator.mock'
 import { getOnStepFinishedParamsFixture, getOnStepStartedParamsFixture } from '../mocks/stepResult.mock'
@@ -12,7 +12,7 @@ describe('onStepStarted / onStepFinished', () => {
     const saveMock = function saveSomething() {}
     const onStep = jest.fn().mockName('onStep')
 
-    await from({ fn: generatorMock, provides: 'job' }, { onStepStarted: onStep, onStepFinished: onStep })
+    await fromGenerator({ fn: generatorMock, provides: 'job' }, { onStepStarted: onStep, onStepFinished: onStep })
       .pipe({ fn: fetchMock, provides: 'rawData', maxConcurrency: 5 })
       .pipe({ fn: saveMock, batch: { maxSize: 2, timeoutMs: 1 }, maxConcurrency: 5 })
       .run()

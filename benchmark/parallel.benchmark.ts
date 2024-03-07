@@ -1,4 +1,4 @@
-import { from, ValueBag } from '../src'
+import { fromGenerator, ValueBag } from '../src'
 import { getNumberedArray } from '../test/mocks/array.mock'
 import { getMockedGenerator } from '../test/mocks/generator.mock'
 
@@ -12,12 +12,12 @@ async function runParallelBenchmark(parentItems: number, childItemsPerParent: nu
   const steps = initializeSteps(parentItems, childItemsPerParent)
   console.timeEnd('initialize steps')
 
-  const childCaminho = from(steps.childGenerator, { maxItemsFlowing: 1_000 })
+  const childCaminho = fromGenerator(steps.childGenerator, { maxItemsFlowing: 1_000 })
     .parallel([steps.pipe3, steps.pipe4])
     .reduce(steps.accumulator)
 
   console.time('initialize caminho')
-  const benchmarkCaminho = from(steps.parentGenerator, { maxItemsFlowing: 1_000 })
+  const benchmarkCaminho = fromGenerator(steps.parentGenerator, { maxItemsFlowing: 1_000 })
     .parallel([steps.pipe1, steps.pipe2])
     .pipe({ fn: childCaminho.run.bind(null, {}, ['count']), provides: 'child' })
     .reduce({

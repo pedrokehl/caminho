@@ -1,10 +1,10 @@
-import { CaminhoOptions, from } from '../../src'
+import { CaminhoOptions, fromGenerator } from '../../src'
 import { sleep } from '../../src/utils/sleep'
 
 import { getMockedJobGenerator } from '../mocks/generator.mock'
 import { getOnStepFinishedParamsFixture } from '../mocks/stepResult.mock'
 
-describe('from', () => {
+describe('fromGenerator', () => {
   test('Should call generator and run all function provided to the flow', async () => {
     const mapMock = jest.fn()
     const fetchMock = jest.fn()
@@ -12,7 +12,7 @@ describe('from', () => {
 
     const generatorMock = getMockedJobGenerator(NUMBER_OF_ITERATIONS)
 
-    await from({ fn: generatorMock, provides: 'job' })
+    await fromGenerator({ fn: generatorMock, provides: 'job' })
       .pipe({ fn: fetchMock, provides: 'rawData' })
       .pipe({ fn: mapMock, provides: 'mappedData' })
       .run()
@@ -27,7 +27,7 @@ describe('from', () => {
 
     const generatorStep = { fn: getMockedJobGenerator(NUMBER_OF_ITERATIONS), provides: 'job', name: 'generator' }
 
-    await from(generatorStep, options)
+    await fromGenerator(generatorStep, options)
       .pipe({ fn: function fetchMock() { return sleep(10) }, provides: 'rawData', maxConcurrency: 1 })
       .run()
 
@@ -52,8 +52,9 @@ describe('from', () => {
   test('Should emit values from generator uncontrolably if maxItemsFlowing was not provided', async () => {
     const options: CaminhoOptions = { onStepFinished: jest.fn() }
     const NUMBER_OF_ITERATIONS = 7
+    const generatorOptions = { fn: getMockedJobGenerator(NUMBER_OF_ITERATIONS), provides: 'job', name: 'generator' }
 
-    await from({ fn: getMockedJobGenerator(NUMBER_OF_ITERATIONS), provides: 'job', name: 'generator' }, options)
+    await fromGenerator(generatorOptions, options)
       .pipe({ fn: function fetchMock() { return sleep(10) }, provides: 'rawData' })
       .run()
 

@@ -1,4 +1,4 @@
-import { from, ReduceParams, ValueBag } from '../../src'
+import { fromGenerator, ReduceParams, ValueBag } from '../../src'
 
 import { getMockedGenerator } from '../mocks/generator.mock'
 import { getNumberedArray } from '../mocks/array.mock'
@@ -8,12 +8,12 @@ describe('Sub-Caminho', () => {
     const companySteps = getCompanySteps()
     const employeeSteps = getEmployeeSteps()
 
-    const employeeCaminho = from(employeeSteps.generator)
+    const employeeCaminho = fromGenerator(employeeSteps.generator)
       .pipe(employeeSteps.mapper)
       .pipe(employeeSteps.saver)
       .reduce(employeeSteps.accumulator)
 
-    await from(companySteps.generator)
+    await fromGenerator(companySteps.generator)
       .pipe(companySteps.fetchStatus)
       .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'employees' })
       .pipe(companySteps.saver)
@@ -27,11 +27,11 @@ describe('Sub-Caminho', () => {
     const companySteps = getCompanySteps()
     const employeeSteps = getEmployeeSteps()
 
-    const employeeCaminho = from(employeeSteps.generator)
+    const employeeCaminho = fromGenerator(employeeSteps.generator)
       .pipe(employeeSteps.mapper)
       .pipe(employeeSteps.saver)
 
-    await from(companySteps.generator)
+    await fromGenerator(companySteps.generator)
       .pipe(companySteps.fetchStatus)
       .pipe({ fn: employeeCaminho.run })
       .pipe(companySteps.saver)
@@ -51,13 +51,13 @@ describe('Sub-Caminho', () => {
     const finalStepCompany = { fn: finalStepCompanyFn }
     const finalStepEmployee = { fn: finalStepEmployeeFn }
 
-    const employeeCaminho = from({ ...employeeSteps.generator }, { maxItemsFlowing: 1 })
+    const employeeCaminho = fromGenerator({ ...employeeSteps.generator }, { maxItemsFlowing: 1 })
       .pipe({ ...employeeSteps.mapper, maxConcurrency: 1 })
       .pipe({ ...employeeSteps.saver, batch: { maxSize: 10, timeoutMs: 5 } })
       .pipe(finalStepEmployee)
       .reduce(employeeSteps.accumulator)
 
-    await from({ ...companySteps.generator }, { maxItemsFlowing: 2 })
+    await fromGenerator({ ...companySteps.generator }, { maxItemsFlowing: 2 })
       .pipe(companySteps.fetchStatus)
       .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'employees' })
       .pipe({ ...companySteps.saver, batch: { maxSize: 2, timeoutMs: 10 } })
@@ -73,17 +73,17 @@ describe('Sub-Caminho', () => {
     const employeeSteps = getEmployeeSteps()
     const internSteps = getEmployeeSteps()
 
-    const internCaminho = from(internSteps.generator)
+    const internCaminho = fromGenerator(internSteps.generator)
       .pipe(internSteps.mapper)
       .pipe(internSteps.saver)
       .reduce(internSteps.accumulator)
 
-    const employeeCaminho = from(employeeSteps.generator)
+    const employeeCaminho = fromGenerator(employeeSteps.generator)
       .pipe(employeeSteps.mapper)
       .pipe(employeeSteps.saver)
       .reduce(employeeSteps.accumulator)
 
-    await from(companySteps.generator)
+    await fromGenerator(companySteps.generator)
       .pipe(companySteps.fetchStatus)
       .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'employees' })
       .pipe({ fn: (bag: ValueBag) => internCaminho.run(bag, ['count']), provides: 'interns' })
@@ -100,17 +100,17 @@ describe('Sub-Caminho', () => {
     const employeeSteps = getEmployeeSteps()
     const documentSteps = getDocumentSteps()
 
-    const documentsCaminho = from(documentSteps.generator)
+    const documentsCaminho = fromGenerator(documentSteps.generator)
       .pipe(documentSteps.saver)
       .reduce(documentSteps.accumulator)
 
-    const employeeCaminho = from(employeeSteps.generator)
+    const employeeCaminho = fromGenerator(employeeSteps.generator)
       .pipe(employeeSteps.mapper)
       .pipe({ fn: (bag: ValueBag) => documentsCaminho.run(bag, ['count']), provides: 'savedDocuments' })
       .pipe(employeeSteps.saver)
       .reduce(employeeSteps.accumulator)
 
-    await from(companySteps.generator)
+    await fromGenerator(companySteps.generator)
       .pipe(companySteps.fetchStatus)
       .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'savedEmployees' })
       .pipe(companySteps.saver)

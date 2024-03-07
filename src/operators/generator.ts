@@ -1,17 +1,12 @@
-import type { Loggers, ValueBag } from '../types'
 import { sleep } from '../utils/sleep'
-import { PendingDataControl } from '../utils/PendingDataControl'
 import { getNewValueBag } from '../utils/valueBag'
+import type { PendingDataControl } from '../utils/PendingDataControl'
+import type { Loggers, ValueBag } from '../types'
+import type { FromGeneratorParams } from '../from'
 
 const SLEEP_FOR_BACKPRESSURE_MS = 10
 
-export interface GeneratorParams {
-  fn: (initialBag: ValueBag) => AsyncGenerator
-  provides: string
-  name?: string
-}
-
-export function wrapGenerator(generatorParams: GeneratorParams, loggers: Loggers) {
+export function wrapGenerator(generatorParams: FromGeneratorParams, loggers: Loggers) {
   return async function* wrappedGenerator(initialBag: ValueBag) {
     const bagArrayForLogger = [initialBag]
     loggers.onStepStarted(bagArrayForLogger)
@@ -31,7 +26,7 @@ export function wrapGenerator(generatorParams: GeneratorParams, loggers: Loggers
 }
 
 export function wrapGeneratorWithBackPressure(
-  generatorParams: GeneratorParams,
+  generatorParams: FromGeneratorParams,
   maxItemsFlowing: number,
   pendingDataControl: PendingDataControl,
   loggers: Loggers,

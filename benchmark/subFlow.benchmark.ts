@@ -1,4 +1,4 @@
-import { from, ValueBag } from '../src'
+import { fromGenerator, ValueBag } from '../src'
 import { getNumberedArray } from '../test/mocks/array.mock'
 import { getMockedGenerator } from '../test/mocks/generator.mock'
 
@@ -13,11 +13,11 @@ async function runSubflowBenchmark(parentItems: number, childItemsPerParent: num
   console.timeEnd('initialize steps')
 
   console.time('initialize caminho')
-  const childCaminho = from(steps.childGenerator, { maxItemsFlowing: 1_000 })
+  const childCaminho = fromGenerator(steps.childGenerator, { maxItemsFlowing: 1_000 })
     .pipe({ fn: steps.batchFn, provides: 'batch1', batch: { maxSize: 50, timeoutMs: 5 } })
     .reduce({ fn: steps.accumulatorFn, seed: 0, provides: 'count' })
 
-  const parentCaminho = from(steps.parentGenerator, { maxItemsFlowing: 1_000 })
+  const parentCaminho = fromGenerator(steps.parentGenerator, { maxItemsFlowing: 1_000 })
     .pipe({ fn: steps.pipeFn })
     .pipe({ fn: (bag: ValueBag) => childCaminho.run(bag, ['count']), provides: 'child' })
     .reduce({

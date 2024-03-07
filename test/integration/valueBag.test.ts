@@ -1,4 +1,4 @@
-import { from, ValueBag } from '../../src'
+import { fromGenerator, ValueBag } from '../../src'
 import { getMockedJobGenerator } from '../mocks/generator.mock'
 import { getMockedJob } from '../mocks/job.mock'
 
@@ -13,7 +13,7 @@ describe('ValueBag', () => {
 
     const generatorMock = getMockedJobGenerator(1)
 
-    await from({ fn: generatorMock, provides: 'job' })
+    await fromGenerator({ fn: generatorMock, provides: 'job' })
       .pipe({ fn: fetchMock, provides: 'rawData' })
       .pipe({ fn: mapMock, provides: 'mappedData' })
       .pipe({ fn: saveMock })
@@ -34,7 +34,7 @@ describe('ValueBag', () => {
     }
     const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
-    await from({ fn: getMockedJobGenerator(1), provides: 'job' })
+    await fromGenerator({ fn: getMockedJobGenerator(1), provides: 'job' })
       .pipe({ fn: mutateValueBag })
       .pipe({ fn: saveMock })
       .run()
@@ -48,7 +48,7 @@ describe('ValueBag', () => {
     }
     const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
-    await from({ fn: getMockedJobGenerator(1), provides: 'job' })
+    await fromGenerator({ fn: getMockedJobGenerator(1), provides: 'job' })
       .pipe({ fn: mutateValueBag, batch: { maxSize: 1, timeoutMs: 1 } })
       .pipe({ fn: saveMock })
       .run()
@@ -59,7 +59,7 @@ describe('ValueBag', () => {
   test('Should correctly receive the initial value provided on run', async () => {
     const saveMock = jest.fn().mockName('save').mockResolvedValue(null)
 
-    await from({ fn: getMockedJobGenerator(1), provides: 'job' })
+    await fromGenerator({ fn: getMockedJobGenerator(1), provides: 'job' })
       .pipe({ fn: saveMock })
       .run({ initial: true })
 

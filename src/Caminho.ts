@@ -1,8 +1,9 @@
 import { from, lastValueFrom, tap } from 'rxjs'
 
-import type { ValueBag, PipeGenericParams, CaminhoOptions, Loggers } from './types'
+import type { ValueBag, PipeGenericParams, CaminhoOptions, Loggers, Caminho as CaminhoInterface } from './types'
+import type { FromGeneratorParams } from './from'
 
-import { GeneratorParams, wrapGenerator, wrapGeneratorWithBackPressure } from './operators/generator'
+import { wrapGenerator, wrapGeneratorWithBackPressure } from './operators/generator'
 import { pipe } from './operators/pipe'
 import { batch } from './operators/batch'
 import { parallel } from './operators/parallel'
@@ -16,13 +17,13 @@ import { getOnStepFinished } from './utils/onStepFinished'
 import { getOnStepStarted } from './utils/onStepStarted'
 import { pick } from './utils/pick'
 
-export class Caminho {
+export class Caminho implements CaminhoInterface {
   private generator: (initialBag: ValueBag) => AsyncGenerator<ValueBag>
   private operators: OperatorApplier[] = []
   private finalStep?: OperatorApplier
   private pendingDataControl?: PendingDataControl
 
-  constructor(generatorParams: GeneratorParams, private options?: CaminhoOptions) {
+  constructor(generatorParams: FromGeneratorParams, private options?: CaminhoOptions) {
     this.addOperatorApplier = this.addOperatorApplier.bind(this)
     this.getApplierForPipeOrBatch = this.getApplierForPipeOrBatch.bind(this)
     this.run = this.run.bind(this)
@@ -66,7 +67,7 @@ export class Caminho {
     return pickLastValues && lastValue ? pick(lastValue, pickLastValues) : undefined
   }
 
-  private getGenerator(generatorParams: GeneratorParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {
+  private getGenerator(generatorParams: FromGeneratorParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {
     const loggers = this.getLoggers(generatorParams)
     if (this.options?.maxItemsFlowing) {
       const pendingDataControl = this.pendingDataControl as PendingDataControl
@@ -99,7 +100,7 @@ export class Caminho {
       : pipe(params, this.getLoggers(params))
   }
 
-  private getLoggers<T>(params: GeneratorParams | PipeGenericParams | ReduceParams<T>): Loggers {
+  private getLoggers<T>(params: FromGeneratorParams | PipeGenericParams | ReduceParams<T>): Loggers {
     const stepName = params.name ?? params.fn.name
     const onStepStarted = getOnStepStarted(stepName, this.options?.onStepStarted)
     const onStepFinished = getOnStepFinished(stepName, this.options?.onStepFinished)
