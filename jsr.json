@@ -2,6 +2,5 @@
     "name": "@pedrokehl/caminho",
     "version": "1.4.0",
     "exports": "./src/index.ts",
-    "include": ["README", "src/*", "package.json", "package-lock.json", "jsr.json"],
-    "exclude": ["**"]
+    "exclude": [".github/*", "benchmark/*", "test/*", ".eslintrc"]
   }
