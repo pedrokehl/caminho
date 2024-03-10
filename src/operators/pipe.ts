@@ -1,13 +1,10 @@
 import { mergeMap } from 'rxjs'
-import type { ValueBag, Loggers } from '../types'
+import type { ValueBag, Loggers, BasePipe } from '../types'
 import { OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 
-export type PipeParams = {
-  name?: string
-  maxConcurrency?: number
+export type PipeParams = BasePipe & {
   fn: (valueBag: ValueBag) => unknown | Promise<unknown>
-  provides?: string
 }
 
 export function pipe(params: PipeParams, loggers: Loggers): OperatorApplier {

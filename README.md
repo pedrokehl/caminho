@@ -5,8 +5,8 @@
 **100%** Test Coverage.
 
 # Caminho
-Caminho is intended to be used for Data-Intensive Computing.  
-The motivation behind Caminho is from an increased demand for data processing systems in combination with the mainstream usage of NodeJS. The JavaScript Ecosystem urges for a tool that offers *Concurrency, Batching, Parallelism and Backpressure* in a simple and efficient manner.
+Tool for creating efficient data pipelines in a JavaScript environment.  
+The motivation behind Caminho is from an increased demand for data processing systems in combination with the mainstream usage of NodeJS for IO tasks. The JavaScript Ecosystem urges for a tool that offers *Concurrency, Batching, Parallelism and Backpressure* in a simple and efficient manner.
 
 ### Features
 
@@ -32,11 +32,12 @@ deno add @pedrokehl/caminho
 
 *A Caminho instance contains the following methods to define the flow:*  
 
-`pipe` receives a StepFunction definition, provided function will receive a `ValueBag`, which holds the values provided from all the previous steps, including the generator, if the step has `provides`, the value will be added to the `ValueBag` accordingly.  
-`parallel` receives StepFunction[], which will execute the steps in parallel, has the same abilities as pipe.  
-`filter` Filter items emitted by the previous step by only emitting those that satisfy the specified predicate, so the subsequent steps won't receive it.
+`pipe` receives a StepFunction definition, the provided function will receive a `ValueBag`, which contains the cumulative values from the previous steps, including the generator, if the step has `provides`, the value will be added to the `ValueBag` accordingly.  
+`parallel` receives StepFunction[], and it will execute the steps in parallel, it has the same abilities as pipe.  
+`filter` Filter items emitted by the previous step by only emitting those that satisfy the specified predicate, so the subsequent steps won't receive it.  
+`reduce` Allows to reduce through all records of the flow and produce an aggregated property.
 
-*After the steps are all defined execute your Caminho flow by calling `.run()`.*  
+*After the steps definition, execute your Caminho flow by calling `.run()`.*  
 
 `run`: Returns a Promise which is fulfilled when the Generator has finished providing values and all the items have been processed by all the defined steps in the Caminho flow.  
 The function takes two parameters:  
@@ -240,6 +241,6 @@ npm run test:watch
 
 ## Roadmap
 
+- Allow a provided callback that receives the bag for generating the seed of `reduce`.
 - Wrap steps in a try catch so we can call logger with the step error.
-- Optional parameter in step to allow error without interrupting flow.
 - Proper typing on ValueBag and how it's handled in child steps.
