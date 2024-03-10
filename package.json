@@ -13,7 +13,7 @@
     "lint:fix": "eslint ./src ./test ./benchmark --fix",
     "benchmark:parallel": "npx ts-node benchmark/parallel.benchmark.ts",
     "benchmark:subflow": "npx ts-node benchmark/subFlow.benchmark.ts",
-    "prepublish": "npm test && npm run build"
+    "prepublishOnly": "npm test && npm run build"
   },
   "repository": {
     "type": "git",
