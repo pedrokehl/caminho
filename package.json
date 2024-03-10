@@ -1,11 +1,32 @@
 {
   "name": "caminho",
   "version": "1.4.2",
-  "description": "Caminho means path, a new path to your data processing.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "description": "Tool for creating efficient data pipelines in a JavaScript environment",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm5/index.js",
+  "es2015": "./dist/esm/index.js",
+  "types": "index.d.ts",
+  "typesVersions": {
+    ">=4.2": {
+      "*": [
+        "dist/types/*"
+      ]
+    }
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "node": "./dist/cjs/index.js",
+      "require": "./dist/cjs/index.js",
+      "es2015": "./dist/esm/index.js",
+      "default": "./dist/esm5/index.js"
+    },
+      "./package.json": "./package.json"
+  },
   "scripts": {
-    "build": "npm run clean && tsc --build",
+    "compile": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.esm5.json ./tsconfig.types.json",
+    "build": "npm run clean && npm run compile",
     "clean": "rm -rf ./dist",
     "test": "jest --coverage",
     "test:watch": "jest -o --watch",
@@ -43,13 +64,16 @@
     }
   },
   "keywords": [
-    "pipeline",
     "data",
-    "functional",
+    "pipeline",
     "javascript",
-    "js",
     "typescript",
-    "ts"
+    "concurrency",
+    "parallel",
+    "backpressure",
+    "dataprocessing",
+    "functional",
+    "reactive"
   ],
   "files": [
     "README.md",
