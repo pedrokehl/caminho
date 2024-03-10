@@ -1,9 +1,24 @@
 import { mergeMap } from 'rxjs'
-import type { ValueBag, Loggers, BasePipe } from '../types'
+import type { ValueBag, Loggers } from '../types'
 import { OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 
-export type PipeParams = BasePipe & {
+export type PipeParams = {
+  /**
+  * The name of the property to be assigned to the cumulate context.
+  * The value of the property is the returned value from the step.
+  */
+  provides?: string
+  /**
+  * Name of the step, useful when logging the steps
+  */
+  name?: string
+  /**
+  * Concurrency is unlimited by default, it means a step can be run concurrently as many times as the flow produces
+  * You can limit the concurrency by using the `maxConcurrency` property.
+  * This is useful for example when you are calling an API that can't handle too many concurrent requests.
+   */
+  maxConcurrency?: number
   fn: (valueBag: ValueBag) => unknown | Promise<unknown>
 }
 

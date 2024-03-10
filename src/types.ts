@@ -23,24 +23,6 @@ export interface Caminho {
   run(initialBag?: ValueBag): Promise<undefined>
 }
 
-export type BasePipe = {
-  /**
-  * The name of the property to be assigned to the cumulate context.
-  * The value of the property is the returned value from the step.
-  */
-  provides?: string
-  /**
-  * Name of the step, useful when logging the steps
-  */
-  name?: string
-  /**
-  * Concurrency is unlimited by default, it means a step can be run concurrently as many times as the flow produces
-  * You can limit the concurrency by using the `maxConcurrency` property.
-  * This is useful for example when you are calling an API that can't handle too many concurrent requests.
-   */
-  maxConcurrency?: number
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ValueBag = any
 

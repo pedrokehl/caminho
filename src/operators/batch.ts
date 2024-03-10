@@ -1,10 +1,27 @@
 import { Observable, bufferTime, filter, mergeAll, mergeMap } from 'rxjs'
 
-import type { BasePipe, Loggers, ValueBag } from '../types'
+import type { Loggers, ValueBag } from '../types'
 import { OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 
-export type BatchParams = BasePipe & {
+export type BatchParams = {
+  /**
+  * The name of the property to be assigned to the cumulate context.
+  * The value of the property is the returned value from the step.
+  * Keep in mind that the order of the returned values must be the same order you received the values
+  * so it gets properly assigned to the context
+  */
+  provides?: string
+  /**
+  * Name of the step, useful when logging the steps
+  */
+  name?: string
+  /**
+  * Concurrency is unlimited by default, it means a step can be run concurrently as many times as the flow produces
+  * You can limit the concurrency by using the `maxConcurrency` property.
+  * This is useful for example when you are calling an API that can't handle too many concurrent requests.
+   */
+  maxConcurrency?: number
   fn: (valueBag: ValueBag[]) => unknown[] | Promise<unknown[]>
   batch: {
     /**
@@ -16,13 +33,6 @@ export type BatchParams = BasePipe & {
     */
     timeoutMs: number
   }
-  /**
-  * The name of the property to be assigned to the cumulate context.
-  * The value of the property is the returned value from the step.
-  * Keep in mind that the order of the returned values must be the same order you received the values
-  * so it gets properly assigned to the context
-  */
-  provides?: string
 }
 
 export function batch(params: BatchParams, loggers: Loggers): OperatorApplier {

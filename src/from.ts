@@ -2,7 +2,7 @@ import { getAsyncGeneratorFromArray, getAsyncGeneratorFromFn } from './utils/get
 import { Caminho } from './Caminho'
 import type { CaminhoOptions, ValueBag } from './types'
 
-type BaseFrom = {
+export type FromGeneratorParams = {
   /**
    * The name of the property to be assigned to the cumulate context.
    * The value of the property is the returned value from the step.
@@ -12,9 +12,6 @@ type BaseFrom = {
    * Name of the step, useful when logging the steps
    */
   name?: string
-}
-
-export type FromGeneratorParams = BaseFrom & {
   /**
    * AsyncGenerator that will provide the values for the flow
    * It receives the initial values passed to the .run() method
@@ -30,7 +27,16 @@ export function fromGenerator(fromParams: FromGeneratorParams, caminhoOptions?: 
   return new Caminho(fromParams, caminhoOptions)
 }
 
-export type fromValueParams = BaseFrom & {
+export type fromValueParams = {
+  /**
+   * The name of the property to be assigned to the cumulate context.
+   * The value of the property is the returned value from the step.
+   */
+  provides: string
+  /**
+   * Name of the step, useful when logging the steps
+   */
+  name?: string
   /**
    * Single item to bootstrap the new flow
    */
@@ -47,7 +53,16 @@ export function fromValue(fromValueParams: fromValueParams, caminhoOptions?: Cam
   return new Caminho({ fn: generator, name, provides }, caminhoOptions)
 }
 
-export type FromArrayParams = BaseFrom & {
+export type FromArrayParams = {
+  /**
+   * The name of the property to be assigned to the cumulate context.
+   * The value of the property is the returned value from the step.
+   */
+  provides: string
+  /**
+   * Name of the step, useful when logging the steps
+   */
+  name?: string
   /**
    * Array of items to execute the new flow
    */
@@ -64,7 +79,16 @@ export function fromArray(fromArrayParams: FromArrayParams, caminhoOptions?: Cam
   return new Caminho({ fn: generator, name, provides }, caminhoOptions)
 }
 
-export type FromFnParams = BaseFrom & {
+export type FromFnParams = {
+  /**
+   * The name of the property to be assigned to the cumulate context.
+   * The value of the property is the returned value from the step.
+   */
+  provides: string
+  /**
+   * Name of the step, useful when logging the steps
+   */
+  name?: string
   /**
    * Async function that will provide one value for the flow
    * It receives the initialBag passed to the .run() method
