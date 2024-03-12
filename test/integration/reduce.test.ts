@@ -8,13 +8,15 @@ describe('Reduce', () => {
     const generatorMock = getMockedJobGenerator(2)
     const saveJob = jest.fn()
     const reduceFn = jest.fn().mockImplementation((acc) => (acc + 1))
+    const saveFn = jest.fn()
 
-    const result = await fromGenerator({ fn: generatorMock, provides: 'job' })
+    await fromGenerator({ fn: generatorMock, provides: 'job' })
       .pipe({ fn: saveJob })
       .reduce({ fn: reduceFn, provides: 'count', seed: 100 })
-      .run({}, ['count'])
+      .pipe({ fn: saveFn })
+      .run()
 
-    expect(result).toEqual({ count: 102 })
+    expect(saveFn).toHaveBeenCalledWith({ count: 102 })
   })
 
   test('Should call aggregator function with correct parameters', async () => {
@@ -32,17 +34,30 @@ describe('Reduce', () => {
     expect(reduceFn).toHaveBeenCalledWith(101, { initial: true, job: { job_id: '2' } }, 1)
   })
 
-  test('Should keep last values processed in reduce to the run output', async () => {
+  test('Should keep only the reduce value by default (keep not defined)', async () => {
     const generatorMock = getMockedJobGenerator(4)
     const saveJob = jest.fn()
     const reduceFn = jest.fn().mockImplementation((acc, bag) => (acc + Number(bag.job.job_id)))
 
     const result = await fromGenerator({ fn: generatorMock, provides: 'job' })
       .pipe({ fn: saveJob })
-      .reduce({ fn: reduceFn, provides: 'count', seed: 0, keep: ['initial', 'job'] })
-      .run({ initial: true }, ['initial', 'job', 'count'])
+      .reduce({ fn: reduceFn, provides: 'count', seed: 0 })
+      .run({ initial: true })
 
-    expect(result).toEqual({ initial: true, job: { job_id: '4' }, count: 10 })
+    expect(result).toEqual({ count: 10 })
+  })
+
+  test('Should keep the reduce value and the properties passed to "keep"', async () => {
+    const generatorMock = getMockedJobGenerator(4)
+    const saveJob = jest.fn()
+    const reduceFn = jest.fn().mockImplementation((acc, bag) => (acc + Number(bag.job.job_id)))
+
+    const result = await fromGenerator({ fn: generatorMock, provides: 'job' })
+      .pipe({ fn: saveJob })
+      .reduce({ fn: reduceFn, provides: 'count', seed: 0, keep: ['initial'] })
+      .run({ initial: true })
+
+    expect(result).toEqual({ count: 10, initial: true })
   })
 
   test('Allows flow to continue after the reduce execution', async () => {
@@ -51,12 +66,12 @@ describe('Reduce', () => {
     const reduceFn = jest.fn().mockImplementation((acc, bag) => (acc + Number(bag.job.job_id)))
 
     await fromGenerator({ fn: generatorMock, provides: 'job' })
-      .reduce({ fn: reduceFn, provides: 'count', seed: 0, keep: ['initial', 'job'] })
+      .reduce({ fn: reduceFn, provides: 'count', seed: 0 })
       .pipe({ fn: saveCount })
-      .run({ initial: true }, ['initial', 'job', 'count'])
+      .run({ initial: true })
 
     expect(saveCount).toBeCalledTimes(1)
-    expect(saveCount).toBeCalledWith({ initial: true, job: { job_id: '4' }, count: 10 })
+    expect(saveCount).toBeCalledWith({ count: 10 })
   })
 
   test('Reduce works fine when combined with backpressure', async () => {
@@ -79,10 +94,9 @@ describe('Reduce', () => {
         fn: reduceFn,
         provides: 'count',
         seed: 0,
-        keep: ['initial', 'job'],
       })
       .pipe({ fn: saveCount, name: 'saveCount' })
-      .run({ initial: true }, ['initial', 'job', 'count'])
+      .run()
 
     expect(onStep.mock.calls).toEqual([
       [getOnStepFinishedParamsFixture({ name: 'generator' })],

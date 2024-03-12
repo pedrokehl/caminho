@@ -19,7 +19,7 @@ async function runSubflowBenchmark(parentItems: number, childItemsPerParent: num
 
   const parentCaminho = fromGenerator(steps.parentGenerator, { maxItemsFlowing: 1_000 })
     .pipe({ fn: steps.pipeFn })
-    .pipe({ fn: (bag: ValueBag) => childCaminho.run(bag, ['count']), provides: 'child' })
+    .pipe({ fn: childCaminho.run, provides: 'child' })
     .reduce({
       fn: (acc: number, bag: ValueBag) => acc + bag.child.count,
       seed: 0,
@@ -28,7 +28,7 @@ async function runSubflowBenchmark(parentItems: number, childItemsPerParent: num
   console.timeEnd('initialize caminho')
 
   console.time('run caminho')
-  const { count: childProcessed } = await parentCaminho.run({}, ['count']) as { count: number }
+  const { count: childProcessed } = await parentCaminho.run()
   console.timeEnd('run caminho')
 
   if (childProcessed !== expectedTotalChild) {

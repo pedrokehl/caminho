@@ -15,7 +15,7 @@ describe('Sub-Caminho', () => {
 
     await fromGenerator(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'employees' })
+      .pipe({ fn: employeeCaminho.run, provides: 'employees' })
       .pipe(companySteps.saver)
       .run()
 
@@ -59,7 +59,7 @@ describe('Sub-Caminho', () => {
 
     await fromGenerator({ ...companySteps.generator }, { maxItemsFlowing: 2 })
       .pipe(companySteps.fetchStatus)
-      .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'employees' })
+      .pipe({ fn: employeeCaminho.run, provides: 'employees' })
       .pipe({ ...companySteps.saver, batch: { maxSize: 2, timeoutMs: 10 } })
       .pipe(finalStepCompany)
       .run()
@@ -85,8 +85,8 @@ describe('Sub-Caminho', () => {
 
     await fromGenerator(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'employees' })
-      .pipe({ fn: (bag: ValueBag) => internCaminho.run(bag, ['count']), provides: 'interns' })
+      .pipe({ fn: employeeCaminho.run, provides: 'employees' })
+      .pipe({ fn: internCaminho.run, provides: 'interns' })
       .pipe(companySteps.saver)
       .run()
 
@@ -106,13 +106,13 @@ describe('Sub-Caminho', () => {
 
     const employeeCaminho = fromGenerator(employeeSteps.generator)
       .pipe(employeeSteps.mapper)
-      .pipe({ fn: (bag: ValueBag) => documentsCaminho.run(bag, ['count']), provides: 'savedDocuments' })
+      .pipe({ fn: documentsCaminho.run, provides: 'savedDocuments' })
       .pipe(employeeSteps.saver)
       .reduce(employeeSteps.accumulator)
 
     await fromGenerator(companySteps.generator)
       .pipe(companySteps.fetchStatus)
-      .pipe({ fn: (bag: ValueBag) => employeeCaminho.run(bag, ['count']), provides: 'savedEmployees' })
+      .pipe({ fn: employeeCaminho.run, provides: 'savedEmployees' })
       .pipe(companySteps.saver)
       .run()
 
@@ -156,7 +156,7 @@ function getEmployeeSteps() {
   const generator = { fn: employeeGeneratorFn, provides: 'employeeName' }
   const mapper = { fn: mapEmployeeFn, provides: 'mappedEmployee' }
   const saver = { fn: saveEmployeeFn }
-  const accumulator: ReduceParams<number> = { fn: (acc: number) => acc + 1, seed: 0, provides: 'count' }
+  const accumulator: ReduceParams<number> = { fn: (acc: number) => acc + 1, seed: 0, provides: 'count', keep: [] }
 
   return {
     generator,
@@ -172,7 +172,7 @@ function getDocumentSteps() {
 
   const generator = { fn: generatorFn, provides: 'documentId' }
   const saver = { fn: saverFn }
-  const accumulator: ReduceParams<number> = { fn: (acc: number) => acc + 1, seed: 0, provides: 'count' }
+  const accumulator: ReduceParams<number> = { fn: (acc: number) => acc + 1, seed: 0, provides: 'count', keep: [] }
 
   return {
     generator,

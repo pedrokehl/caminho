@@ -40,9 +40,7 @@ deno add @pedrokehl/caminho
 *After the steps definition, execute your Caminho flow by calling `.run()`.*  
 
 `run`: Returns a Promise which is fulfilled when the Generator has finished providing values and all the items have been processed by all the defined steps in the Caminho flow.  
-The function takes two parameters:  
-- `initialValueBag: ValueBag`: An initial valueBag, which is passed through all steps.  
-- `pickLastValues: string[]`: List of properties you want to be returned by run execution, only last values are executed, useful mainly for data that got aggregated with reduce.  
+The function takes an initial valueBag as parameter, which is passed to the child steps, and the returned value from the promise is an object that contains the context of the last execution of the flow.
 
 Simple flow:
 
@@ -151,7 +149,7 @@ To use it, call `reduce()` with the following properties:
 - `fn: (acc: A, value: ValueBag, index: number) => A`, Similar to a callback provided to [Array.reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce).
 - `seed: A`: Defines the initial `acc` value received on your aggregator function.
 - `provides: string`: The property name to be appended to the valueBag with the value returned from the reducer.
-- `keep: string[]`: List of the properties that you want to keep the last known value in the valueBag for following steps, useful for child flows.
+- `keep: string[]`: Optional list of the properties that you want to keep the last known value in the valueBag for following steps, by default it keeps only the reduce result.
 
 ```typescript
 function sumPrice(acc: number, item: ValueBag) {
@@ -162,7 +160,7 @@ const result = await fromGenerator({ fn: generateCars, provides: 'carId' })
   .pipe({ fn: fetchPrice, provides: 'price' })
   .reduce({ fn: sumPrice, seed: 0, provides: 'sum', keep: ['manufacturer'] })
   .pipe( { fn: saveTotalForManufacturer })
-  .run({ manufacturer: 'Mazda' }, ['sum', 'manufacturer'])
+  .run({ manufacturer: 'Mazda' })
 
 console.log('result', result)
 // result { "sum": 1_532_600, "manufacturer": "Mazda" }

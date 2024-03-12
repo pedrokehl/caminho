@@ -18,9 +18,7 @@ export interface Caminho {
   parallel: (multiPipeParams: PipeGenericParams[]) => this
   filter: (predicate: FilterPredicate) => this
   reduce: <T>(reduceParams: ReduceParams<T>) => this
-
-  run(initialBag: ValueBag, pickLastValues: string[]): Promise<unknown>
-  run(initialBag?: ValueBag): Promise<undefined>
+  run(initialBag?: ValueBag): Promise<ValueBag>
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -19,7 +19,7 @@ async function runParallelBenchmark(parentItems: number, childItemsPerParent: nu
   console.time('initialize caminho')
   const benchmarkCaminho = fromGenerator(steps.parentGenerator, { maxItemsFlowing: 1_000 })
     .parallel([steps.pipe1, steps.pipe2])
-    .pipe({ fn: childCaminho.run.bind(null, {}, ['count']), provides: 'child' })
+    .pipe({ fn: childCaminho.run, provides: 'child' })
     .reduce({
       fn: (acc: number, bag: ValueBag): number => acc + bag.child.count,
       seed: 0,
@@ -28,7 +28,7 @@ async function runParallelBenchmark(parentItems: number, childItemsPerParent: nu
   console.timeEnd('initialize caminho')
 
   console.time('run caminho')
-  const { count: childProcessed } = await benchmarkCaminho.run({}, ['count']) as { count: number }
+  const { count: childProcessed } = await benchmarkCaminho.run()
   console.timeEnd('run caminho')
 
   if (childProcessed !== expectedTotalChild) {
