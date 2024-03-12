@@ -37,6 +37,6 @@ describe('Error Handling', () => {
         provides: 'doesntMatter',
       })
 
-    return expect(caminho.run({})).rejects.toMatchObject({ message: 'Reduce error' })
+    return expect(caminho.run()).rejects.toMatchObject({ message: 'Reduce error' })
   })
 })

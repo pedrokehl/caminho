@@ -15,7 +15,6 @@ import { PendingDataControl, PendingDataControlInMemory } from './utils/PendingD
 
 import { getOnStepFinished } from './utils/onStepFinished'
 import { getOnStepStarted } from './utils/onStepStarted'
-import { pick } from './utils/pick'
 
 export class Caminho implements CaminhoInterface {
   private generator: (initialBag: ValueBag) => AsyncGenerator<ValueBag>
@@ -59,12 +58,9 @@ export class Caminho implements CaminhoInterface {
     return this
   }
 
-  public run(initialBag: ValueBag, pickLastValues: string[]): Promise<unknown>
-  public run(initialBag?: ValueBag): Promise<undefined>
-  public async run(initialBag?: ValueBag, pickLastValues?: string[]): Promise<unknown | undefined> {
+  public async run(initialBag?: ValueBag): Promise<ValueBag> {
     const observable$ = this.buildObservable(initialBag)
-    const lastValue = await lastValueFrom(observable$, { defaultValue: undefined })
-    return pickLastValues && lastValue ? pick(lastValue, pickLastValues) : undefined
+    return lastValueFrom(observable$, { defaultValue: initialBag })
   }
 
   private getGenerator(generatorParams: FromGeneratorParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {

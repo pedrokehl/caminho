@@ -19,9 +19,8 @@ export function reduce<T>(
   loggers: Loggers,
   pendingDataControl?: PendingDataControl,
 ): OperatorApplier {
-  const { provides } = reduceParams
-  const keepAfterReduce = reduceParams.keep ?? []
-  let initialBag: ValueBag = {}
+  const { provides, keep } = reduceParams
+  let lastBag: ValueBag = {}
 
   function wrappedReduce(acc: T, valueBag: ValueBag, index: number): T {
     const startedAt = new Date()
@@ -29,13 +28,13 @@ export function reduce<T>(
     const reduceResult = reduceParams.fn(acc, valueBag, index)
     pendingDataControl?.decrement()
     loggers.onStepFinished([valueBag], startedAt)
-    initialBag = valueBag
+    lastBag = valueBag
     return reduceResult
   }
 
   return function operatorApplier(observable: Observable<ValueBag>) {
     return observable
       .pipe(reduceRxJs(wrappedReduce, reduceParams.seed))
-      .pipe(map((reduceResult: T) => getNewValueBag(pick(initialBag, keepAfterReduce), provides, reduceResult)))
+      .pipe(map((reduceResult: T) => getNewValueBag(pick(lastBag, keep ?? []), provides, reduceResult)))
   }
 }
