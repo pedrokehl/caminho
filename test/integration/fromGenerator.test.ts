@@ -17,8 +17,8 @@ describe('fromGenerator', () => {
       .pipe({ fn: mapMock, provides: 'mappedData' })
       .run()
 
-    expect(fetchMock).toBeCalledTimes(NUMBER_OF_ITERATIONS)
-    expect(mapMock).toBeCalledTimes(NUMBER_OF_ITERATIONS)
+    expect(fetchMock).toHaveBeenCalledTimes(NUMBER_OF_ITERATIONS)
+    expect(mapMock).toHaveBeenCalledTimes(NUMBER_OF_ITERATIONS)
   })
 
   test('Should not emit more than maxItemsFlowing value concurrently', async () => {

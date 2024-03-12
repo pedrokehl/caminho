@@ -22,7 +22,7 @@
       "es2015": "./dist/esm/index.js",
       "default": "./dist/esm5/index.js"
     },
-      "./package.json": "./package.json"
+    "./package.json": "./package.json"
   },
   "scripts": {
     "compile": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.esm5.json ./tsconfig.types.json",
@@ -39,29 +39,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/pedrokehl/caminho"
-  },
-  "jest": {
-    "transform": {
-      "^.+\\.tsx?$": [
-        "ts-jest",
-        {
-          "preset": "ts-jest",
-          "globals": {
-            "ts-jest": {
-              "tsconfig": "test/tsconfig.json"
-            }
-          },
-          "coverageThreshold": {
-            "global": {
-              "branches": 100,
-              "functions": 100,
-              "lines": 100,
-              "statements": 100
-            }
-          }
-        }
-      ]
-    }
   },
   "keywords": [
     "data",
