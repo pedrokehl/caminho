@@ -35,7 +35,8 @@
     "no-underscore-dangle": ["error"],
     "no-await-in-loop": "off",
     "complexity": ["error", { "max": 4 }],
-    "class-methods-use-this": "off"
+    "class-methods-use-this": "off",
+    "@typescript-eslint/consistent-type-imports": ["error", { "fixStyle": "inline-type-imports" }]
   },
   "env": {
     "es2020": true,

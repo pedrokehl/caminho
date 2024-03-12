@@ -1,8 +1,8 @@
 import type { Observable } from 'rxjs'
-import { ValueBag } from '../../types'
+import { type ValueBag } from '../../types'
 
-import { BatchParams } from '../batch'
-import { PipeParams } from '../pipe'
+import { type BatchParams } from '../batch'
+import { type PipeParams } from '../pipe'
 
 export type OperatorApplier = (observable: Observable<ValueBag>) => Observable<ValueBag>
 

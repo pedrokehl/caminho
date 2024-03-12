@@ -1,4 +1,4 @@
-import { fromGenerator, ValueBag } from '../src'
+import { fromGenerator, type ValueBag } from '../src'
 import { getNumberedArray } from '../test/mocks/array.mock'
 import { getMockedGenerator } from '../test/mocks/generator.mock'
 

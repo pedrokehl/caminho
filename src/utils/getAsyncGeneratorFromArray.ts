@@ -1,4 +1,4 @@
-import { ValueBag } from '../types'
+import type { ValueBag } from '../types'
 
 export function getAsyncGeneratorFromArray(items: unknown[]): () => AsyncGenerator {
   return async function* asyncGeneratorFromArray(): AsyncGenerator {

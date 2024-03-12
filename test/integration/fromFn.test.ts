@@ -1,4 +1,4 @@
-import { ValueBag, fromFn } from '../../src'
+import { type ValueBag, fromFn } from '../../src'
 
 describe('fromFn', () => {
   test('Should call the subsequent functions of the flow with the provided item from the function', async () => {

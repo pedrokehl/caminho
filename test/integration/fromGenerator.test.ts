@@ -1,4 +1,4 @@
-import { CaminhoOptions, fromGenerator } from '../../src'
+import { type CaminhoOptions, fromGenerator } from '../../src'
 import { sleep } from '../../src/utils/sleep'
 
 import { getMockedJobGenerator } from '../mocks/generator.mock'

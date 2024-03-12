@@ -1,4 +1,4 @@
-import { fromGenerator, ReduceParams, ValueBag } from '../../src'
+import { fromGenerator, type ReduceParams, type ValueBag } from '../../src'
 
 import { getMockedGenerator } from '../mocks/generator.mock'
 import { getNumberedArray } from '../mocks/array.mock'

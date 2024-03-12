@@ -7,11 +7,11 @@ import { wrapGenerator, wrapGeneratorWithBackPressure } from './operators/genera
 import { pipe } from './operators/pipe'
 import { batch } from './operators/batch'
 import { parallel } from './operators/parallel'
-import { reduce, ReduceParams } from './operators/reduce'
-import { filter, FilterPredicate } from './operators/filter'
+import { reduce, type ReduceParams } from './operators/reduce'
+import { filter, type FilterPredicate } from './operators/filter'
 
-import { applyOperator, isBatch, OperatorApplier } from './operators/helpers/operatorHelpers'
-import { PendingDataControl, PendingDataControlInMemory } from './utils/PendingDataControl'
+import { applyOperator, isBatch, type OperatorApplier } from './operators/helpers/operatorHelpers'
+import { type PendingDataControl, PendingDataControlInMemory } from './utils/PendingDataControl'
 
 import { getOnStepFinished } from './utils/onStepFinished'
 import { getOnStepStarted } from './utils/onStepStarted'
