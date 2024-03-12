@@ -1,4 +1,4 @@
-import { getMockedJob, Job } from './job.mock'
+import { getMockedJob, type Job } from './job.mock'
 
 export function getMockedJobGenerator(numberOfValuesToEmit: number) {
   const jobs = new Array(numberOfValuesToEmit).fill(0).map((_, index) => getMockedJob(index))

@@ -1,4 +1,4 @@
-import { fromGenerator, ValueBag } from '../../src'
+import { fromGenerator, type ValueBag } from '../../src'
 import { sleep } from '../../src/utils/sleep'
 
 import { getMockedJobGenerator } from '../mocks/generator.mock'

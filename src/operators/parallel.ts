@@ -1,7 +1,7 @@
-import { map, Observable, share, zip } from 'rxjs'
+import { map, type Observable, share, zip } from 'rxjs'
 import type { PipeGenericParams, ValueBag } from '../types'
 import { buildValueBagAccumulator } from '../utils/valueBag'
-import { OperatorApplier } from './helpers/operatorHelpers'
+import { type OperatorApplier } from './helpers/operatorHelpers'
 
 export function parallel(params: PipeGenericParams[], operatorAppliers: OperatorApplier[]): OperatorApplier {
   function parallelOperatorsApplier(observable: Observable<ValueBag>) {

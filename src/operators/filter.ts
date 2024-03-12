@@ -1,7 +1,7 @@
 import { filter as filterRxJs } from 'rxjs'
-import { PendingDataControl } from '../utils/PendingDataControl'
-import { ValueBag } from '../types'
-import { OperatorApplier } from './helpers/operatorHelpers'
+import { type PendingDataControl } from '../utils/PendingDataControl'
+import { type ValueBag } from '../types'
+import { type OperatorApplier } from './helpers/operatorHelpers'
 
 export type FilterPredicate = (valueBag: ValueBag, index: number) => boolean
 

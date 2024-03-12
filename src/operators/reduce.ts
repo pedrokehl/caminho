@@ -1,7 +1,7 @@
-import { Observable, map, reduce as reduceRxJs } from 'rxjs'
+import { type Observable, map, reduce as reduceRxJs } from 'rxjs'
 import type { Loggers, ValueBag } from '../types'
-import { PendingDataControl } from '../utils/PendingDataControl'
-import { OperatorApplier } from './helpers/operatorHelpers'
+import { type PendingDataControl } from '../utils/PendingDataControl'
+import { type OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 import { pick } from '../utils/pick'
 

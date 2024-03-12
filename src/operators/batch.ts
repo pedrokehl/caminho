@@ -1,7 +1,7 @@
-import { Observable, bufferTime, filter, mergeAll, mergeMap } from 'rxjs'
+import { type Observable, bufferTime, filter, mergeAll, mergeMap } from 'rxjs'
 
 import type { Loggers, ValueBag } from '../types'
-import { OperatorApplier } from './helpers/operatorHelpers'
+import { type OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 
 export type BatchParams = {
@@ -44,7 +44,7 @@ export function batch(params: BatchParams, loggers: Loggers): OperatorApplier {
     loggers.onStepStarted(valueBag)
     const startTime = new Date()
     const values = await params.fn([...valueBag])
-    const newValueBags = getBag(valueBag, values as unknown[])
+    const newValueBags = getBag(valueBag, values)
     loggers.onStepFinished(newValueBags, startTime)
     return newValueBags
   }

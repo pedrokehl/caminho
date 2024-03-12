@@ -1,6 +1,6 @@
 import { mergeMap } from 'rxjs'
 import type { ValueBag, Loggers } from '../types'
-import { OperatorApplier } from './helpers/operatorHelpers'
+import { type OperatorApplier } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 
 export type PipeParams = {
