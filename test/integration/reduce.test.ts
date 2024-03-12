@@ -29,7 +29,7 @@ describe('Reduce', () => {
       .reduce({ fn: reduceFn, provides: 'count', seed: 100 })
       .run({ initial: true })
 
-    expect(reduceFn).toBeCalledTimes(2)
+    expect(reduceFn).toHaveBeenCalledTimes(2)
     expect(reduceFn).toHaveBeenCalledWith(100, { initial: true, job: { job_id: '1' } }, 0)
     expect(reduceFn).toHaveBeenCalledWith(101, { initial: true, job: { job_id: '2' } }, 1)
   })
@@ -70,8 +70,8 @@ describe('Reduce', () => {
       .pipe({ fn: saveCount })
       .run({ initial: true })
 
-    expect(saveCount).toBeCalledTimes(1)
-    expect(saveCount).toBeCalledWith({ count: 10 })
+    expect(saveCount).toHaveBeenCalledTimes(1)
+    expect(saveCount).toHaveBeenCalledWith({ count: 10 })
   })
 
   test('Reduce works fine when combined with backpressure', async () => {
