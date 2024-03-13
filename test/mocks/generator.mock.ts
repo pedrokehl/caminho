@@ -12,3 +12,20 @@ export function getMockedGenerator<T>(data: T[]) {
     }
   }
 }
+
+export function getThrowingGenerator(error: Error) {
+  // eslint-disable-next-line require-yield
+  return async function* throwingGenerator(): AsyncGenerator<number> {
+    throw error
+  }
+}
+
+export function getGeneratorThrowsAfterThYields(error: Error, numberOfYieldsBeforeThrow: number) {
+  return async function* throwingGenerator(): AsyncGenerator<number> {
+    const items = new Array(numberOfYieldsBeforeThrow).fill(0)
+    for await (const value of items) {
+      yield value
+    }
+    throw error
+  }
+}

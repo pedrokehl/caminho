@@ -40,6 +40,7 @@ export type OnStepFinishedParams = {
   tookMs: number
   emitted: number
   valueBags: ValueBag[]
+  error?: Error
 }
 
 export type Loggers = { onStepFinished: InternalOnStepFinished; onStepStarted: InternalOnStepStarted }

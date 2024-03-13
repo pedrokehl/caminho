@@ -43,10 +43,15 @@ export function batch(params: BatchParams, loggers: Loggers): OperatorApplier {
   async function wrappedStep(valueBag: ValueBag[]): Promise<ValueBag[]> {
     loggers.onStepStarted(valueBag)
     const startTime = new Date()
-    const values = await params.fn([...valueBag])
-    const newValueBags = getBag(valueBag, values)
-    loggers.onStepFinished(newValueBags, startTime)
-    return newValueBags
+    try {
+      const values = await params.fn([...valueBag])
+      const newValueBags = getBag(valueBag, values)
+      loggers.onStepFinished(newValueBags, startTime)
+      return newValueBags
+    } catch (err) {
+      loggers.onStepFinished(valueBag, startTime, err as Error)
+      throw err
+    }
   }
 
   return function operatorApplier(observable: Observable<ValueBag>) {
