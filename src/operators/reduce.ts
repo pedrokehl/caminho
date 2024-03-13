@@ -19,14 +19,19 @@ export function reduce<T>(
   loggers: Loggers,
   pendingDataControl?: PendingDataControl,
 ): OperatorApplier {
-  const { provides, keep } = reduceParams
+  const { provides, keep, seed } = reduceParams
+  const immutableSeed = Object.freeze(seed)
   let lastBag: ValueBag = {}
 
   function wrappedReduce(acc: T, valueBag: ValueBag, index: number): T {
     const startedAt = new Date()
     loggers.onStepStarted([valueBag])
+    // RxJs doesn't create a structureClone from the seed parameter when start processing.
+    // Developer can implement function that mutate the "acc" on reduce.fn
+    // To safely avoid conflicts between different runs, we copy the seed when it's a new run
+    const renewedAcc = index === 0 ? structuredClone(immutableSeed) : acc
     try {
-      const reduceResult = reduceParams.fn(acc, valueBag, index)
+      const reduceResult = reduceParams.fn(renewedAcc, valueBag, index)
       loggers.onStepFinished([valueBag], startedAt)
       lastBag = valueBag
       return reduceResult
@@ -40,7 +45,7 @@ export function reduce<T>(
 
   return function operatorApplier(observable: Observable<ValueBag>) {
     return observable
-      .pipe(reduceRxJs(wrappedReduce, reduceParams.seed))
+      .pipe(reduceRxJs(wrappedReduce, seed))
       .pipe(map((reduceResult: T) => getNewValueBag(pick(lastBag, keep ?? []), provides, reduceResult)))
   }
 }
