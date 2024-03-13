@@ -1,35 +1,52 @@
 import { fromGenerator } from '../../src'
-import { getMockedGenerator } from '../mocks/generator.mock'
+import { getMockedGenerator, getThrowingGenerator } from '../mocks/generator.mock'
 
 describe('Error Handling', () => {
-  test('Should pass generator error to run call stack', () => {
-    // eslint-disable-next-line require-yield
-    async function* generator(): AsyncGenerator<number> {
-      throw new Error('Generator error')
-    }
-
-    const caminho = fromGenerator({ fn: generator, provides: 'generatedData' })
-      .pipe({ fn: jest.fn() })
-
-    return expect(caminho.run()).rejects.toMatchObject({ message: 'Generator error' })
+  test('Should pass "generator" error to run call stack', async () => {
+    const caminho = fromGenerator({ fn: getThrowingGenerator(new Error('Generator error')), provides: 'generatedData' })
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Generator error' })
   })
 
-  test('Should pass operator error to run call stack', () => {
+  test('Should pass "generator with backpressure" error to run call stack', async () => {
+    const onStepFinished = jest.fn()
+    const options = { maxItemsFlowing: 1, onStepFinished }
+    const throwingGenerator = getThrowingGenerator(new Error('Generator error'))
+    const caminho = fromGenerator({ fn: throwingGenerator, provides: 'generatedData' }, options)
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Generator error' })
+  })
+
+  test('Should pass "pipe" error to run call stack', async () => {
     const operator = jest.fn().mockRejectedValue(new Error('Operator error'))
     const caminho = fromGenerator({ fn: getMockedGenerator([1, 2]), provides: 'number' })
       .pipe({ fn: operator })
 
-    return expect(caminho.run()).rejects.toMatchObject({ message: 'Operator error' })
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Operator error' })
   })
 
-  test('Should pass filter error to run call stack', () => {
+  test('Should pass "batch" error to run call stack', async () => {
+    const operator = jest.fn().mockRejectedValue(new Error('Operator error'))
+    const caminho = fromGenerator({ fn: getMockedGenerator([1, 2]), provides: 'number' })
+      .pipe({ fn: operator, batch: { maxSize: 10, timeoutMs: 1 } })
+
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Operator error' })
+  })
+
+  test('Should pass "parallel" error to run call stack', async () => {
+    const operator = jest.fn().mockRejectedValue(new Error('Operator error'))
+    const caminho = fromGenerator({ fn: getMockedGenerator([1, 2]), provides: 'number' })
+      .parallel([{ fn: operator }])
+
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Operator error' })
+  })
+
+  test('Should pass "filter" error to run call stack', async () => {
     const caminho = fromGenerator({ fn: getMockedGenerator([1, 2]), provides: 'number' })
       .filter(() => { throw new Error('Filter error') })
 
-    return expect(caminho.run()).rejects.toMatchObject({ message: 'Filter error' })
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Filter error' })
   })
 
-  test('Should pass reduce error to run call stack', () => {
+  test('Should pass "reduce" error to run call stack', async () => {
     const caminho = fromGenerator({ fn: getMockedGenerator([1, 2]), provides: 'number' })
       .reduce({
         fn: () => { throw new Error('Reduce error') },
@@ -37,6 +54,6 @@ describe('Error Handling', () => {
         provides: 'doesntMatter',
       })
 
-    return expect(caminho.run()).rejects.toMatchObject({ message: 'Reduce error' })
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Reduce error' })
   })
 })

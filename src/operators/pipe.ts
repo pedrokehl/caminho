@@ -28,10 +28,15 @@ export function pipe(params: PipeParams, loggers: Loggers): OperatorApplier {
   async function wrappedStep(valueBag: ValueBag): Promise<ValueBag> {
     loggers.onStepStarted([valueBag])
     const startTime = new Date()
-    const value = await params.fn({ ...valueBag })
-    const newBag = getBag(valueBag, value)
-    loggers.onStepFinished([newBag], startTime)
-    return newBag
+    try {
+      const value = await params.fn({ ...valueBag })
+      const newBag = getBag(valueBag, value)
+      loggers.onStepFinished([newBag], startTime)
+      return newBag
+    } catch (err) {
+      loggers.onStepFinished([valueBag], startTime, err as Error)
+      throw err
+    }
   }
   return mergeMap(wrappedStep, params?.maxConcurrency)
 }

@@ -239,6 +239,7 @@ npm run test:watch
 
 ## Roadmap
 
-- Allow a provided callback that receives the bag for generating the seed of `reduce`.
-- Wrap steps in a try catch so we can call logger with the step error.
+- Write test for “maxItemsFlowing” in combination with “reduce” + following pipes
+- Better wrap filter and add logging to it
+- Use “wrappedGenerator” in “wrappedGeneratorWithBackPressure” to remove duplicates
 - Proper typing on ValueBag and how it's handled in child steps.

@@ -25,11 +25,17 @@ export function reduce<T>(
   function wrappedReduce(acc: T, valueBag: ValueBag, index: number): T {
     const startedAt = new Date()
     loggers.onStepStarted([valueBag])
-    const reduceResult = reduceParams.fn(acc, valueBag, index)
-    pendingDataControl?.decrement()
-    loggers.onStepFinished([valueBag], startedAt)
-    lastBag = valueBag
-    return reduceResult
+    try {
+      const reduceResult = reduceParams.fn(acc, valueBag, index)
+      loggers.onStepFinished([valueBag], startedAt)
+      lastBag = valueBag
+      return reduceResult
+    } catch (err) {
+      loggers.onStepFinished([valueBag], startedAt, err as Error)
+      throw err
+    } finally {
+      pendingDataControl?.decrement()
+    }
   }
 
   return function operatorApplier(observable: Observable<ValueBag>) {
