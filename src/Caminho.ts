@@ -47,8 +47,9 @@ export class Caminho implements CaminhoInterface {
     return this
   }
 
-  public filter(predicate: FilterPredicate): this {
-    this.addOperatorApplier(filter(predicate, this.pendingDataControl))
+  public filter(params: { fn: FilterPredicate, name?: string }): this {
+    const loggers = this.getLoggers(params)
+    this.addOperatorApplier(filter(params.fn, loggers, this.pendingDataControl))
     return this
   }
 
@@ -96,7 +97,7 @@ export class Caminho implements CaminhoInterface {
       : pipe(params, this.getLoggers(params))
   }
 
-  private getLoggers<T>(params: FromGeneratorParams | PipeGenericParams | ReduceParams<T>): Loggers {
+  private getLoggers(params: { name?: string, fn: { name: string } }): Loggers {
     const stepName = params.name ?? params.fn.name
     const onStepStarted = getOnStepStarted(stepName, this.options?.onStepStarted)
     const onStepFinished = getOnStepFinished(stepName, this.options?.onStepFinished)

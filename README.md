@@ -137,9 +137,9 @@ Comparable to [Array.filter](https://developer.mozilla.org/en-US/docs/Web/JavaSc
 
 ```typescript
 
-await fromGenerator({ fn: generateCarIds, provides: 'carId' })
-  .filter((valueBag: ValueBag) => valueBag.carId % 2 === 0)
-  .pipe(processCarsWithEvenId)
+await fromGenerator({ fn: generateCars, provides: 'car' })
+  .filter({ fn: ({ car }: { car: Car }) => car.price >= 100_000 })
+  .pipe({ fn: processCarsThatCosts100kOrMore })
   .run()
 ```
 
@@ -240,6 +240,5 @@ npm run test:watch
 ## Roadmap
 
 - Write test for “maxItemsFlowing” in combination with “reduce” + following pipes
-- Better wrap filter and add logging to it
 - Change backpressure "resume" to be triggered by event instead of retrying after "sleep"
 - Proper typing on ValueBag and how it's handled in child steps.

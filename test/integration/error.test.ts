@@ -41,7 +41,7 @@ describe('Error Handling', () => {
 
   test('Should pass "filter" error to run call stack', async () => {
     const caminho = fromGenerator({ fn: getMockedGenerator([1, 2]), provides: 'number' })
-      .filter(() => { throw new Error('Filter error') })
+      .filter({ fn: () => { throw new Error('Filter error') } })
 
     await expect(caminho.run()).rejects.toMatchObject({ message: 'Filter error' })
   })

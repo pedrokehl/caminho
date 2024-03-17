@@ -16,7 +16,7 @@ export interface Caminho {
   * Useful only for Asynchronous operations.
    */
   parallel: (multiPipeParams: PipeGenericParams[]) => this
-  filter: (predicate: FilterPredicate) => this
+  filter: (filterParams: { fn: FilterPredicate, name: string }) => this
   reduce: <T>(reduceParams: ReduceParams<T>) => this
   run(initialBag?: ValueBag): Promise<ValueBag>
 }
