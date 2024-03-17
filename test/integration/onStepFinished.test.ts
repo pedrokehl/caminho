@@ -182,5 +182,23 @@ describe('onStepFinished', () => {
         [getOnStepFinishedParamsFixture({ name: 'generator', error })],
       ])
     })
+
+    it('forwards the error from .filter to onStepFinished and stops the flow', async () => {
+      const error = new Error('fetchError')
+      const generatorMock = getMockedJobGenerator(1)
+      const filterFn = jest.fn().mockRejectedValue(error)
+      const saveMock = jest.fn()
+      const onStepFinished = jest.fn().mockName('onStepFinishedLog')
+
+      const flow = fromGenerator({ name: 'generator', fn: generatorMock, provides: 'job' }, { onStepFinished })
+        .pipe({ name: 'filterSomething', fn: filterFn })
+        .pipe({ fn: saveMock })
+
+      await expect(flow.run).rejects.toThrow(error)
+      expect(onStepFinished.mock.calls).toEqual([
+        [getOnStepFinishedParamsFixture({ name: 'generator' })],
+        [getOnStepFinishedParamsFixture({ name: 'filterSomething', error })],
+      ])
+    })
   })
 })
