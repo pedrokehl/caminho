@@ -37,29 +37,14 @@ export function wrapGeneratorWithBackPressure(
   pendingDataControl: PendingDataControl,
   loggers: Loggers,
 ) {
+  const wrappedGenerator = wrapGenerator(generatorParams, loggers)
   return async function* wrappedGeneratorWithBackPressure(initialBag: ValueBag) {
-    const bagArrayForLogger = [initialBag]
-    loggers.onStepStarted(bagArrayForLogger)
-    let isStart = true
-    let startTime = new Date()
-    try {
-      for await (const value of generatorParams.fn(initialBag)) {
-        if (!isStart) {
-          loggers.onStepStarted(bagArrayForLogger)
-        }
-        isStart = false
-        const newValueBag = getNewValueBag(initialBag, generatorParams.provides, value)
-        if (needsToWaitForBackpressure(pendingDataControl, maxItemsFlowing)) {
-          await waitOnBackpressure(maxItemsFlowing, pendingDataControl)
-        }
-        pendingDataControl.increment()
-        loggers.onStepFinished([newValueBag], startTime)
-        yield newValueBag
-        startTime = new Date()
+    for await (const value of wrappedGenerator(initialBag)) {
+      pendingDataControl.increment()
+      yield value
+      if (needsToWaitForBackpressure(pendingDataControl, maxItemsFlowing)) {
+        await waitOnBackpressure(maxItemsFlowing, pendingDataControl)
       }
-    } catch (err) {
-      loggers.onStepFinished([initialBag], startTime, err as Error)
-      throw err
     }
   }
 }
