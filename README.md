@@ -241,5 +241,5 @@ npm run test:watch
 
 - Write test for “maxItemsFlowing” in combination with “reduce” + following pipes
 - Better wrap filter and add logging to it
-- Use “wrappedGenerator” in “wrappedGeneratorWithBackPressure” to remove duplicates
+- Change backpressure "resume" to be triggered by event instead of retrying after "sleep"
 - Proper typing on ValueBag and how it's handled in child steps.
