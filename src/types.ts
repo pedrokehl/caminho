@@ -6,14 +6,10 @@ import type { InternalOnStepFinished } from './utils/onStepFinished'
 import type { InternalOnStepStarted } from './utils/onStepStarted'
 
 export interface Caminho {
-  /**
-  * receives an array of StepFunctions and each provided step has the same parameters and behavior as a pipe.
-  * Useful only for Asynchronous operations.
-   */
   pipe: (pipeParams: PipeGenericParams) => this
   /**
   * receives an array of StepFunctions and each provided step has the same parameters and behavior as a pipe.
-  * Useful only for Asynchronous operations.
+  * Useful only for Asynchronous operations given NodeJS's single-threaded nature.
    */
   parallel: (multiPipeParams: PipeGenericParams[]) => this
   filter: (filterParams: { fn: FilterPredicate, name: string }) => this

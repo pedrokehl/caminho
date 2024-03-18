@@ -112,6 +112,7 @@ describe('Reduce', () => {
       [getOnStepFinishedParamsFixture({ name: 'saveCount' })],
     ])
   })
+
   test('Doesnt apply mutation to "seed" in different runs when reduce.fn mutates the "acc"', async () => {
     const saveChild = jest.fn()
     const saveParent = jest.fn()
