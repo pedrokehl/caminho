@@ -236,9 +236,3 @@ npm test
 or
 npm run test:watch
 ```
-
-## Roadmap
-
-- Write test for “maxItemsFlowing” in combination with “reduce” + following pipes
-- Change backpressure "resume" to be triggered by event instead of retrying after "sleep"
-- Proper typing on ValueBag and how it's handled in child steps.

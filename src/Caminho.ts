@@ -34,6 +34,10 @@ export class Caminho implements CaminhoInterface {
     this.generator = this.getGenerator(generatorParams)
   }
 
+  public getNumberOfItemsFlowing(): number | undefined {
+    return this.pendingDataControl?.size
+  }
+
   public pipe(params: PipeGenericParams): this {
     const operatorApplier = this.getApplierForPipeOrBatch(params)
     this.addOperatorApplier(operatorApplier)
