@@ -46,6 +46,9 @@ export function reduce<T>(
   return function operatorApplier(observable: Observable<ValueBag>) {
     return observable
       .pipe(reduceRxJs(wrappedReduce, seed))
-      .pipe(map((reduceResult: T) => getNewValueBag(pick(lastBag, keep ?? []), provides, reduceResult)))
+      .pipe(map((reduceResult: T) => {
+        pendingDataControl?.increment()
+        return getNewValueBag(pick(lastBag, keep ?? []), provides, reduceResult)
+      }))
   }
 }
