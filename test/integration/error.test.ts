@@ -56,4 +56,13 @@ describe('Error Handling', () => {
 
     await expect(caminho.run()).rejects.toMatchObject({ message: 'Reduce error' })
   })
+
+  test('Should not interfere with the backpressure when error happens', async () => {
+    const operator = jest.fn().mockRejectedValueOnce(new Error('Operator error')).mockResolvedValue(null)
+    const caminho = fromGenerator({ fn: getMockedGenerator([1, 2]), provides: 'number' }, { maxItemsFlowing: 1 })
+      .pipe({ fn: operator })
+
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Operator error' })
+    expect(caminho.getNumberOfItemsFlowing()).toBe(0)
+  })
 })
