@@ -1,4 +1,6 @@
 import { fromGenerator } from '../../src'
+import { sleep } from '../../src/utils/sleep'
+import { getNumberedArray } from '../mocks/array.mock'
 import { getMockedGenerator, getThrowingGenerator } from '../mocks/generator.mock'
 
 describe('Error Handling', () => {
@@ -60,6 +62,22 @@ describe('Error Handling', () => {
   test('Should not interfere with the backpressure when error happens', async () => {
     const operator = jest.fn().mockRejectedValueOnce(new Error('Operator error')).mockResolvedValue(null)
     const caminho = fromGenerator({ fn: getMockedGenerator([1, 2]), provides: 'number' }, { maxItemsFlowing: 1 })
+      .pipe({ fn: operator })
+
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Operator error' })
+    expect(caminho.getNumberOfItemsFlowing()).toBe(0)
+  })
+
+  test('Should not keep account for the pending items in the flow after an error', async () => {
+    const operator = jest.fn()
+      .mockImplementationOnce(() => sleep(1))
+      .mockImplementationOnce(() => sleep(1))
+      .mockImplementationOnce(() => sleep(1))
+      .mockRejectedValueOnce(new Error('Operator error'))
+
+    const generator = getMockedGenerator(getNumberedArray(10))
+
+    const caminho = fromGenerator({ fn: generator, provides: 'number' }, { maxItemsFlowing: 5 })
       .pipe({ fn: operator })
 
     await expect(caminho.run()).rejects.toMatchObject({ message: 'Operator error' })

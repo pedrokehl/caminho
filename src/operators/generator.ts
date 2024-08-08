@@ -38,9 +38,9 @@ export function wrapGeneratorWithBackPressure(
   loggers: Loggers,
 ) {
   const wrappedGenerator = wrapGenerator(generatorParams, loggers)
-  return async function* wrappedGeneratorWithBackPressure(initialBag: ValueBag) {
-    for await (const value of wrappedGenerator(initialBag)) {
-      pendingDataControl.increment()
+  return async function* wrappedGeneratorWithBackPressure(initialBag: ValueBag, runId: string) {
+    for await (const value of wrappedGenerator({ ...initialBag })) {
+      pendingDataControl.increment(runId)
       yield value
       if (needsToWaitForBackpressure(pendingDataControl, maxItemsFlowing)) {
         await waitOnBackpressure(maxItemsFlowing, pendingDataControl)
