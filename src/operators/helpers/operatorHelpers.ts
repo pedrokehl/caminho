@@ -5,6 +5,7 @@ import { type BatchParams } from '../batch'
 import { type PipeParams } from '../pipe'
 
 export type OperatorApplier = (observable: Observable<ValueBag>) => Observable<ValueBag>
+export type OperatorApplierWithRunId = (runId: string) => OperatorApplier
 
 export function isBatch(params: PipeParams | BatchParams): params is BatchParams {
   return !!(params as BatchParams)?.batch
@@ -12,7 +13,8 @@ export function isBatch(params: PipeParams | BatchParams): params is BatchParams
 
 export function applyOperator(
   observable: Observable<ValueBag>,
-  operatorApplier: OperatorApplier,
+  operatorApplier: OperatorApplierWithRunId,
+  runId: string,
 ): Observable<ValueBag> {
-  return operatorApplier(observable)
+  return operatorApplier(runId)(observable)
 }

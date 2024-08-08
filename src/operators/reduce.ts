@@ -1,7 +1,7 @@
 import { type Observable, map, reduce as reduceRxJs } from 'rxjs'
 import type { Loggers, ValueBag } from '../types'
 import { type PendingDataControl } from '../utils/PendingDataControl'
-import { type OperatorApplier } from './helpers/operatorHelpers'
+import { type OperatorApplierWithRunId } from './helpers/operatorHelpers'
 import { getNewValueBag } from '../utils/valueBag'
 import { pick } from '../utils/pick'
 
@@ -18,12 +18,12 @@ export function reduce<T>(
   reduceParams: ReduceParams<T>,
   loggers: Loggers,
   pendingDataControl?: PendingDataControl,
-): OperatorApplier {
+): OperatorApplierWithRunId {
   const { provides, keep, seed } = reduceParams
   const immutableSeed = Object.freeze(seed)
   let lastBag: ValueBag = {}
 
-  function wrappedReduce(acc: T, valueBag: ValueBag, index: number): T {
+  function wrappedReduce(acc: T, valueBag: ValueBag, index: number, runId: string): T {
     const startedAt = new Date()
     loggers.onStepStarted([valueBag])
     // RxJs doesn't create a structureClone from the seed parameter when start processing.
@@ -39,16 +39,18 @@ export function reduce<T>(
       loggers.onStepFinished([valueBag], startedAt, err as Error)
       throw err
     } finally {
-      pendingDataControl?.decrement()
+      pendingDataControl?.decrement(runId)
     }
   }
 
-  return function operatorApplier(observable: Observable<ValueBag>) {
-    return observable
-      .pipe(reduceRxJs(wrappedReduce, seed))
-      .pipe(map((reduceResult: T) => {
-        pendingDataControl?.increment()
-        return getNewValueBag(pick(lastBag, keep ?? []), provides, reduceResult)
-      }))
+  return function operatorApplierWithRunId(runId: string) {
+    return function operatorApplier(observable: Observable<ValueBag>) {
+      return observable
+        .pipe(reduceRxJs((acc, valueBag, index) => wrappedReduce(acc, valueBag, index, runId), seed))
+        .pipe(map((reduceResult: T) => {
+          pendingDataControl?.increment(runId)
+          return getNewValueBag(pick(lastBag, keep ?? []), provides, reduceResult)
+        }))
+    }
   }
 }

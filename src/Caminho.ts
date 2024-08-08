@@ -10,16 +10,23 @@ import { parallel } from './operators/parallel'
 import { reduce, type ReduceParams } from './operators/reduce'
 import { filter, type FilterPredicate } from './operators/filter'
 
-import { applyOperator, isBatch, type OperatorApplier } from './operators/helpers/operatorHelpers'
+import {
+  applyOperator,
+  isBatch,
+  type OperatorApplier,
+  type OperatorApplierWithRunId,
+} from './operators/helpers/operatorHelpers'
 import { type PendingDataControl, PendingDataControlInMemory } from './utils/PendingDataControl'
 
 import { getOnStepFinished } from './utils/onStepFinished'
 import { getOnStepStarted } from './utils/onStepStarted'
+import { generateId } from './utils/generateId'
+
+type Generator = (initialBag: ValueBag, runId: string) => AsyncGenerator<ValueBag>
 
 export class Caminho implements CaminhoInterface {
-  private generator: (initialBag: ValueBag) => AsyncGenerator<ValueBag>
-  private operators: OperatorApplier[] = []
-  private finalStep?: OperatorApplier
+  private generator: Generator
+  private operators: OperatorApplierWithRunId[] = []
   private pendingDataControl?: PendingDataControl
 
   constructor(generatorParams: FromGeneratorParams, private options?: CaminhoOptions) {
@@ -40,14 +47,14 @@ export class Caminho implements CaminhoInterface {
 
   public pipe(params: PipeGenericParams): this {
     const operatorApplier = this.getApplierForPipeOrBatch(params)
-    this.addOperatorApplier(operatorApplier)
+    this.addOperatorApplier(() => operatorApplier)
     return this
   }
 
   public parallel(params: PipeGenericParams[]): this {
     const operatorAppliers: OperatorApplier[] = params.map(this.getApplierForPipeOrBatch)
     const operatorApplier = parallel(params, operatorAppliers)
-    this.addOperatorApplier(operatorApplier)
+    this.addOperatorApplier(() => operatorApplier)
     return this
   }
 
@@ -64,34 +71,32 @@ export class Caminho implements CaminhoInterface {
   }
 
   public async run(initialBag?: ValueBag): Promise<ValueBag> {
-    const observable$ = this.buildObservable(initialBag)
-    return lastValueFrom(observable$, { defaultValue: initialBag })
+    const runId = generateId()
+    const initial$ = from(this.generator({ ...initialBag }, runId))
+    const observable$ = this.operators.reduce((acc, operator) => applyOperator(acc, operator, runId), initial$)
+
+    const finalObservable$ = this.options?.maxItemsFlowing
+      ? observable$.pipe(tap(() => (this.pendingDataControl as PendingDataControl).decrement(runId)))
+      : observable$
+
+    try {
+      return await lastValueFrom(finalObservable$, { defaultValue: initialBag })
+    } finally {
+      this.pendingDataControl?.destroyBucket(runId)
+    }
   }
 
-  private getGenerator(generatorParams: FromGeneratorParams): (initialBag: ValueBag) => AsyncGenerator<ValueBag> {
+  private getGenerator(generatorParams: FromGeneratorParams): Generator {
     const loggers = this.getLoggers(generatorParams)
     if (this.options?.maxItemsFlowing) {
       const pendingDataControl = this.pendingDataControl as PendingDataControl
-      this.finalStep = tap({ next: () => pendingDataControl.decrement(), error: () => pendingDataControl.decrement() })
       return wrapGeneratorWithBackPressure(generatorParams, this.options.maxItemsFlowing, pendingDataControl, loggers)
     }
 
     return wrapGenerator(generatorParams, loggers)
   }
 
-  private buildObservable(initialBag: ValueBag = {}) {
-    const initialObservable$ = from(this.generator({ ...initialBag }))
-    const observable$ = this.operators.reduce(applyOperator, initialObservable$)
-
-    if (this.finalStep) {
-      return observable$
-        .pipe(this.finalStep)
-    }
-
-    return observable$
-  }
-
-  private addOperatorApplier(operatorApplier: OperatorApplier) {
+  private addOperatorApplier(operatorApplier: OperatorApplierWithRunId) {
     this.operators.push(operatorApplier)
   }
 
