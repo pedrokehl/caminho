@@ -72,7 +72,7 @@ export class Caminho implements CaminhoInterface {
     const loggers = this.getLoggers(generatorParams)
     if (this.options?.maxItemsFlowing) {
       const pendingDataControl = this.pendingDataControl as PendingDataControl
-      this.finalStep = tap(() => pendingDataControl.decrement())
+      this.finalStep = tap({ next: () => pendingDataControl.decrement(), error: () => pendingDataControl.decrement() })
       return wrapGeneratorWithBackPressure(generatorParams, this.options.maxItemsFlowing, pendingDataControl, loggers)
     }
 
