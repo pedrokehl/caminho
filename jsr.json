@@ -1,6 +1,6 @@
 {
     "name": "@pedrokehl/caminho",
-    "version": "1.7.3",
+    "version": "1.7.4",
     "exports": "./src/index.ts",
     "exclude": [".github/*", "benchmark/*", "test/*", "eslint.config.mjs"],
     "license": "ISC"
