@@ -21,6 +21,7 @@ export interface Caminho {
 export type ValueBag = any
 
 export type PipeGenericParams = PipeParams | BatchParams
+export type PipeGenericParamsProvides = PipeGenericParams & { provides: string };
 
 export type OnStepStarted = (params: OnStepStartedParams) => void
 export type OnStepFinished = (params: OnStepFinishedParams) => void

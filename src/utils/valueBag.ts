@@ -1,21 +1,22 @@
-import type { ValueBag, PipeGenericParams } from '../types'
-import type { PipeParams } from '../operators/pipe'
+import type { ValueBag, PipeGenericParams, PipeGenericParamsProvides } from '../types'
 
 export function getNewValueBag(oldValueBag: ValueBag, toProvide: string, newValue: unknown) {
   return { ...oldValueBag, [toProvide]: newValue }
 }
 
+function isPipeParamsProvides(pipeParams: PipeGenericParams): pipeParams is PipeGenericParamsProvides {
+  return !!pipeParams.provides
+}
+
 export function buildValueBagAccumulator(pipesParams: PipeGenericParams[]) {
-  const providablePipeParams = pipesParams.filter((pipeParams: PipeGenericParams) => pipeParams.provides)
+  const providablePipeParams = pipesParams.filter(isPipeParamsProvides)
 
   return function getAccumulatedParallelBag(valueBags: ValueBag[]) {
-    function accumulateParallelProvidedValues(valueBag: ValueBag, pipeParams: PipeParams, index: number) {
-      if (pipeParams.provides) {
-        valueBag[pipeParams.provides] = valueBags[index][pipeParams.provides]
-      }
+    function accumulateProvidedValues(valueBag: ValueBag, pipeParams: PipeGenericParamsProvides, index: number) {
+      valueBag[pipeParams.provides] = valueBags[index][pipeParams.provides]
       return valueBag
     }
 
-    return providablePipeParams.reduce(accumulateParallelProvidedValues, { ...valueBags[0] })
+    return providablePipeParams.reduce(accumulateProvidedValues, { ...valueBags[0] })
   }
 }
