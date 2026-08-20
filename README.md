@@ -59,8 +59,9 @@ await caminho.run({ manufacturer: 'subaru' })
 ```
 
 #### Generator
-`from` receives an AsyncGenerator that provides any amount of items to the subsequent steps.  
+`fromGenerator` receives an AsyncGenerator that provides any amount of items to the subsequent steps.  
 Use `maxItemsFlowing` for lossless backpressure, it limits the amount of data concurrently in the flow, useful to avoid memory overflow.  
+Keep in mind the `maxItemsFlowing` budget is shared between concurrent `run()` calls on the same Caminho instance.  
 
 ```typescript
 import { fromGenerator, ValueBag } from 'caminho'
@@ -86,9 +87,10 @@ await fromGenerator({ fn: generateCars, provides: 'carId' }, { maxItemsFlowing: 
 #### Concurrency
 Concurrency is unlimited by default, which means a step function can be dispatched concurrently as many times as the number of items the generator provides.  
 You can limit the concurrency by providing `maxConcurrency` option on a step definition, this is useful when you use an API that can't handle too many concurrent requests.  
+Values are emitted in completion order, not in the order the generator produced them, so a slow item never blocks faster ones behind it.  
 
 ```typescript
-await fromGenerator(generator)
+await fromGenerator({ fn: generateCars, provides: 'carId' })
   .pipe({ fn: (valueBag: ValueBag) => {}, maxConcurrency: 5 })
   .run()
 ```
@@ -103,7 +105,7 @@ A batch configuration consists of two parameters:
 Your batch step can also provide values to the ValueBag, but keep in mind that the order of the returned values must be the same order you received the ValueBag, so it gets merged and is properly assigned to the next `pipe`.  
 
 ```typescript
-async function saveCars(valueBags: ValueBag[]): string[] {
+async function saveCars(valueBags: ValueBag[]): Promise<string[]> {
   const cars = valueBags.map((valueBag) => valueBag.car)
   const response = await saveManyCars(cars)
   return response.ids
@@ -166,6 +168,20 @@ console.log('result', result)
 // result { "sum": 1_532_600, "manufacturer": "Mazda" }
 ```
 
+#### TypeScript
+The bag type is accumulated automatically as the flow is defined: every `provides` adds a property, `parallel` merges the values of all its branches, and `reduce` replaces the bag with the aggregation plus the properties listed in `keep`.  
+No annotations are required, and untyped flows keep working since the bag defaults to `any`.
+
+```typescript
+const flow = fromArray({ items: [1, 2, 3], provides: 'n' })
+  .pipe({ fn: ({ n }) => n * 10, provides: 'tens' })   // bag is { n: number }
+  .pipe({ fn: ({ n, tens }) => {} })                   // bag is { n: number, tens: number }
+
+const result = await flow.run()                        // result is { n: number, tens: number }
+```
+
+Note: steps receive a copy of the ValueBag, mutating it inside a step does not affect other steps, use `provides` to add values to the bag.
+
 #### Nested Caminhos
 You can combine multiple instances of Caminho in the same execution for nested generators.  
 This approach works with Parallelism, Concurrency and Batching, since the run function will be treated as a normal step.  
@@ -181,13 +197,13 @@ await fromGenerator({ fn: generateCars, provides: 'carId' })
 
 #### Logging
 Caminho features a simple log mechanism which executes a syncronous callback function on every step start and finish.  
-The functions can be defined with the `onStepStart` and `onStepFinished` parameter on one of the `from` flow initializers.
+The functions can be defined with the `onStepStarted` and `onStepFinished` parameter on one of the `from` flow initializers.
 
-The **onStepStart** provides the callback with the following information:
+The **onStepStarted** provides the callback with the following information:
 
 - *name: string* - The name provided on the step definition, fallback to the name of the step function.
 - *valueBags: ValueBag[]* - Array of value bags at the moment this was executed.
-- *received: number* - Time of items received (this will only be greater than 1 in case it's a batch).
+- *received: number* - Number of items received (this will only be greater than 1 in case it's a batch).
 
 The **onStepFinished** provides the callback with the following information:
 
@@ -206,18 +222,18 @@ await fromGenerator(
       onStepFinished: (log) => console.log('stepFinished', log),
     }
   )
-  // stepStarted { name: 'generateCars', received: 1, valueBags: [{}}] }
+  // stepStarted { name: 'generateCars', received: 1, valueBags: [{}] }
   // stepFinished { name: 'generateCars', tookMs: number, emitted: 1, valueBags: [{ carId: "1" }] }
   // stepStarted { name: 'generateCars', received: 1, valueBags: [{}] }
   // stepFinished { name: 'generateCars', tookMs: number, emitted: 1, valueBags: [{ carId: "2" }] }
   .pipe({ fn: fetchPrice, provides: 'price', name: 'customName' })
   // stepStarted { name: 'customName', received: 1, valueBags: [{ carId: "1" }] }
-  // stepFinished { name: 'customName', tookMs: number, emitted: 1, valueBags: [{ carId: "1", customName: "car-1" }] }
+  // stepFinished { name: 'customName', tookMs: number, emitted: 1, valueBags: [{ carId: "1", price: 20_000 }] }
   // stepStarted { name: 'customName', received: 1, valueBags: [{ carId: "2" }] }
-  // stepFinished { name: 'customName', tookMs: number, emitted: 1, valueBags: [{ carId: "2", customName: "car-2" }] }
+  // stepFinished { name: 'customName', tookMs: number, emitted: 1, valueBags: [{ carId: "2", price: 35_000 }] }
   .pipe({ fn: fetchSpecs, provides: 'specs', batch: { maxSize: 50, timeoutMs: 500 } })
-  // stepStarted { name: 'fetchSpecs', received: 2, valueBags: [{ carId: "1", customName: "car-1" }, { carId: "2", customName: "car-2" } }] }
-  // stepFinished { name: 'fetchSpecs', tookMs: number, emitted: 2, valueBags: [{ carId: "1", customName: "car-1", specs: { engineSize: 1600 } }, { carId: "2", customName: "car-2", specs: { engineSize: 2000 } }] }
+  // stepStarted { name: 'fetchSpecs', received: 2, valueBags: [{ carId: "1", price: 20_000 }, { carId: "2", price: 35_000 }] }
+  // stepFinished { name: 'fetchSpecs', tookMs: number, emitted: 2, valueBags: [{ carId: "1", price: 20_000, specs: { engineSize: 1600 } }, { carId: "2", price: 35_000, specs: { engineSize: 2000 } }] }
   .run()
 ```
 
