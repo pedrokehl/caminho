@@ -22,6 +22,7 @@
     "noImplicitReturns": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
+    "isolatedModules": true,
     "stripInternal": true,
     "skipLibCheck": true,
     "types": ["node"],
