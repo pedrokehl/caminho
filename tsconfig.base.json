@@ -20,12 +20,14 @@
     "sourceMap": true,
     "strict": true,
     "noImplicitReturns": true,
-    "moduleResolution": "node",
-    "ignoreDeprecations": "6.0",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "isolatedModules": true,
     "stripInternal": true,
+    "skipLibCheck": true,
+    "types": ["node"],
     "lib": [
-      "esnext",
-      "dom"
+      "esnext"
     ],
     "target": "esnext",
   }

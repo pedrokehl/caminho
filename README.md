@@ -17,6 +17,7 @@ The motivation behind Caminho is from an increased demand for data processing sy
 - [Filtering](#filtering)
 - [Reduce](#reduce)
 - [Logging](#logging)
+- [Error handling](#error-handling)
 
 ## Usage Instructions
 
@@ -59,8 +60,9 @@ await caminho.run({ manufacturer: 'subaru' })
 ```
 
 #### Generator
-`from` receives an AsyncGenerator that provides any amount of items to the subsequent steps.  
+`fromGenerator` receives an AsyncGenerator that provides any amount of items to the subsequent steps.  
 Use `maxItemsFlowing` for lossless backpressure, it limits the amount of data concurrently in the flow, useful to avoid memory overflow.  
+Keep in mind the `maxItemsFlowing` budget is shared between concurrent `run()` calls on the same Caminho instance.  
 
 ```typescript
 import { fromGenerator, ValueBag } from 'caminho'
@@ -83,12 +85,46 @@ await fromGenerator({ fn: generateCars, provides: 'carId' }, { maxItemsFlowing: 
   .run({ manufacturer: 'nissan' })
 ```
 
+#### Other entry points
+Besides `fromGenerator`, a flow can start from data you already have at hand. All entry points share the same options (`maxItemsFlowing`, `onStepStarted`, `onStepFinished`) and the same `provides` semantics.
+
+`fromArray` runs the flow once per item of an array:
+
+```typescript
+import { fromArray } from 'caminho'
+
+await fromArray({ items: ['WBA123', 'JTD456'], provides: 'vin' })
+  .pipe({ fn: fetchCarByVin, provides: 'car' })
+  .run()
+```
+
+`fromValue` runs the flow exactly once, for the single provided item:
+
+```typescript
+import { fromValue } from 'caminho'
+
+await fromValue({ item: 'WBA123', provides: 'vin' })
+  .pipe({ fn: fetchCarByVin, provides: 'car' })
+  .run()
+```
+
+`fromFn` runs the flow exactly once, with the value returned (or resolved) by the function. The function receives the `initialBag` passed to `run()`:
+
+```typescript
+import { fromFn } from 'caminho'
+
+await fromFn({ fn: (bag) => fetchNewestCar(bag.manufacturer), provides: 'car' })
+  .pipe({ fn: saveCar })
+  .run({ manufacturer: 'honda' })
+```
+
 #### Concurrency
 Concurrency is unlimited by default, which means a step function can be dispatched concurrently as many times as the number of items the generator provides.  
 You can limit the concurrency by providing `maxConcurrency` option on a step definition, this is useful when you use an API that can't handle too many concurrent requests.  
+Values are emitted in completion order, not in the order the generator produced them, so a slow item never blocks faster ones behind it.  
 
 ```typescript
-await fromGenerator(generator)
+await fromGenerator({ fn: generateCars, provides: 'carId' })
   .pipe({ fn: (valueBag: ValueBag) => {}, maxConcurrency: 5 })
   .run()
 ```
@@ -103,7 +139,7 @@ A batch configuration consists of two parameters:
 Your batch step can also provide values to the ValueBag, but keep in mind that the order of the returned values must be the same order you received the ValueBag, so it gets merged and is properly assigned to the next `pipe`.  
 
 ```typescript
-async function saveCars(valueBags: ValueBag[]): string[] {
+async function saveCars(valueBags: ValueBag[]): Promise<string[]> {
   const cars = valueBags.map((valueBag) => valueBag.car)
   const response = await saveManyCars(cars)
   return response.ids
@@ -166,6 +202,34 @@ console.log('result', result)
 // result { "sum": 1_532_600, "manufacturer": "Mazda" }
 ```
 
+#### TypeScript
+The bag type is accumulated automatically as the flow is defined: every `provides` adds a property (re-providing an existing key replaces its type), `parallel` merges the values of all its branches, and `reduce` replaces the bag with the aggregation plus the properties listed in `keep`.  
+No annotations are required, and untyped flows keep working since the bag defaults to `any`.
+
+```typescript
+const flow = fromArray({ items: [1, 2, 3], provides: 'n' })
+  .pipe({ fn: ({ n }) => n * 10, provides: 'tens' })   // bag is { n: number }
+  .pipe({ fn: ({ n, tens }) => {} })                   // bag is { n: number, tens: number }
+
+const result = await flow.run()                        // result is { n: number, tens: number }
+result.other                                           // compile error: bags are closed
+```
+
+Typed bags are **closed**: only declared properties are accessible. To use `run(initialBag)` properties in a typed flow, declare them by annotating the generator/fn parameter of `fromGenerator` or `fromFn` — they become part of the bag type for every step:
+
+```typescript
+async function* generateCars(initialBag: { manufacturer: string }) { /* ... */ }
+
+const flow = fromGenerator({ fn: generateCars, provides: 'carId' })
+  .pipe({ fn: ({ manufacturer, carId }) => {} })  // bag is { manufacturer: string, carId: string }
+
+await flow.run({ manufacturer: 'subaru' })
+```
+
+Annotating the parameter as `ValueBag` (or omitting it) keeps the flow untyped.
+
+Note: steps receive a copy of the ValueBag, mutating it inside a step does not affect other steps, use `provides` to add values to the bag.
+
 #### Nested Caminhos
 You can combine multiple instances of Caminho in the same execution for nested generators.  
 This approach works with Parallelism, Concurrency and Batching, since the run function will be treated as a normal step.  
@@ -181,13 +245,13 @@ await fromGenerator({ fn: generateCars, provides: 'carId' })
 
 #### Logging
 Caminho features a simple log mechanism which executes a syncronous callback function on every step start and finish.  
-The functions can be defined with the `onStepStart` and `onStepFinished` parameter on one of the `from` flow initializers.
+The functions can be defined with the `onStepStarted` and `onStepFinished` parameter on one of the `from` flow initializers.
 
-The **onStepStart** provides the callback with the following information:
+The **onStepStarted** provides the callback with the following information:
 
 - *name: string* - The name provided on the step definition, fallback to the name of the step function.
 - *valueBags: ValueBag[]* - Array of value bags at the moment this was executed.
-- *received: number* - Time of items received (this will only be greater than 1 in case it's a batch).
+- *received: number* - Number of items received (this will only be greater than 1 in case it's a batch).
 
 The **onStepFinished** provides the callback with the following information:
 
@@ -206,18 +270,45 @@ await fromGenerator(
       onStepFinished: (log) => console.log('stepFinished', log),
     }
   )
-  // stepStarted { name: 'generateCars', received: 1, valueBags: [{}}] }
+  // stepStarted { name: 'generateCars', received: 1, valueBags: [{}] }
   // stepFinished { name: 'generateCars', tookMs: number, emitted: 1, valueBags: [{ carId: "1" }] }
   // stepStarted { name: 'generateCars', received: 1, valueBags: [{}] }
   // stepFinished { name: 'generateCars', tookMs: number, emitted: 1, valueBags: [{ carId: "2" }] }
   .pipe({ fn: fetchPrice, provides: 'price', name: 'customName' })
   // stepStarted { name: 'customName', received: 1, valueBags: [{ carId: "1" }] }
-  // stepFinished { name: 'customName', tookMs: number, emitted: 1, valueBags: [{ carId: "1", customName: "car-1" }] }
+  // stepFinished { name: 'customName', tookMs: number, emitted: 1, valueBags: [{ carId: "1", price: 20_000 }] }
   // stepStarted { name: 'customName', received: 1, valueBags: [{ carId: "2" }] }
-  // stepFinished { name: 'customName', tookMs: number, emitted: 1, valueBags: [{ carId: "2", customName: "car-2" }] }
+  // stepFinished { name: 'customName', tookMs: number, emitted: 1, valueBags: [{ carId: "2", price: 35_000 }] }
   .pipe({ fn: fetchSpecs, provides: 'specs', batch: { maxSize: 50, timeoutMs: 500 } })
-  // stepStarted { name: 'fetchSpecs', received: 2, valueBags: [{ carId: "1", customName: "car-1" }, { carId: "2", customName: "car-2" } }] }
-  // stepFinished { name: 'fetchSpecs', tookMs: number, emitted: 2, valueBags: [{ carId: "1", customName: "car-1", specs: { engineSize: 1600 } }, { carId: "2", customName: "car-2", specs: { engineSize: 2000 } }] }
+  // stepStarted { name: 'fetchSpecs', received: 2, valueBags: [{ carId: "1", price: 20_000 }, { carId: "2", price: 35_000 }] }
+  // stepFinished { name: 'fetchSpecs', tookMs: number, emitted: 2, valueBags: [{ carId: "1", price: 20_000, specs: { engineSize: 1600 } }, { carId: "2", price: 35_000, specs: { engineSize: 2000 } }] }
+  .run()
+```
+
+#### Error handling
+An error thrown (or rejected) by the generator or by any step rejects the `run()` promise with that error, and the flow is torn down:
+
+- No further values are pulled from the generator, and the generator is **closed**: its `finally` blocks run, so resources like connections or cursors can be released even if the failure happened elsewhere in the flow.
+- The failing step's `onStepFinished` callback receives the `error`, which makes it a good place for logging.
+- In a `batch` step, a thrown error fails the run as a whole, there is no per-item isolation within a batch.
+- Errors don't leak across concurrent runs: other `run()` calls on the same instance keep going, and the failed run releases its share of the `maxItemsFlowing` budget, so `getNumberOfItemsFlowing()` is accurate after any run settles, successfully or not.
+
+There is no built-in retry or per-item error channel: if an item is allowed to fail without aborting the run, catch the error inside the step function and represent it as a value in the bag.
+
+```typescript
+await fromGenerator({ fn: generateCars, provides: 'carId' })
+  .pipe({
+    fn: async ({ carId }) => {
+      try {
+        return { ok: true, price: await fetchPrice(carId) }
+      } catch (error) {
+        return { ok: false, error }
+      }
+    },
+    provides: 'priceResult',
+  })
+  .filter({ fn: ({ priceResult }) => priceResult.ok })
+  .pipe({ fn: savePrice })
   .run()
 ```
 

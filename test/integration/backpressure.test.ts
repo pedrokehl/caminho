@@ -1,4 +1,5 @@
 import { fromGenerator } from '../../src'
+import { sleep } from '../../src/utils/sleep'
 import { getMockedJobGenerator } from '../mocks/generator.mock'
 import { type Job } from '../mocks/job.mock'
 
@@ -45,6 +46,27 @@ describe('Backpressure', () => {
 
     await caminho.run()
 
+    expect(caminho.getNumberOfItemsFlowing()).toBe(0)
+  })
+
+  test('Should never hold more than maxItemsFlowing items with parallel steps of different speeds', async () => {
+    const generatorMock = getMockedJobGenerator(10)
+    const observedCounts: number[] = []
+
+    const caminho = fromGenerator({ fn: generatorMock, provides: 'job' }, { maxItemsFlowing: 2 })
+      .parallel([
+        { fn: async () => { await sleep(1) }, name: 'fast' },
+        {
+          fn: async ({ job }: { job: Job }) => { await sleep(Number(job.job_id) % 3 === 0 ? 15 : 1) },
+          name: 'slow',
+        },
+      ])
+      .pipe({ fn: () => { observedCounts.push(caminho.getNumberOfItemsFlowing() as number) } })
+
+    await caminho.run()
+
+    expect(observedCounts).toHaveLength(10)
+    expect(Math.max(...observedCounts)).toBeLessThanOrEqual(2)
     expect(caminho.getNumberOfItemsFlowing()).toBe(0)
   })
 

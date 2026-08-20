@@ -15,3 +15,9 @@ jobs:
           cache: 'npm'
       - run: npm install
       - run: npm run build
+      - name: E2E against the packed CJS and ESM outputs
+        run: npm run test:e2e
+      - name: Check package.json and jsr.json versions match
+        run: >
+          node -e "const p=require('./package.json').version,j=require('./jsr.json').version;
+          if(p!==j){console.error('Version mismatch: package.json '+p+' vs jsr.json '+j);process.exit(1)}"

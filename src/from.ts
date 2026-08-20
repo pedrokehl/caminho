@@ -1,38 +1,42 @@
 import { getAsyncGeneratorFromArray, getAsyncGeneratorFromFn } from './utils/getAsyncGeneratorFromArray'
 import { Caminho } from './Caminho'
-import type { CaminhoOptions, ValueBag } from './types'
+import type { CaminhoOptions, SeededBag, ValueBag } from './types'
 
-export type FromGeneratorParams = {
+export type FromGeneratorParams<P extends string = string, V = ValueBag, I = ValueBag> = {
   /**
    * The name of the property to be assigned to the cumulate context.
    * The value of the property is the returned value from the step.
    */
-  provides: string
+  provides: P
   /**
    * Name of the step, useful when logging the steps
    */
   name?: string
   /**
    * AsyncGenerator that will provide the values for the flow
-   * It receives the initial values passed to the .run() method
+   * It receives the initial values passed to the .run() method.
+   * Annotating the parameter types the initial-bag properties for the whole flow.
    */
-  fn: (initialBag: ValueBag) => AsyncGenerator
+  fn: (initialBag: I) => AsyncGenerator<V>
 }
 
 /**
  * Starting point of a flow, returns a Caminho instance that will iterate over the asyncGenerator
  * The caminho flow defined will execute each step until the generator is done
  */
-export function fromGenerator(fromParams: FromGeneratorParams, caminhoOptions?: CaminhoOptions): Caminho {
-  return new Caminho(fromParams, caminhoOptions)
+export function fromGenerator<P extends string, V, I>(
+  fromParams: FromGeneratorParams<P, V, I>,
+  caminhoOptions?: CaminhoOptions,
+): Caminho<SeededBag<I, P, V>> {
+  return new Caminho(fromParams as FromGeneratorParams, caminhoOptions)
 }
 
-export type fromValueParams = {
+export type fromValueParams<P extends string = string, V = ValueBag> = {
   /**
    * The name of the property to be assigned to the cumulate context.
    * The value of the property is the returned value from the step.
    */
-  provides: string
+  provides: P
   /**
    * Name of the step, useful when logging the steps
    */
@@ -40,25 +44,28 @@ export type fromValueParams = {
   /**
    * Single item to bootstrap the new flow
    */
-  item: unknown
+  item: V
 }
 
 /**
  * Starting point of a flow, returns a Caminho instance based on the provided value
  * The caminho flow defined will execute each step only once
  */
-export function fromValue(fromValueParams: fromValueParams, caminhoOptions?: CaminhoOptions): Caminho {
+export function fromValue<P extends string, V>(
+  fromValueParams: fromValueParams<P, V>,
+  caminhoOptions?: CaminhoOptions,
+): Caminho<Record<P, V>> {
   const { item, name, provides } = fromValueParams
   const generator = getAsyncGeneratorFromArray([item])
   return new Caminho({ fn: generator, name, provides }, caminhoOptions)
 }
 
-export type FromArrayParams = {
+export type FromArrayParams<P extends string = string, V = ValueBag> = {
   /**
    * The name of the property to be assigned to the cumulate context.
    * The value of the property is the returned value from the step.
    */
-  provides: string
+  provides: P
   /**
    * Name of the step, useful when logging the steps
    */
@@ -66,34 +73,38 @@ export type FromArrayParams = {
   /**
    * Array of items to execute the new flow
    */
-  items: unknown[]
+  items: readonly V[]
 }
 
 /**
  * Starting point of a flow, returns a Caminho instance based on the provided array of values
  * The caminho flow defined will execute one time for each item in the array
  */
-export function fromArray(fromArrayParams: FromArrayParams, caminhoOptions?: CaminhoOptions): Caminho {
+export function fromArray<P extends string, V>(
+  fromArrayParams: FromArrayParams<P, V>,
+  caminhoOptions?: CaminhoOptions,
+): Caminho<Record<P, V>> {
   const { name, provides } = fromArrayParams
-  const generator = getAsyncGeneratorFromArray(fromArrayParams.items)
+  const generator = getAsyncGeneratorFromArray(fromArrayParams.items as unknown[])
   return new Caminho({ fn: generator, name, provides }, caminhoOptions)
 }
 
-export type FromFnParams = {
+export type FromFnParams<P extends string = string, V = ValueBag, I = ValueBag> = {
   /**
    * The name of the property to be assigned to the cumulate context.
    * The value of the property is the returned value from the step.
    */
-  provides: string
+  provides: P
   /**
    * Name of the step, useful when logging the steps
    */
   name?: string
   /**
    * Async function that will provide one value for the flow
-   * It receives the initialBag passed to the .run() method
+   * It receives the initialBag passed to the .run() method.
+   * Annotating the parameter types the initial-bag properties for the whole flow.
    */
-  fn: (initialBag: ValueBag) => unknown
+  fn: (initialBag: I) => V
 }
 
 /**
@@ -101,8 +112,11 @@ export type FromFnParams = {
  * The caminho flow defined will execute each step only once
  * The fn provided will receive the initialBag passed in the `run()` method.
  */
-export function fromFn(fromFnParams: FromFnParams, caminhoOptions?: CaminhoOptions): Caminho {
+export function fromFn<P extends string, V, I>(
+  fromFnParams: FromFnParams<P, V, I>,
+  caminhoOptions?: CaminhoOptions,
+): Caminho<SeededBag<I, P, Awaited<V>>> {
   const { name, provides, fn } = fromFnParams
-  const generator = getAsyncGeneratorFromFn(fn)
+  const generator = getAsyncGeneratorFromFn(fn as (initialBag: ValueBag) => V)
   return new Caminho({ fn: generator, name: name ?? fn.name, provides }, caminhoOptions)
 }

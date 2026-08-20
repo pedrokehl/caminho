@@ -1,17 +1,14 @@
-import { sleep } from '../utils/sleep'
 import { getNewValueBag } from '../utils/valueBag'
 import type { PendingDataControl } from '../utils/PendingDataControl'
 import type { Loggers, ValueBag } from '../types'
 import type { FromGeneratorParams } from '../from'
-
-const SLEEP_FOR_BACKPRESSURE_MS = 10
 
 export function wrapGenerator(generatorParams: FromGeneratorParams, loggers: Loggers) {
   return async function* wrappedGenerator(initialBag: ValueBag) {
     const bagArrayForLogger = [initialBag]
     loggers.onStepStarted(bagArrayForLogger)
     let isStart = true
-    let startTime = new Date()
+    let startTime = performance.now()
 
     try {
       for await (const value of generatorParams.fn(initialBag)) {
@@ -22,7 +19,7 @@ export function wrapGenerator(generatorParams: FromGeneratorParams, loggers: Log
         const newValueBag = getNewValueBag(initialBag, generatorParams.provides, value)
         loggers.onStepFinished([newValueBag], startTime)
         yield newValueBag
-        startTime = new Date()
+        startTime = performance.now()
       }
     } catch (err) {
       loggers.onStepFinished([initialBag], startTime, err as Error)
@@ -31,6 +28,11 @@ export function wrapGenerator(generatorParams: FromGeneratorParams, loggers: Log
   }
 }
 
+/**
+ * Each item acquires a slot before it is produced, so the source never runs ahead of capacity.
+ * If the run is torn down while waiting, acquireSlot resolves false so the inner generator is
+ * still closed and its `finally` cleanup runs.
+ */
 export function wrapGeneratorWithBackPressure(
   generatorParams: FromGeneratorParams,
   maxItemsFlowing: number,
@@ -39,22 +41,18 @@ export function wrapGeneratorWithBackPressure(
 ) {
   const wrappedGenerator = wrapGenerator(generatorParams, loggers)
   return async function* wrappedGeneratorWithBackPressure(initialBag: ValueBag, runId: string) {
-    for await (const value of wrappedGenerator({ ...initialBag })) {
-      pendingDataControl.increment(runId)
-      yield value
-      if (needsToWaitForBackpressure(pendingDataControl, maxItemsFlowing)) {
-        await waitOnBackpressure(maxItemsFlowing, pendingDataControl)
+    const iterator = wrappedGenerator({ ...initialBag })
+    try {
+      while (await pendingDataControl.acquireSlot(runId, maxItemsFlowing)) {
+        const next = await iterator.next()
+        if (next.done) {
+          pendingDataControl.decrement(runId)
+          return
+        }
+        yield next.value
       }
+    } finally {
+      await iterator.return(undefined)
     }
-  }
-}
-
-function needsToWaitForBackpressure(pendingDataControl: PendingDataControl, maxItemsFlowing: number) {
-  return pendingDataControl.size >= maxItemsFlowing
-}
-
-async function waitOnBackpressure(maxItemsFlowing: number, pendingDataControl: PendingDataControl): Promise<void> {
-  while (pendingDataControl.size >= maxItemsFlowing) {
-    await sleep(SLEEP_FOR_BACKPRESSURE_MS)
   }
 }

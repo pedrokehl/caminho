@@ -21,32 +21,33 @@ export function reduce<T>(
 ): OperatorApplierWithRunId {
   const { provides, keep, seed } = reduceParams
   const immutableSeed = Object.freeze(seed)
-  let lastBag: ValueBag = {}
-
-  function wrappedReduce(acc: T, valueBag: ValueBag, index: number, runId: string): T {
-    const startedAt = new Date()
-    loggers.onStepStarted([valueBag])
-    // RxJs doesn't create a structureClone from the seed parameter when start processing.
-    // Developer can implement function that mutate the "acc" on reduce.fn
-    // To safely avoid conflicts between different runs, we copy the seed when it's a new run
-    const renewedAcc = index === 0 ? structuredClone(immutableSeed) : acc
-    try {
-      const reduceResult = reduceParams.fn(renewedAcc, valueBag, index)
-      loggers.onStepFinished([valueBag], startedAt)
-      lastBag = valueBag
-      return reduceResult
-    } catch (err) {
-      loggers.onStepFinished([valueBag], startedAt, err as Error)
-      throw err
-    } finally {
-      pendingDataControl?.decrement(runId)
-    }
-  }
 
   return function operatorApplierWithRunId(runId: string) {
+    let lastBag: ValueBag = {}
+
+    function wrappedReduce(acc: T, valueBag: ValueBag, index: number): T {
+      const startedAt = performance.now()
+      loggers.onStepStarted([valueBag])
+      // RxJs doesn't create a structureClone from the seed parameter when start processing.
+      // Developer can implement function that mutate the "acc" on reduce.fn
+      // To safely avoid conflicts between different runs, we copy the seed when it's a new run
+      const renewedAcc = index === 0 ? structuredClone(immutableSeed) : acc
+      try {
+        const reduceResult = reduceParams.fn(renewedAcc, valueBag, index)
+        loggers.onStepFinished([valueBag], startedAt)
+        lastBag = valueBag
+        return reduceResult
+      } catch (err) {
+        loggers.onStepFinished([valueBag], startedAt, err as Error)
+        throw err
+      } finally {
+        pendingDataControl?.decrement(runId)
+      }
+    }
+
     return function operatorApplier(observable: Observable<ValueBag>) {
       return observable
-        .pipe(reduceRxJs((acc, valueBag, index) => wrappedReduce(acc, valueBag, index, runId), seed))
+        .pipe(reduceRxJs(wrappedReduce, seed))
         .pipe(map((reduceResult: T) => {
           pendingDataControl?.increment(runId)
           return getNewValueBag(pick(lastBag, keep ?? []), provides, reduceResult)

@@ -1,37 +1,38 @@
 {
   "name": "caminho",
-  "version": "1.7.6",
+  "version": "2.0.0",
   "description": "Tool for creating efficient data pipelines in a JavaScript environment",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "index.d.ts",
-  "typesVersions": {
-    ">=4.2": {
-      "*": [
-        "dist/types/*"
-      ]
-    }
-  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
   "sideEffects": false,
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
-      "node": "./dist/cjs/index.js",
-      "require": "./dist/cjs/index.js",
-      "default": "./dist/esm/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "compile": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json",
-    "build": "npm run clean && npm run compile",
+    "build": "tsdown",
     "clean": "rm -rf ./dist",
     "test": "jest --coverage",
     "test:watch": "jest -o --watch",
+    "test:e2e": "node ./test/e2e/run.mjs",
     "lint": "eslint ./src ./test ./benchmark ./eslint.config.mjs",
     "lint:fix": "npm run lint -- --fix",
-    "benchmark:parallel": "npx tsx ./benchmark/parallel.benchmark.ts",
-    "benchmark:subflow": "npx tsx ./benchmark/subFlow.benchmark.ts",
+    "benchmark:micro": "tsx ./benchmark/micro.benchmark.ts",
+    "benchmark:parallel": "tsx ./benchmark/parallel.benchmark.ts",
+    "benchmark:subflow": "tsx ./benchmark/subFlow.benchmark.ts",
     "prepublishOnly": "npm test && npm run build"
   },
   "repository": {
@@ -61,8 +62,13 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.13.3",
     "eslint": "^10.8.1",
+    "expect-type": "^1.4.0",
+    "fast-check": "^4.9.0",
     "jest": "^30.4.2",
+    "tinybench": "^6.1.3",
     "ts-jest": "^29.4.12",
+    "tsdown": "^0.22.14",
+    "tsx": "^4.23.12",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.67.0"
   },

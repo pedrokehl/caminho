@@ -1,0 +1,48 @@
+name: Benchmark
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  benchmark:
+    name: 📈 Benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+      - run: npm install
+      - name: Run benchmarks
+        run: BENCHMARK_OUTPUT=benchmark-results.json npm run benchmark:micro
+      - name: Restore benchmark baseline
+        uses: actions/cache/restore@v4
+        with:
+          path: ./benchmark-cache
+          key: benchmark-baseline-${{ github.event.pull_request.base.sha || github.sha }}
+          restore-keys: benchmark-baseline-
+      - name: Compare against baseline
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: customBiggerIsBetter
+          output-file-path: benchmark-results.json
+          external-data-json-path: ./benchmark-cache/benchmark-data.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          alert-threshold: 150%
+          # fork PRs get a read-only token, commenting would fail the job
+          comment-always: ${{ github.event.pull_request.head.repo.fork != true }}
+          fail-on-alert: false
+          summary-always: true
+      - name: Save benchmark baseline
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v4
+        with:
+          path: ./benchmark-cache
+          key: benchmark-baseline-${{ github.sha }}

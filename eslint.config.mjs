@@ -26,4 +26,18 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
+  {
+    files: ['test/e2e/**/*'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        require: 'readonly',
+      },
+    },
+    rules: {
+      'no-console': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
 )

@@ -11,7 +11,7 @@ export function filter(
   pendingDataControl?: PendingDataControl,
 ): OperatorApplierWithRunId {
   function wrappedFilter(valueBag: ValueBag, index: number, runId: string): boolean {
-    const startedAt = new Date()
+    const startedAt = performance.now()
     loggers.onStepStarted([valueBag])
     try {
       const filterResult = predicate(valueBag, index)
