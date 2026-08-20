@@ -70,7 +70,7 @@ async function* generateCars(valueBag: ValueBag) {
   let page = 1
   while(true) {
     const cars = await getCarsByManufacturer(valueBag.manufacturer, { page, limit })
-    for (carId of cars) yield carId
+    for (const carId of cars) yield carId
     if (cars.length < limit) {
       break
     }
@@ -79,7 +79,7 @@ async function* generateCars(valueBag: ValueBag) {
 }
 
 await fromGenerator({ fn: generateCars, provides: 'carId' }, { maxItemsFlowing: 1_000 })
-  .pipe( fn: doSomething })
+  .pipe({ fn: doSomething })
   .run({ manufacturer: 'nissan' })
 ```
 
@@ -159,7 +159,7 @@ function sumPrice(acc: number, item: ValueBag) {
 const result = await fromGenerator({ fn: generateCars, provides: 'carId' })
   .pipe({ fn: fetchPrice, provides: 'price' })
   .reduce({ fn: sumPrice, seed: 0, provides: 'sum', keep: ['manufacturer'] })
-  .pipe( { fn: saveTotalForManufacturer })
+  .pipe({ fn: saveTotalForManufacturer })
   .run({ manufacturer: 'Mazda' })
 
 console.log('result', result)
