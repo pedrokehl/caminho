@@ -17,6 +17,7 @@ The motivation behind Caminho is from an increased demand for data processing sy
 - [Filtering](#filtering)
 - [Reduce](#reduce)
 - [Logging](#logging)
+- [Error handling](#error-handling)
 
 ## Usage Instructions
 
@@ -82,6 +83,39 @@ async function* generateCars(valueBag: ValueBag) {
 await fromGenerator({ fn: generateCars, provides: 'carId' }, { maxItemsFlowing: 1_000 })
   .pipe({ fn: doSomething })
   .run({ manufacturer: 'nissan' })
+```
+
+#### Other entry points
+Besides `fromGenerator`, a flow can start from data you already have at hand. All entry points share the same options (`maxItemsFlowing`, `onStepStarted`, `onStepFinished`) and the same `provides` semantics.
+
+`fromArray` runs the flow once per item of an array:
+
+```typescript
+import { fromArray } from 'caminho'
+
+await fromArray({ items: ['WBA123', 'JTD456'], provides: 'vin' })
+  .pipe({ fn: fetchCarByVin, provides: 'car' })
+  .run()
+```
+
+`fromValue` runs the flow exactly once, for the single provided item:
+
+```typescript
+import { fromValue } from 'caminho'
+
+await fromValue({ item: 'WBA123', provides: 'vin' })
+  .pipe({ fn: fetchCarByVin, provides: 'car' })
+  .run()
+```
+
+`fromFn` runs the flow exactly once, with the value returned (or resolved) by the function. The function receives the `initialBag` passed to `run()`:
+
+```typescript
+import { fromFn } from 'caminho'
+
+await fromFn({ fn: (bag) => fetchNewestCar(bag.manufacturer), provides: 'car' })
+  .pipe({ fn: saveCar })
+  .run({ manufacturer: 'honda' })
 ```
 
 #### Concurrency
@@ -235,6 +269,33 @@ await fromGenerator(
   .pipe({ fn: fetchSpecs, provides: 'specs', batch: { maxSize: 50, timeoutMs: 500 } })
   // stepStarted { name: 'fetchSpecs', received: 2, valueBags: [{ carId: "1", price: 20_000 }, { carId: "2", price: 35_000 }] }
   // stepFinished { name: 'fetchSpecs', tookMs: number, emitted: 2, valueBags: [{ carId: "1", price: 20_000, specs: { engineSize: 1600 } }, { carId: "2", price: 35_000, specs: { engineSize: 2000 } }] }
+  .run()
+```
+
+#### Error handling
+An error thrown (or rejected) by the generator or by any step rejects the `run()` promise with that error, and the flow is torn down:
+
+- No further values are pulled from the generator, and the generator is **closed**: its `finally` blocks run, so resources like connections or cursors can be released even if the failure happened elsewhere in the flow.
+- The failing step's `onStepFinished` callback receives the `error`, which makes it a good place for logging.
+- In a `batch` step, a thrown error fails the run as a whole, there is no per-item isolation within a batch.
+- Errors don't leak across concurrent runs: other `run()` calls on the same instance keep going, and the failed run releases its share of the `maxItemsFlowing` budget, so `getNumberOfItemsFlowing()` is accurate after any run settles, successfully or not.
+
+There is no built-in retry or per-item error channel: if an item is allowed to fail without aborting the run, catch the error inside the step function and represent it as a value in the bag.
+
+```typescript
+await fromGenerator({ fn: generateCars, provides: 'carId' })
+  .pipe({
+    fn: async ({ carId }) => {
+      try {
+        return { ok: true, price: await fetchPrice(carId) }
+      } catch (error) {
+        return { ok: false, error }
+      }
+    },
+    provides: 'priceResult',
+  })
+  .filter({ fn: ({ priceResult }) => priceResult.ok })
+  .pipe({ fn: savePrice })
   .run()
 ```
 
