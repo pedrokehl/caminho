@@ -1,7 +1,8 @@
-import { type Observable, bufferTime, filter, mergeAll, mergeMap } from 'rxjs'
+import { type Observable, mergeAll, mergeMap } from 'rxjs'
 
 import type { Loggers, ValueBag } from '../types'
 import { type OperatorApplier } from './helpers/operatorHelpers'
+import { bufferSizeOrTimeout } from './helpers/bufferSizeOrTimeout'
 import { getNewValueBag } from '../utils/valueBag'
 
 export type BatchParams = {
@@ -56,8 +57,7 @@ export function batch(params: BatchParams, loggers: Loggers): OperatorApplier {
 
   return function operatorApplier(observable: Observable<ValueBag>) {
     return observable
-      .pipe(bufferTime(params.batch.timeoutMs, undefined, params.batch.maxSize))
-      .pipe(filter((buffer) => buffer.length > 0))
+      .pipe(bufferSizeOrTimeout(params.batch.maxSize, params.batch.timeoutMs))
       .pipe(mergeMap(wrappedStep, params.maxConcurrency))
       .pipe(mergeAll())
   }
