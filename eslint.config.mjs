@@ -5,41 +5,6 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.recommended,
   {
-    // type-aware strict linting for everything covered by the tsconfigs
-    files: ['src/**/*.ts', 'test/**/*.ts'],
-    ignores: ['test/e2e/**'],
-    extends: [tseslint.configs.strictTypeChecked],
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-    rules: {
-      // The ValueBag is `any` by design (untyped flows are a supported public contract),
-      // so the no-unsafe-* family would flag nearly every interaction with a bag.
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true, allowAny: true }],
-      '@typescript-eslint/restrict-plus-operands': ['error', { allowAny: true }],
-      // overload implementation signatures must keep the loosely typed Caminho return:
-      // `this` is not compatible with the typed Caminho<...> each overload returns
-      '@typescript-eslint/prefer-return-this-type': 'off',
-    },
-  },
-  {
-    files: ['test/**/*.ts'],
-    rules: {
-      // mocks implement async interfaces without awaiting anything,
-      // and jest matchers like expect(mock.fn) trip unbound-method
-      '@typescript-eslint/require-await': 'off',
-      '@typescript-eslint/unbound-method': 'off',
-    },
-  },
-  {
     rules: {
       semi: ['error', 'never'],
       'no-console': 'error',

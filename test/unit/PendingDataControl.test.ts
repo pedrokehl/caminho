@@ -88,7 +88,7 @@ describe('PendingDataControl', () => {
     const admittedFirst = jest.fn()
     const admittedSecond = jest.fn()
     const firstWaiting = pendingDataControl.acquireSlot('b', 3).then(admittedFirst)
-    void pendingDataControl.acquireSlot('c', 3).then(admittedSecond)
+    pendingDataControl.acquireSlot('c', 3).then(admittedSecond)
 
     pendingDataControl.decrement('a')
     await firstWaiting

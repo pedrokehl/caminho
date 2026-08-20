@@ -61,9 +61,10 @@ export class Caminho<Bag = ValueBag> implements CaminhoInterface<Bag> {
   }
 
   public pipe<P extends string, V>(params: BatchParamsProvides<Bag, P, V>): Caminho<Provided<Bag, P, V>>
+  public pipe(params: BatchParamsNoProvides<Bag>): Caminho<Bag>
   public pipe<P extends string, V>(params: PipeParamsProvides<Bag, P, V>): Caminho<Provided<Bag, P, Awaited<V>>>
-  public pipe(params: BatchParamsNoProvides<Bag> | PipeParamsNoProvides<Bag>): Caminho<Bag>
-  public pipe(params: PipeGenericParams): Caminho {
+  public pipe(params: PipeParamsNoProvides<Bag>): Caminho<Bag>
+  public pipe(params: PipeGenericParams): Caminho<ValueBag> {
     const operatorApplier = this.getApplierForPipeOrBatch(params)
     this.addOperatorApplier(() => operatorApplier)
     return this
@@ -73,14 +74,14 @@ export class Caminho<Bag = ValueBag> implements CaminhoInterface<Bag> {
     steps: Steps,
   ): Caminho<ParallelResult<Bag, Steps>>
 
-  public parallel(params: PipeGenericParams[]): Caminho {
+  public parallel(params: PipeGenericParams[]): Caminho<ValueBag> {
     const operatorAppliers: OperatorApplier[] = params.map((param) => this.getApplierForPipeOrBatch(param))
     const operatorApplier = parallel(params, operatorAppliers)
     this.addOperatorApplier(() => operatorApplier)
     return this
   }
 
-  public filter(params: { fn: (valueBag: OpenBag<Bag>, index: number) => boolean, name?: string }): this {
+  public filter(params: { fn: (valueBag: OpenBag<Bag>, index: number) => boolean, name?: string }): Caminho<Bag> {
     const loggers = this.getLoggers(params)
     this.addOperatorApplier(filter(params.fn as FilterPredicate, loggers, this.pendingDataControl))
     return this
@@ -90,7 +91,7 @@ export class Caminho<Bag = ValueBag> implements CaminhoInterface<Bag> {
     reduceParams: TypedReduceParams<Bag, P, A, K>,
   ): Caminho<ReducedBag<Bag, P, A, K>>
 
-  public reduce<T>(reduceParams: ReduceParams<T>): Caminho {
+  public reduce<T>(reduceParams: ReduceParams<T>): Caminho<ValueBag> {
     const loggers = this.getLoggers(reduceParams)
     this.addOperatorApplier(reduce(reduceParams, loggers, this.pendingDataControl))
     return this
@@ -102,7 +103,7 @@ export class Caminho<Bag = ValueBag> implements CaminhoInterface<Bag> {
     const observable$ = this.operators.reduce((acc, operator) => applyOperator(acc, operator, runId), initial$)
 
     const finalObservable$ = this.options?.maxItemsFlowing
-      ? observable$.pipe(tap(() => { (this.pendingDataControl as PendingDataControl).decrement(runId) }))
+      ? observable$.pipe(tap(() => (this.pendingDataControl as PendingDataControl).decrement(runId)))
       : observable$
 
     try {
