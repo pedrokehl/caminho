@@ -56,7 +56,9 @@ find code that breaks one.
 
 - `ValueBag` defaults to `any`; untyped flows must keep compiling forever. Typed-bag features may
   only add inference, never require annotations.
-- Bags are open (`OpenBag`): step functions and run results must always accept properties carried
-  by `run(initialBag)`, which the flow cannot know at compile time. Never narrow step-fn
-  parameters to the exact inferred bag type.
+- Typed bags are closed: steps and run results expose exactly the declared properties. The typed
+  way to use `run(initialBag)` properties is annotating the generator/fn parameter of
+  `fromGenerator`/`fromFn` (`SeededBag` merges it into the starting bag). This is sound because
+  the initial bag is spread into every produced bag, and `reduce` drops undeclared keys from both
+  the type and the runtime bag.
 - Every step function referenced in logs falls back to `fn.name`; keep step wrappers named functions.

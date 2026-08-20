@@ -33,8 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Generic `ValueBag` typing: the bag type accumulates `provides` across `pipe`, `parallel`,
   `batch` and `reduce` steps. Providing an existing key replaces its type, matching the runtime
-  overwrite, and bags stay open: properties carried by `run(initialBag)` are accessible in steps
-  and results as `any`. Untyped flows keep working unchanged (`ValueBag` defaults to `any`).
+  overwrite. Typed bags are closed — only declared properties are accessible; to use
+  `run(initialBag)` properties in a typed flow, annotate the generator/fn parameter of
+  `fromGenerator`/`fromFn` and they become part of the bag type. Untyped flows keep working
+  unchanged (`ValueBag` defaults to `any`).
 - LICENSE file (ISC) and `engines.node >= 18`.
 - Property-based tests (fast-check), concurrent-run tests, and compile-time typing tests (expect-type).
 - Tinybench micro-benchmark suite with peak-heap tracking and a CI benchmark regression job.

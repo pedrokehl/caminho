@@ -204,7 +204,6 @@ console.log('result', result)
 
 #### TypeScript
 The bag type is accumulated automatically as the flow is defined: every `provides` adds a property (re-providing an existing key replaces its type), `parallel` merges the values of all its branches, and `reduce` replaces the bag with the aggregation plus the properties listed in `keep`.  
-Bags stay open: properties passed through `run(initialBag)` are accessible in steps and results as `any`.  
 No annotations are required, and untyped flows keep working since the bag defaults to `any`.
 
 ```typescript
@@ -213,7 +212,21 @@ const flow = fromArray({ items: [1, 2, 3], provides: 'n' })
   .pipe({ fn: ({ n, tens }) => {} })                   // bag is { n: number, tens: number }
 
 const result = await flow.run()                        // result is { n: number, tens: number }
+result.other                                           // compile error: bags are closed
 ```
+
+Typed bags are **closed**: only declared properties are accessible. To use `run(initialBag)` properties in a typed flow, declare them by annotating the generator/fn parameter of `fromGenerator` or `fromFn` — they become part of the bag type for every step:
+
+```typescript
+async function* generateCars(initialBag: { manufacturer: string }) { /* ... */ }
+
+const flow = fromGenerator({ fn: generateCars, provides: 'carId' })
+  .pipe({ fn: ({ manufacturer, carId }) => {} })  // bag is { manufacturer: string, carId: string }
+
+await flow.run({ manufacturer: 'subaru' })
+```
+
+Annotating the parameter as `ValueBag` (or omitting it) keeps the flow untyped.
 
 Note: steps receive a copy of the ValueBag, mutating it inside a step does not affect other steps, use `provides` to add values to the bag.
 

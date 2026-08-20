@@ -11,5 +11,8 @@ export async function typedFlow(options?: CaminhoOptions): Promise<number> {
     .reduce({ fn: (acc, bag) => acc + bag.double, seed: 0, provides: 'sum' })
     .run()
 
+  // @ts-expect-error typed bags are closed, undeclared properties are not accessible
+  void result.somethingElse
+
   return result.sum
 }

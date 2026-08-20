@@ -5,7 +5,6 @@ export type {
   OnStepStartedParams,
   OnStepFinishedParams,
   ValueBag,
-  OpenBag,
 } from './types'
 
 export type { BatchParams } from './operators/batch'

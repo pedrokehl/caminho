@@ -32,46 +32,48 @@ type StepCommonParams = {
 export type PipeParamsProvides<Bag, P extends string, V> = StepCommonParams & {
   provides: P
   batch?: undefined
-  fn: (valueBag: OpenBag<Bag>) => V
+  fn: (valueBag: Bag) => V
 }
 
 export type PipeParamsNoProvides<Bag> = StepCommonParams & {
   provides?: undefined
   batch?: undefined
-  fn: (valueBag: OpenBag<Bag>) => unknown
+  fn: (valueBag: Bag) => unknown
 }
 
 export type BatchParamsProvides<Bag, P extends string, V> = StepCommonParams & {
   provides: P
   batch: BatchConfig
-  fn: (valueBags: OpenBag<Bag>[]) => readonly V[] | Promise<readonly V[]>
+  fn: (valueBags: Bag[]) => readonly V[] | Promise<readonly V[]>
 }
 
 export type BatchParamsNoProvides<Bag> = StepCommonParams & {
   provides?: undefined
   batch: BatchConfig
-  fn: (valueBags: OpenBag<Bag>[]) => unknown
+  fn: (valueBags: Bag[]) => unknown
 }
 
 export type ParallelStep<Bag> =
   | (StepCommonParams & {
     provides: string
     batch: BatchConfig
-    fn: (valueBags: OpenBag<Bag>[]) => readonly ValueBag[] | Promise<readonly ValueBag[]>
+    fn: (valueBags: Bag[]) => readonly ValueBag[] | Promise<readonly ValueBag[]>
   })
-  | (StepCommonParams & { provides?: undefined, batch: BatchConfig, fn: (valueBags: OpenBag<Bag>[]) => unknown })
-  | (StepCommonParams & { provides?: string, batch?: undefined, fn: (valueBag: OpenBag<Bag>) => unknown })
+  | (StepCommonParams & { provides?: undefined, batch: BatchConfig, fn: (valueBags: Bag[]) => unknown })
+  | (StepCommonParams & { provides?: string, batch?: undefined, fn: (valueBag: Bag) => unknown })
 
 type IsAny<T> = 0 extends 1 & T ? true : false
 
 type Flatten<T> = { [K in keyof T]: T[K] }
 
 /**
- * What step functions and run results actually expose: bags are open at runtime because
- * run(initialBag) merges arbitrary properties into every bag, which the flow cannot know at
- * compile time. Declared keys stay precisely typed; any other key is accessible as ValueBag.
+ * The starting bag of a flow: the entry point's provides plus the initial-bag type declared
+ * by the generator/fn parameter annotation (initialBag is spread into every produced bag).
+ * An initial bag annotated as ValueBag (any) or left unannotated adds nothing, keeping
+ * untyped flows untyped.
  */
-export type OpenBag<Bag> = IsAny<Bag> extends true ? ValueBag : Bag & { [key: string]: ValueBag }
+export type SeededBag<I, P extends string, V> =
+  IsAny<I> extends true ? Record<P, V> : Flatten<I & Record<P, V>>
 
 /**
  * A step providing key P replaces any previous value under that key, matching the runtime
@@ -102,7 +104,7 @@ export type TypedReduceParams<Bag, P extends string, A, K extends string> = {
   /**
   * Similar to a callback provided to Array.reduce
   */
-  fn: (acc: A, value: OpenBag<Bag>, index: number) => A
+  fn: (acc: A, value: Bag, index: number) => A
   /**
   * Properties to keep in the bag after reducing, keep in mind only the last known value is kept
   */
@@ -125,11 +127,11 @@ export interface Caminho<Bag = ValueBag> {
   * Values are emitted in completion order, like any concurrent step.
    */
   parallel<const Steps extends readonly ParallelStep<Bag>[]>(steps: Steps): Caminho<ParallelResult<Bag, Steps>>
-  filter(filterParams: { fn: (valueBag: OpenBag<Bag>, index: number) => boolean, name?: string }): Caminho<Bag>
+  filter(filterParams: { fn: (valueBag: Bag, index: number) => boolean, name?: string }): Caminho<Bag>
   reduce<P extends string, A, K extends string = never>(
     reduceParams: TypedReduceParams<Bag, P, A, K>,
   ): Caminho<ReducedBag<Bag, P, A, K>>
-  run(initialBag?: ValueBag): Promise<OpenBag<Bag>>
+  run(initialBag?: ValueBag): Promise<Bag>
 }
 
 export type PipeGenericParams = PipeParams | BatchParams
