@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nonexistent file.
 - `Caminho.filter()` interface no longer requires a `name`.
 - `PendingDataControl` no longer stores `NaN` when decrementing an untracked bucket.
+- The npm package no longer ships `tsbuildinfo` compiler artifacts (over half the unpacked size).
 
 ### Added
 

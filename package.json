@@ -51,7 +51,8 @@
   ],
   "files": [
     "README.md",
-    "dist/**/*"
+    "dist/**/*",
+    "!dist/*.tsbuildinfo"
   ],
   "author": "Pedro Kehl",
   "license": "ISC",
