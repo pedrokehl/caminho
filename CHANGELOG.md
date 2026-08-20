@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so no timer runs while the flow is idle and `timeoutMs` counts from the first buffered item.
 - Step timing uses `performance.now()` and logger callbacks are no-op stubs when not configured,
   removing two allocations per item per step.
-- CI runs on pushes to main and tests against Node 18, 20, 22 and 24.
+- CI tests against Node 18, 20, 22 and 24; the audit additionally runs on a weekly schedule.
   `jsr.json` version is checked against `package.json` at build time.
 
 ## [1.7.6] - 2025
