@@ -1,4 +1,4 @@
-import { fromGenerator } from '../../src'
+import { fromFn, fromGenerator, fromValue } from '../../src'
 import { sleep } from '../../src/utils/sleep'
 import { getNumberedArray } from '../mocks/array.mock'
 import { getMockedGenerator, getThrowingGenerator } from '../mocks/generator.mock'
@@ -66,6 +66,18 @@ describe('Error Handling', () => {
 
     await expect(caminho.run()).rejects.toMatchObject({ message: 'Operator error' })
     expect(caminho.getNumberOfItemsFlowing()).toBe(0)
+  })
+
+  test('Should pass "fromFn" error to run call stack', async () => {
+    const caminho = fromFn({ fn: () => { throw new Error('fromFn error') }, provides: 'value' })
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'fromFn error' })
+  })
+
+  test('Should pass step error to run call stack on a fromValue flow', async () => {
+    const caminho = fromValue({ item: 1, provides: 'value' })
+      .pipe({ fn: () => { throw new Error('Step error') } })
+
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Step error' })
   })
 
   test('Should not keep account for the pending items in the flow after an error', async () => {
