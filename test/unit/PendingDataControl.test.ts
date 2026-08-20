@@ -31,4 +31,18 @@ describe('PendingDataControl', () => {
     pendingDataControl.decrement('b', 4)
     expect(pendingDataControl.size).toEqual(1)
   })
+
+  test('PendingDataControl should keep bucket accounting consistent when decrementing an unknown bucket', async () => {
+    const pendingDataControl = new PendingDataControlInMemory()
+    pendingDataControl.increment('a')
+    pendingDataControl.decrement('b')
+    expect(pendingDataControl.size).toEqual(0)
+
+    // bucket 'b' holds -1, destroying it must add 1 back instead of NaN
+    pendingDataControl.destroyBucket('b')
+    expect(pendingDataControl.size).toEqual(1)
+
+    pendingDataControl.destroyBucket('a')
+    expect(pendingDataControl.size).toEqual(0)
+  })
 })

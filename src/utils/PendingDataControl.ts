@@ -10,7 +10,7 @@ export class PendingDataControlInMemory implements PendingDataControl {
 
   decrement(bucketId: string, value = 1): void {
     this.size -= value
-    const current = this.buckets.get(bucketId)
+    const current = this.buckets.get(bucketId) ?? 0
     this.buckets.set(bucketId, current - value)
   }
 

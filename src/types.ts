@@ -12,7 +12,7 @@ export interface Caminho {
   * Useful only for Asynchronous operations given NodeJS's single-threaded nature.
    */
   parallel: (multiPipeParams: PipeGenericParams[]) => this
-  filter: (filterParams: { fn: FilterPredicate, name: string }) => this
+  filter: (filterParams: { fn: FilterPredicate, name?: string }) => this
   reduce: <T>(reduceParams: ReduceParams<T>) => this
   run(initialBag?: ValueBag): Promise<ValueBag>
 }
