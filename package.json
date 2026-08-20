@@ -26,6 +26,7 @@
     "clean": "rm -rf ./dist",
     "test": "jest --coverage",
     "test:watch": "jest -o --watch",
+    "test:e2e": "node ./test/e2e/run.mjs",
     "lint": "eslint ./src ./test ./benchmark ./eslint.config.mjs",
     "lint:fix": "npm run lint -- --fix",
     "benchmark:micro": "tsx ./benchmark/micro.benchmark.ts",

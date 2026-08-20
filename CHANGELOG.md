@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - LICENSE file (ISC) and `engines.node >= 18`.
 - Property-based tests (fast-check), concurrent-run tests, and compile-time typing tests (expect-type).
 - Tinybench micro-benchmark suite with peak-heap tracking and a CI benchmark regression job.
+- End-to-end packaging test (`npm run test:e2e`, also run by the Build workflow): packs the
+  package, installs the tarball into a scratch project, and consumes it via `require()`,
+  `import`, and `tsc` under `nodenext` for both module systems.
 
 ### Changed
 

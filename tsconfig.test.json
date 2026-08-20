@@ -7,5 +7,6 @@
     "types": ["jest", "node"]
   },
   "references": [],
-  "include": ["./test/**/*", "./src/**/*"]
+  "include": ["./test/**/*", "./src/**/*"],
+  "exclude": ["./test/e2e"]
 }
