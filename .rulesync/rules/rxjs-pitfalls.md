@@ -45,4 +45,6 @@ Flows made of immediately-resolving promises form one long microtask chain; `set
 `PendingDataControl.acquireSlot` queues when at capacity; `decrement`/`destroyBucket` admit queued
 waiters FIFO, counting the slot synchronously per admission. If you add a code path that reduces
 `size` some other way, it must run the admission loop or generators will hang. Never resolve a
-waiter without consuming its slot in the same synchronous step.
+waiter with `true` without consuming its slot in the same synchronous step, and never drop a
+waiter without settling it (`false`): an unsettled promise leaves the generator wrapper suspended
+forever, so `iterator.return()` never processes and the user generator's `finally` never runs.

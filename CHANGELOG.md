@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Backpressure admission is atomic: each item acquires a slot before it is produced, and freed
   capacity admits exactly one queued item. Previously an errored run could leak phantom items
   into the shared budget, and concurrent runs woken together could exceed `maxItemsFlowing`.
+- When a run fails while its generator is waiting for capacity, the generator is now closed and
+  its `finally` cleanup runs, instead of staying suspended forever.
+- Batched `parallel` branches with `provides` must return an array (one value per bag), matching
+  the runtime behavior; returning a plain value no longer type-checks.
 - The ESM build is now loadable by Node: `dist` is bundled with tsdown into `index.mjs` and
   `index.cjs` with per-format type declarations (`.d.mts`/`.d.cts`). The package `exports` map
   gained real `import`/`require` conditions with their own `types`, and the root `types` field

@@ -59,7 +59,7 @@ describe('PendingDataControl', () => {
     const pendingDataControl = new PendingDataControlInMemory()
     pendingDataControl.increment('a')
 
-    await expect(pendingDataControl.acquireSlot('a', 2)).resolves.toBeUndefined()
+    await expect(pendingDataControl.acquireSlot('a', 2)).resolves.toBe(true)
     expect(pendingDataControl.size).toEqual(2)
   })
 
@@ -76,7 +76,7 @@ describe('PendingDataControl', () => {
 
     pendingDataControl.decrement('a')
     await waiting
-    expect(admitted).toHaveBeenCalled()
+    expect(admitted).toHaveBeenCalledWith(true)
     // the freed slot is consumed by the admission, size is back at the limit
     expect(pendingDataControl.size).toEqual(2)
   })
@@ -99,22 +99,22 @@ describe('PendingDataControl', () => {
     expect(pendingDataControl.size).toEqual(3)
   })
 
-  test('destroyBucket should cancel its own waiters and hand freed capacity to other buckets', async () => {
+  test('destroyBucket should settle its own waiters as canceled and hand freed capacity to others', async () => {
     const pendingDataControl = new PendingDataControlInMemory()
     pendingDataControl.increment('a', 2)
     pendingDataControl.increment('b', 1)
 
     const admittedDoomed = jest.fn()
     const admittedHealthy = jest.fn()
-    pendingDataControl.acquireSlot('a', 3).then(admittedDoomed)
+    const doomedWaiting = pendingDataControl.acquireSlot('a', 3).then(admittedDoomed)
     const healthyWaiting = pendingDataControl.acquireSlot('b', 3).then(admittedHealthy)
 
     pendingDataControl.destroyBucket('a')
-    await healthyWaiting
-    await flushMicrotasks()
+    await Promise.all([doomedWaiting, healthyWaiting])
 
-    expect(admittedDoomed).not.toHaveBeenCalled()
-    expect(admittedHealthy).toHaveBeenCalled()
+    // the doomed waiter settles (so a suspended generator can clean up) but acquires nothing
+    expect(admittedDoomed).toHaveBeenCalledWith(false)
+    expect(admittedHealthy).toHaveBeenCalledWith(true)
     expect(pendingDataControl.size).toEqual(2)
   })
 })

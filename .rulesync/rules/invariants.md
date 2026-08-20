@@ -44,9 +44,11 @@ find code that breaks one.
 - The generator wrapper acquires a slot **before** pulling the next value, so the source never
   produces ahead of capacity.
 - Decrements happen in the final tap of `run()` and in `filter`/`reduce` when they drop items.
-- `run()` destroys the run's bucket in a `finally`; `destroyBucket` removes the bucket's queued
-  slot requests (a torn-down run must not admit items) and, like `decrement`, hands freed
-  capacity to the remaining waiters, otherwise concurrent generators deadlock.
+- `run()` destroys the run's bucket in a `finally`; `destroyBucket` settles the bucket's queued
+  slot requests as canceled (`acquired: false`) — a torn-down run must not admit items, but its
+  suspended generator must resume so the inner generator is closed and its `finally` cleanup
+  runs. Freed capacity is handed to the remaining waiters, otherwise concurrent generators
+  deadlock.
 - After any run finishes (success or error), `getNumberOfItemsFlowing()` must be 0, and the peak
   across concurrent runs must never exceed `maxItemsFlowing` (tested in `concurrentRuns.test.ts`).
 

@@ -32,7 +32,8 @@ export function wrapGenerator(generatorParams: FromGeneratorParams, loggers: Log
  * Each item atomically acquires a slot (which counts it into the run's bucket) before it is even
  * produced, so the generator never runs ahead of the available capacity. A run torn down by an
  * error cannot corrupt the shared budget: destroying its bucket removes its counted items and
- * cancels its queued slot requests.
+ * settles its queued slot requests as canceled, which resumes a suspended wrapper so the inner
+ * generator is closed and its cleanup (finally) runs.
  */
 export function wrapGeneratorWithBackPressure(
   generatorParams: FromGeneratorParams,
@@ -43,14 +44,17 @@ export function wrapGeneratorWithBackPressure(
   const wrappedGenerator = wrapGenerator(generatorParams, loggers)
   return async function* wrappedGeneratorWithBackPressure(initialBag: ValueBag, runId: string) {
     const iterator = wrappedGenerator({ ...initialBag })
-    while (true) {
-      await pendingDataControl.acquireSlot(runId, maxItemsFlowing)
-      const next = await iterator.next()
-      if (next.done) {
-        pendingDataControl.decrement(runId)
-        return
+    try {
+      while (await pendingDataControl.acquireSlot(runId, maxItemsFlowing)) {
+        const next = await iterator.next()
+        if (next.done) {
+          pendingDataControl.decrement(runId)
+          return
+        }
+        yield next.value
       }
-      yield next.value
+    } finally {
+      await iterator.return(undefined)
     }
   }
 }

@@ -68,6 +68,26 @@ describe('Error Handling', () => {
     expect(caminho.getNumberOfItemsFlowing()).toBe(0)
   })
 
+  test('Should run the generator cleanup when an error happens while waiting for capacity', async () => {
+    let cleanedUp = false
+    async function* generator() {
+      try {
+        for (let i = 0; i < 10; i += 1) {
+          yield i
+        }
+      } finally {
+        cleanedUp = true
+      }
+    }
+
+    const caminho = fromGenerator({ fn: generator, provides: 'number' }, { maxItemsFlowing: 1 })
+      .pipe({ fn: () => { throw new Error('Operator error') } })
+
+    await expect(caminho.run()).rejects.toMatchObject({ message: 'Operator error' })
+    await sleep(1)
+    expect(cleanedUp).toBe(true)
+  })
+
   test('Should pass "fromFn" error to run call stack', async () => {
     const caminho = fromFn({ fn: () => { throw new Error('fromFn error') }, provides: 'value' })
     await expect(caminho.run()).rejects.toMatchObject({ message: 'fromFn error' })
