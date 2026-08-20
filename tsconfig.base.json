@@ -23,9 +23,10 @@
     "moduleResolution": "node",
     "ignoreDeprecations": "6.0",
     "stripInternal": true,
+    "skipLibCheck": true,
+    "types": ["node"],
     "lib": [
-      "esnext",
-      "dom"
+      "esnext"
     ],
     "target": "esnext",
   }

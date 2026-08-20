@@ -1,6 +1,20 @@
 import { from, lastValueFrom, tap } from 'rxjs'
 
-import type { ValueBag, PipeGenericParams, CaminhoOptions, Loggers, Caminho as CaminhoInterface } from './types'
+import type {
+  ValueBag,
+  PipeGenericParams,
+  CaminhoOptions,
+  Loggers,
+  Caminho as CaminhoInterface,
+  PipeParamsProvides,
+  PipeParamsNoProvides,
+  BatchParamsProvides,
+  BatchParamsNoProvides,
+  ParallelStep,
+  ParallelProvides,
+  TypedReduceParams,
+  ReducedBag,
+} from './types'
 import type { FromGeneratorParams } from './from'
 
 import { wrapGenerator, wrapGeneratorWithBackPressure } from './operators/generator'
@@ -24,7 +38,7 @@ import { generateId } from './utils/generateId'
 
 type Generator = (initialBag: ValueBag, runId: string) => AsyncGenerator<ValueBag>
 
-export class Caminho implements CaminhoInterface {
+export class Caminho<Bag = ValueBag> implements CaminhoInterface<Bag> {
   private generator: Generator
   private operators: OperatorApplierWithRunId[] = []
   private pendingDataControl?: PendingDataControl
@@ -45,32 +59,44 @@ export class Caminho implements CaminhoInterface {
     return this.pendingDataControl?.size
   }
 
-  public pipe(params: PipeGenericParams): this {
+  public pipe<P extends string, V>(params: BatchParamsProvides<Bag, P, V>): Caminho<Bag & Record<P, V>>
+  public pipe(params: BatchParamsNoProvides<Bag>): Caminho<Bag>
+  public pipe<P extends string, V>(params: PipeParamsProvides<Bag, P, V>): Caminho<Bag & Record<P, Awaited<V>>>
+  public pipe(params: PipeParamsNoProvides<Bag>): Caminho<Bag>
+  public pipe(params: PipeGenericParams): Caminho<ValueBag> {
     const operatorApplier = this.getApplierForPipeOrBatch(params)
     this.addOperatorApplier(() => operatorApplier)
     return this
   }
 
-  public parallel(params: PipeGenericParams[]): this {
+  public parallel<const Steps extends readonly ParallelStep<Bag>[]>(
+    steps: Steps,
+  ): Caminho<Bag & ParallelProvides<Steps>>
+
+  public parallel(params: PipeGenericParams[]): Caminho<ValueBag> {
     const operatorAppliers: OperatorApplier[] = params.map(this.getApplierForPipeOrBatch)
     const operatorApplier = parallel(params, operatorAppliers)
     this.addOperatorApplier(() => operatorApplier)
     return this
   }
 
-  public filter(params: { fn: FilterPredicate, name?: string }): this {
-    const loggers = this.getLoggers(params)
-    this.addOperatorApplier(filter(params.fn, loggers, this.pendingDataControl))
+  public filter(params: { fn: (valueBag: Bag, index: number) => boolean, name?: string }): Caminho<Bag> {
+    const loggers = this.getLoggers(params as { name?: string, fn: FilterPredicate })
+    this.addOperatorApplier(filter(params.fn as FilterPredicate, loggers, this.pendingDataControl))
     return this
   }
 
-  public reduce<T>(reduceParams: ReduceParams<T>): this {
+  public reduce<P extends string, A, K extends string = never>(
+    reduceParams: TypedReduceParams<Bag, P, A, K>,
+  ): Caminho<ReducedBag<Bag, P, A, K>>
+
+  public reduce<T>(reduceParams: ReduceParams<T>): Caminho<ValueBag> {
     const loggers = this.getLoggers(reduceParams)
     this.addOperatorApplier(reduce(reduceParams, loggers, this.pendingDataControl))
     return this
   }
 
-  public async run(initialBag?: ValueBag): Promise<ValueBag> {
+  public async run(initialBag?: ValueBag): Promise<Bag> {
     const runId = generateId()
     const initial$ = this.getInitialObservable(initialBag, runId)
     const observable$ = this.operators.reduce((acc, operator) => applyOperator(acc, operator, runId), initial$)
