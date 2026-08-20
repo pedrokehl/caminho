@@ -11,7 +11,8 @@ import type {
   BatchParamsProvides,
   BatchParamsNoProvides,
   ParallelStep,
-  ParallelProvides,
+  ParallelResult,
+  Provided,
   TypedReduceParams,
   ReducedBag,
 } from './types'
@@ -59,9 +60,9 @@ export class Caminho<Bag = ValueBag> implements CaminhoInterface<Bag> {
     return this.pendingDataControl?.size
   }
 
-  public pipe<P extends string, V>(params: BatchParamsProvides<Bag, P, V>): Caminho<Bag & Record<P, V>>
+  public pipe<P extends string, V>(params: BatchParamsProvides<Bag, P, V>): Caminho<Provided<Bag, P, V>>
   public pipe(params: BatchParamsNoProvides<Bag>): Caminho<Bag>
-  public pipe<P extends string, V>(params: PipeParamsProvides<Bag, P, V>): Caminho<Bag & Record<P, Awaited<V>>>
+  public pipe<P extends string, V>(params: PipeParamsProvides<Bag, P, V>): Caminho<Provided<Bag, P, Awaited<V>>>
   public pipe(params: PipeParamsNoProvides<Bag>): Caminho<Bag>
   public pipe(params: PipeGenericParams): Caminho<ValueBag> {
     const operatorApplier = this.getApplierForPipeOrBatch(params)
@@ -71,7 +72,7 @@ export class Caminho<Bag = ValueBag> implements CaminhoInterface<Bag> {
 
   public parallel<const Steps extends readonly ParallelStep<Bag>[]>(
     steps: Steps,
-  ): Caminho<Bag & ParallelProvides<Steps>>
+  ): Caminho<ParallelResult<Bag, Steps>>
 
   public parallel(params: PipeGenericParams[]): Caminho<ValueBag> {
     const operatorAppliers: OperatorApplier[] = params.map(this.getApplierForPipeOrBatch)

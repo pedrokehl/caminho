@@ -16,16 +16,24 @@ describe('ValueBag typing', () => {
   test('pipe accumulates provides and preserves the bag without provides', () => {
     const flow = fromArray({ items: [1, 2], provides: 'n' })
       .pipe({ fn: ({ n }) => String(n), provides: 's' })
-      .pipe({ fn: (bag) => expectTypeOf(bag).toEqualTypeOf<{ n: number } & { s: string }>() })
+      .pipe({ fn: (bag) => expectTypeOf(bag).toEqualTypeOf<{ n: number, s: string }>() })
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number } & { s: string }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number, s: string }>()
+  })
+
+  test('providing an existing key replaces its type instead of intersecting', () => {
+    const flow = fromArray({ items: [1, 2], provides: 'n' })
+      .pipe({ fn: ({ n }) => String(n), provides: 'n' })
+      .pipe({ fn: (bag) => expectTypeOf(bag.n).toEqualTypeOf<string>() })
+
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: string }>()
   })
 
   test('async pipe fn provides the awaited value', () => {
     const flow = fromArray({ items: [1, 2], provides: 'n' })
       .pipe({ fn: async () => new Date(), provides: 'when' })
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number } & { when: Date }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number, when: Date }>()
   })
 
   test('batch steps provide the element type of the returned array', () => {
@@ -36,7 +44,7 @@ describe('ValueBag typing', () => {
         batch: { maxSize: 10, timeoutMs: 5 },
       })
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number } & { even: boolean }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number, even: boolean }>()
   })
 
   test('parallel accumulates provides from all branches', () => {
@@ -47,7 +55,7 @@ describe('ValueBag typing', () => {
         { fn: async () => {} },
       ])
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number } & { double: number } & { text: string }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number, double: number, text: string }>()
   })
 
   test('filter preserves the bag type', () => {

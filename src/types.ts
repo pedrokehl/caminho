@@ -57,6 +57,17 @@ export type ParallelStep<Bag> =
   | (StepCommonParams & { provides?: string, batch: BatchConfig, fn: (valueBags: Bag[]) => unknown })
   | (StepCommonParams & { provides?: string, batch?: undefined, fn: (valueBag: Bag) => unknown })
 
+type IsAny<T> = 0 extends 1 & T ? true : false
+
+type Flatten<T> = { [K in keyof T]: T[K] }
+
+/**
+ * A step providing key P replaces any previous value under that key, matching the runtime
+ * behavior of getNewValueBag (object spread). Untyped bags (any) stay untyped.
+ */
+export type Provided<Bag, P extends string, V> =
+  IsAny<Bag> extends true ? ValueBag : Flatten<Omit<Bag, P> & Record<P, V>>
+
 type UnionToIntersection<U> = (U extends unknown ? (x: U) => void : never) extends (x: infer I) => void ? I : never
 
 type StepProvidedValue<S> = S extends { batch: BatchConfig, fn: (...args: never[]) => infer R }
@@ -69,6 +80,10 @@ type StepProvides<S> = S extends { provides: infer P extends string }
 
 export type ParallelProvides<Steps extends readonly unknown[]> =
   [StepProvides<Steps[number]>] extends [never] ? unknown : UnionToIntersection<StepProvides<Steps[number]>>
+
+export type ParallelResult<Bag, Steps extends readonly unknown[]> = IsAny<Bag> extends true
+  ? ValueBag
+  : Flatten<Omit<Bag, keyof ParallelProvides<Steps>> & ParallelProvides<Steps>>
 
 export type TypedReduceParams<Bag, P extends string, A, K extends string> = {
   name?: string
@@ -88,16 +103,16 @@ export type ReducedBag<Bag, P extends string, A, K extends string> =
   Record<P, A> & { [Key in K]: Key extends keyof Bag ? Bag[Key] : unknown }
 
 export interface Caminho<Bag = ValueBag> {
-  pipe<P extends string, V>(pipeParams: BatchParamsProvides<Bag, P, V>): Caminho<Bag & Record<P, V>>
+  pipe<P extends string, V>(pipeParams: BatchParamsProvides<Bag, P, V>): Caminho<Provided<Bag, P, V>>
   pipe(pipeParams: BatchParamsNoProvides<Bag>): Caminho<Bag>
-  pipe<P extends string, V>(pipeParams: PipeParamsProvides<Bag, P, V>): Caminho<Bag & Record<P, Awaited<V>>>
+  pipe<P extends string, V>(pipeParams: PipeParamsProvides<Bag, P, V>): Caminho<Provided<Bag, P, Awaited<V>>>
   pipe(pipeParams: PipeParamsNoProvides<Bag>): Caminho<Bag>
   /**
   * Receives an array of StepFunctions and each provided step has the same parameters and behavior as a pipe.
   * Useful only for Asynchronous operations given NodeJS's single-threaded nature.
   * Values are emitted in completion order, like any concurrent step.
    */
-  parallel<const Steps extends readonly ParallelStep<Bag>[]>(steps: Steps): Caminho<Bag & ParallelProvides<Steps>>
+  parallel<const Steps extends readonly ParallelStep<Bag>[]>(steps: Steps): Caminho<ParallelResult<Bag, Steps>>
   filter(filterParams: { fn: (valueBag: Bag, index: number) => boolean, name?: string }): Caminho<Bag>
   reduce<P extends string, A, K extends string = never>(
     reduceParams: TypedReduceParams<Bag, P, A, K>,
