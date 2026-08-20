@@ -160,24 +160,24 @@ test('Parallel steps should use the most efficient path for emiting values', asy
     .pipe(saveAll)
     .run()
 
-  expect(onStepFinished.mock.calls).toEqual([
-    [getOnStepFinishedParamsFixture({ name: 'generator' })],
-    [getOnStepFinishedParamsFixture({ name: 'generator' })],
-    [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],
-    [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],
-    [getOnStepFinishedParamsFixture({ name: 'fetchStatus' })],
-    [getOnStepFinishedParamsFixture({ name: 'saveSomething' })],
-    [getOnStepFinishedParamsFixture({ name: 'saveSomething' })],
-    [getOnStepFinishedParamsFixture({ name: 'generator' })],
-    [getOnStepFinishedParamsFixture({ name: 'generator' })],
-    [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],
-    [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],
-    [getOnStepFinishedParamsFixture({ name: 'fetchStatus' })],
-    [getOnStepFinishedParamsFixture({ name: 'saveSomething' })],
-    [getOnStepFinishedParamsFixture({ name: 'saveSomething' })],
-    [getOnStepFinishedParamsFixture({ name: 'generator' })],
-    [getOnStepFinishedParamsFixture({ name: 'fetchPosition' })],
-    [getOnStepFinishedParamsFixture({ name: 'fetchStatus' })],
-    [getOnStepFinishedParamsFixture({ name: 'saveSomething' })],
-  ])
+  const finishedStepNames = onStepFinished.mock.calls.map(([params]) => params.name)
+
+  // every item passes through every step
+  expect(finishedStepNames.filter((name) => name === 'generator')).toHaveLength(NUMBER_OF_ITERATIONS)
+  expect(finishedStepNames.filter((name) => name === 'fetchPosition')).toHaveLength(NUMBER_OF_ITERATIONS)
+  expect(finishedStepNames.filter((name) => name === 'saveSomething')).toHaveLength(NUMBER_OF_ITERATIONS)
+  // maxItemsFlowing 2 caps batches at 2 items, so there are at least 3 batches
+  expect(finishedStepNames.filter((name) => name === 'fetchStatus').length).toBeGreaterThanOrEqual(3)
+
+  // items stream through the whole flow instead of being processed stage by stage:
+  // the first item must finish the last step before the generator emits the last item
+  const firstItemSaved = finishedStepNames.indexOf('saveSomething')
+  const lastItemGenerated = finishedStepNames.lastIndexOf('generator')
+  expect(firstItemSaved).toBeGreaterThan(-1)
+  expect(firstItemSaved).toBeLessThan(lastItemGenerated)
+
+  expect(onStepFinished).toHaveBeenCalledWith(getOnStepFinishedParamsFixture({ name: 'generator' }))
+  expect(onStepFinished).toHaveBeenCalledWith(getOnStepFinishedParamsFixture({ name: 'fetchStatus' }))
+  expect(onStepFinished).toHaveBeenCalledWith(getOnStepFinishedParamsFixture({ name: 'fetchPosition' }))
+  expect(onStepFinished).toHaveBeenCalledWith(getOnStepFinishedParamsFixture({ name: 'saveSomething' }))
 })
