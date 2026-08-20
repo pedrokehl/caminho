@@ -59,6 +59,23 @@ describe('ValueBag typing', () => {
     expectTypeOf(flow.run()).resolves.toEqualTypeOf<OpenBag<{ n: number, double: number, text: string }>>()
   })
 
+  test('batched parallel branches with provides must return an array of values', () => {
+    const batch = { maxSize: 10, timeoutMs: 5 }
+
+    const flow = fromArray({ items: [1, 2], provides: 'n' })
+      .parallel([
+        { fn: (bags) => bags.map(({ n }) => n * 2), provides: 'double', batch },
+        { fn: async () => {}, batch },
+      ])
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<OpenBag<{ n: number, double: number }>>()
+
+    fromArray({ items: [1, 2], provides: 'n' })
+      .parallel([
+        // @ts-expect-error a providing batched branch must return one value per bag, in an array
+        { fn: () => 123, provides: 'broken', batch },
+      ])
+  })
+
   test('filter preserves the bag type', () => {
     const flow = fromArray({ items: [1, 2], provides: 'n' })
       .filter({ fn: ({ n }) => n > 0 })

@@ -54,7 +54,12 @@ export type BatchParamsNoProvides<Bag> = StepCommonParams & {
 }
 
 export type ParallelStep<Bag> =
-  | (StepCommonParams & { provides?: string, batch: BatchConfig, fn: (valueBags: OpenBag<Bag>[]) => unknown })
+  | (StepCommonParams & {
+    provides: string
+    batch: BatchConfig
+    fn: (valueBags: OpenBag<Bag>[]) => readonly ValueBag[] | Promise<readonly ValueBag[]>
+  })
+  | (StepCommonParams & { provides?: undefined, batch: BatchConfig, fn: (valueBags: OpenBag<Bag>[]) => unknown })
   | (StepCommonParams & { provides?: string, batch?: undefined, fn: (valueBag: OpenBag<Bag>) => unknown })
 
 type IsAny<T> = 0 extends 1 & T ? true : false
