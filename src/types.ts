@@ -67,18 +67,13 @@ type IsAny<T> = 0 extends 1 & T ? true : false
 type Flatten<T> = { [K in keyof T]: T[K] }
 
 /**
- * The starting bag of a flow: the entry point's provides plus the initial-bag type declared
- * by the generator/fn parameter annotation (initialBag is spread into every produced bag).
- * An initial bag annotated as ValueBag (any) or left unannotated adds nothing, keeping
- * untyped flows untyped.
+ * The starting bag of a flow: the entry point's `provides` plus the initial-bag type declared
+ * by the generator/fn parameter annotation, since `initialBag` is spread into every produced bag.
  */
 export type SeededBag<I, P extends string, V> =
   IsAny<I> extends true ? Record<P, V> : Flatten<I & Record<P, V>>
 
-/**
- * A step providing key P replaces any previous value under that key, matching the runtime
- * behavior of getNewValueBag (object spread). Untyped bags (any) stay untyped.
- */
+/** Providing an existing key replaces its type, matching the runtime overwrite (object spread). */
 export type Provided<Bag, P extends string, V> =
   IsAny<Bag> extends true ? ValueBag : Flatten<Omit<Bag, P> & Record<P, V>>
 
@@ -122,10 +117,9 @@ export interface Caminho<Bag = ValueBag> {
   pipe<P extends string, V>(pipeParams: PipeParamsProvides<Bag, P, V>): Caminho<Provided<Bag, P, Awaited<V>>>
   pipe(pipeParams: PipeParamsNoProvides<Bag>): Caminho<Bag>
   /**
-  * Receives an array of StepFunctions and each provided step has the same parameters and behavior as a pipe.
-  * Useful only for Asynchronous operations given NodeJS's single-threaded nature.
-  * Values are emitted in completion order, like any concurrent step.
-   */
+  * Runs each step concurrently for the same item, useful only for asynchronous operations
+  * given NodeJS's single-threaded nature. Values are emitted in completion order.
+  */
   parallel<const Steps extends readonly ParallelStep<Bag>[]>(steps: Steps): Caminho<ParallelResult<Bag, Steps>>
   filter(filterParams: { fn: (valueBag: Bag, index: number) => boolean, name?: string }): Caminho<Bag>
   reduce<P extends string, A, K extends string = never>(

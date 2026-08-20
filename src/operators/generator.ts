@@ -29,11 +29,9 @@ export function wrapGenerator(generatorParams: FromGeneratorParams, loggers: Log
 }
 
 /**
- * Each item atomically acquires a slot (which counts it into the run's bucket) before it is even
- * produced, so the generator never runs ahead of the available capacity. A run torn down by an
- * error cannot corrupt the shared budget: destroying its bucket removes its counted items and
- * settles its queued slot requests as canceled, which resumes a suspended wrapper so the inner
- * generator is closed and its cleanup (finally) runs.
+ * Each item acquires a slot before it is produced, so the source never runs ahead of capacity.
+ * If the run is torn down while waiting, acquireSlot resolves false so the inner generator is
+ * still closed and its `finally` cleanup runs.
  */
 export function wrapGeneratorWithBackPressure(
   generatorParams: FromGeneratorParams,

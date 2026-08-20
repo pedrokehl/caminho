@@ -3,11 +3,8 @@ import type { PipeGenericParams, ValueBag } from '../types'
 import { buildValueBagAccumulator } from '../utils/valueBag'
 import { type OperatorApplier } from './helpers/operatorHelpers'
 
-/**
- * Internal symbol used to track item identity across parallel branches.
- * Symbol-keyed properties survive the object spreads performed by pipe/batch steps.
- */
-export const PARALLEL_ITEM_ID = Symbol('caminhoParallelItemId')
+// Symbol-keyed so it survives the object spreads performed by pipe/batch steps.
+const PARALLEL_ITEM_ID = Symbol('caminhoParallelItemId')
 
 type BranchEmission = { branchIndex: number, valueBag: ValueBag }
 

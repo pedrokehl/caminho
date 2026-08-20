@@ -59,10 +59,8 @@ export type PendingDataControl = {
   decrement: (bucketId: string, value?: number) => void
   destroyBucket: (bucketId: string) => void
   /**
-  * Counts one item into the bucket as soon as the size is below the limit:
-  * immediately when there is capacity, otherwise when a slot frees up (FIFO).
-  * Resolves true once the item is counted, or false when the bucket was
-  * destroyed while waiting, in which case the caller must not emit the item.
+  * Counts one item into the bucket once size is below the limit (immediately, or FIFO when a
+  * slot frees up). Resolves false instead if the bucket was destroyed while waiting.
   */
   acquireSlot: (bucketId: string, limit: number) => Promise<boolean>
 }

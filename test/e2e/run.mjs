@@ -1,11 +1,6 @@
 /**
- * End-to-end packaging test.
- *
- * Builds the package, packs it with `npm pack` (which applies the `files` allowlist),
- * installs the tarball into a scratch project, and then consumes it exactly like a user:
- * - require('caminho') from a CommonJS consumer
- * - import 'caminho' from an ESM consumer
- * - tsc type resolution under nodenext for both an .mts and a .cts consumer
+ * Builds the package, packs it with `npm pack`, installs the tarball into a scratch project,
+ * and consumes it like a real user: require(), import, and tsc under nodenext.
  */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
