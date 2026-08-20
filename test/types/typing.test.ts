@@ -1,24 +1,25 @@
 import { expectTypeOf } from 'expect-type'
-import { fromArray, fromFn, fromGenerator, fromValue } from '../../src'
+import { fromArray, fromFn, fromGenerator, fromValue, type OpenBag } from '../../src'
 
 describe('ValueBag typing', () => {
   test('from* entry points type the bag from provides', async () => {
-    expectTypeOf(fromArray({ items: [1, 2], provides: 'n' }).run()).resolves.toEqualTypeOf<{ n: number }>()
-    expectTypeOf(fromValue({ item: 'hi', provides: 's' }).run()).resolves.toEqualTypeOf<{ s: string }>()
-    expectTypeOf(fromFn({ fn: async () => true, provides: 'ok' }).run()).resolves.toEqualTypeOf<{ ok: boolean }>()
+    expectTypeOf(fromArray({ items: [1, 2], provides: 'n' }).run()).resolves.toEqualTypeOf<OpenBag<{ n: number }>>()
+    expectTypeOf(fromValue({ item: 'hi', provides: 's' }).run()).resolves.toEqualTypeOf<OpenBag<{ s: string }>>()
+    expectTypeOf(fromFn({ fn: async () => true, provides: 'ok' }).run())
+      .resolves.toEqualTypeOf<OpenBag<{ ok: boolean }>>()
 
     async function* generate() {
       yield 1
     }
-    expectTypeOf(fromGenerator({ fn: generate, provides: 'g' }).run()).resolves.toEqualTypeOf<{ g: number }>()
+    expectTypeOf(fromGenerator({ fn: generate, provides: 'g' }).run()).resolves.toEqualTypeOf<OpenBag<{ g: number }>>()
   })
 
   test('pipe accumulates provides and preserves the bag without provides', () => {
     const flow = fromArray({ items: [1, 2], provides: 'n' })
       .pipe({ fn: ({ n }) => String(n), provides: 's' })
-      .pipe({ fn: (bag) => expectTypeOf(bag).toEqualTypeOf<{ n: number, s: string }>() })
+      .pipe({ fn: (bag) => expectTypeOf(bag).toEqualTypeOf<OpenBag<{ n: number, s: string }>>() })
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number, s: string }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<OpenBag<{ n: number, s: string }>>()
   })
 
   test('providing an existing key replaces its type instead of intersecting', () => {
@@ -26,14 +27,14 @@ describe('ValueBag typing', () => {
       .pipe({ fn: ({ n }) => String(n), provides: 'n' })
       .pipe({ fn: (bag) => expectTypeOf(bag.n).toEqualTypeOf<string>() })
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: string }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<OpenBag<{ n: string }>>()
   })
 
   test('async pipe fn provides the awaited value', () => {
     const flow = fromArray({ items: [1, 2], provides: 'n' })
       .pipe({ fn: async () => new Date(), provides: 'when' })
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number, when: Date }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<OpenBag<{ n: number, when: Date }>>()
   })
 
   test('batch steps provide the element type of the returned array', () => {
@@ -44,7 +45,7 @@ describe('ValueBag typing', () => {
         batch: { maxSize: 10, timeoutMs: 5 },
       })
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number, even: boolean }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<OpenBag<{ n: number, even: boolean }>>()
   })
 
   test('parallel accumulates provides from all branches', () => {
@@ -55,14 +56,14 @@ describe('ValueBag typing', () => {
         { fn: async () => {} },
       ])
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number, double: number, text: string }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<OpenBag<{ n: number, double: number, text: string }>>()
   })
 
   test('filter preserves the bag type', () => {
     const flow = fromArray({ items: [1, 2], provides: 'n' })
       .filter({ fn: ({ n }) => n > 0 })
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<OpenBag<{ n: number }>>()
   })
 
   test('reduce replaces the bag with the aggregation plus kept properties', () => {
@@ -70,7 +71,22 @@ describe('ValueBag typing', () => {
       .pipe({ fn: ({ n }) => String(n), provides: 's' })
       .reduce({ fn: (acc: number, { n }) => acc + n, seed: 0, provides: 'sum', keep: ['s'] })
 
-    expectTypeOf(flow.run()).resolves.toEqualTypeOf<Record<'sum', number> & { s: string }>()
+    expectTypeOf(flow.run()).resolves.toEqualTypeOf<OpenBag<{ sum: number, s: string }>>()
+  })
+
+  test('step functions and run results accept properties carried by the run initialBag', async () => {
+    const result = await fromArray({ items: [1, 2], provides: 'n' })
+      .pipe({
+        fn: (bag) => {
+          expectTypeOf(bag.n).toEqualTypeOf<number>()
+          return bag.initial === true
+        },
+        provides: 'fromInitial',
+      })
+      .run({ initial: true })
+
+    expect(result.fromInitial).toBe(true)
+    expect(result.initial).toBe(true)
   })
 
   test('runtime behavior matches the declared types', async () => {

@@ -169,7 +169,8 @@ console.log('result', result)
 ```
 
 #### TypeScript
-The bag type is accumulated automatically as the flow is defined: every `provides` adds a property, `parallel` merges the values of all its branches, and `reduce` replaces the bag with the aggregation plus the properties listed in `keep`.  
+The bag type is accumulated automatically as the flow is defined: every `provides` adds a property (re-providing an existing key replaces its type), `parallel` merges the values of all its branches, and `reduce` replaces the bag with the aggregation plus the properties listed in `keep`.  
+Bags stay open: properties passed through `run(initialBag)` are accessible in steps and results as `any`.  
 No annotations are required, and untyped flows keep working since the bag defaults to `any`.
 
 ```typescript

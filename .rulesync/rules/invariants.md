@@ -54,4 +54,7 @@ find code that breaks one.
 
 - `ValueBag` defaults to `any`; untyped flows must keep compiling forever. Typed-bag features may
   only add inference, never require annotations.
+- Bags are open (`OpenBag`): step functions and run results must always accept properties carried
+  by `run(initialBag)`, which the flow cannot know at compile time. Never narrow step-fn
+  parameters to the exact inferred bag type.
 - Every step function referenced in logs falls back to `fn.name`; keep step wrappers named functions.

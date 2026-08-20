@@ -13,6 +13,7 @@ import type {
   ParallelStep,
   ParallelResult,
   Provided,
+  OpenBag,
   TypedReduceParams,
   ReducedBag,
 } from './types'
@@ -81,7 +82,7 @@ export class Caminho<Bag = ValueBag> implements CaminhoInterface<Bag> {
     return this
   }
 
-  public filter(params: { fn: (valueBag: Bag, index: number) => boolean, name?: string }): Caminho<Bag> {
+  public filter(params: { fn: (valueBag: OpenBag<Bag>, index: number) => boolean, name?: string }): Caminho<Bag> {
     const loggers = this.getLoggers(params as { name?: string, fn: FilterPredicate })
     this.addOperatorApplier(filter(params.fn as FilterPredicate, loggers, this.pendingDataControl))
     return this
@@ -97,7 +98,7 @@ export class Caminho<Bag = ValueBag> implements CaminhoInterface<Bag> {
     return this
   }
 
-  public async run(initialBag?: ValueBag): Promise<Bag> {
+  public async run(initialBag?: ValueBag): Promise<OpenBag<Bag>> {
     const runId = generateId()
     const initial$ = from(this.generator({ ...initialBag }, runId))
     const observable$ = this.operators.reduce((acc, operator) => applyOperator(acc, operator, runId), initial$)
