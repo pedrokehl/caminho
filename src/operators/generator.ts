@@ -8,7 +8,7 @@ export function wrapGenerator(generatorParams: FromGeneratorParams, loggers: Log
     const bagArrayForLogger = [initialBag]
     loggers.onStepStarted(bagArrayForLogger)
     let isStart = true
-    let startTime = new Date()
+    let startTime = performance.now()
 
     try {
       for await (const value of generatorParams.fn(initialBag)) {
@@ -19,7 +19,7 @@ export function wrapGenerator(generatorParams: FromGeneratorParams, loggers: Log
         const newValueBag = getNewValueBag(initialBag, generatorParams.provides, value)
         loggers.onStepFinished([newValueBag], startTime)
         yield newValueBag
-        startTime = new Date()
+        startTime = performance.now()
       }
     } catch (err) {
       loggers.onStepFinished([initialBag], startTime, err as Error)

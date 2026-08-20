@@ -26,7 +26,7 @@ export function reduce<T>(
     let lastBag: ValueBag = {}
 
     function wrappedReduce(acc: T, valueBag: ValueBag, index: number): T {
-      const startedAt = new Date()
+      const startedAt = performance.now()
       loggers.onStepStarted([valueBag])
       // RxJs doesn't create a structureClone from the seed parameter when start processing.
       // Developer can implement function that mutate the "acc" on reduce.fn

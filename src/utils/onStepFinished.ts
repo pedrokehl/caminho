@@ -1,14 +1,13 @@
 import { type OnStepFinished, type ValueBag } from '../types'
 
-export type InternalOnStepFinished = (valueBags: ValueBag[], stepStartedAt: Date, error?: Error) => void
+export type InternalOnStepFinished = (valueBags: ValueBag[], startedAtMs: number, error?: Error) => void
 
 const stub = () => {}
 
 export function getOnStepFinished(name: string, onStepFinished?: OnStepFinished): InternalOnStepFinished {
   if (onStepFinished) {
-    return function internalOnStepFinished(valueBags: ValueBag[], stepStartedAt: Date, error?: Error) {
-      const now = Date.now()
-      const tookMs = now - stepStartedAt.getTime()
+    return function internalOnStepFinished(valueBags: ValueBag[], startedAtMs: number, error?: Error) {
+      const tookMs = Math.round(performance.now() - startedAtMs)
       onStepFinished({ name, tookMs, valueBags, emitted: valueBags.length, error })
     }
   }
