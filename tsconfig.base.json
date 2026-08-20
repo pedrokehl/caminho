@@ -21,6 +21,7 @@
     "strict": true,
     "noImplicitReturns": true,
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "stripInternal": true,
     "lib": [
       "esnext",
