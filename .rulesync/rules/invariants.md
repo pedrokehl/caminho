@@ -1,0 +1,52 @@
+---
+root: false
+targets: ["*"]
+description: "Non-negotiable invariants of the Caminho flow engine"
+globs: ["src/**/*.ts"]
+---
+
+# Flow engine invariants
+
+Violating any of these is a bug, even if all current tests pass. Add a regression test when you
+find code that breaks one.
+
+## Streaming, never buffering
+
+- Caminho must **never hold the whole generated dataset in memory**. Items stream through the
+  operators; with `maxItemsFlowing` set, at most that many items exist in the flow at once.
+- Any new operator or join logic must hold at most O(maxItemsFlowing) items, not O(total items).
+
+## Item integrity
+
+- Values from different items must never be mixed into the same ValueBag. `parallel()` tags each
+  bag with a `PARALLEL_ITEM_ID` symbol and joins branch outputs by that id — never join concurrent
+  branches by emission index (`zip`), because concurrent steps emit in completion order.
+- Steps receive a defensive copy of the bag: mutating a bag inside a step must not leak into other
+  steps. This is a tested public contract; do not remove the copies for performance.
+
+## Emission order
+
+- Steps emit in **completion order**, not generator order. This is consistent across pipe, batch,
+  and parallel, and maximizes throughput. Do not "fix" ordering without an explicit design change.
+
+## Per-run isolation
+
+- One Caminho instance supports concurrent `run()` calls. Any mutable state for a run must live
+  inside the `operatorApplierWithRunId` closure (see `reduce`), never in the operator's outer
+  closure, which is shared by all runs.
+
+## Backpressure accounting (PendingDataControl)
+
+- Items are counted when **delivered into the flow** (tap on the source observable in
+  `Caminho.getInitialObservable`), never inside the generator: a run torn down by an error must not
+  account for values nobody consumed.
+- Decrements happen in the final tap of `run()` and in `filter`/`reduce` when they drop items.
+- `run()` destroys the run's bucket in a `finally`; `destroyBucket` and `decrement` must notify
+  backpressure waiters, otherwise an errored run deadlocks a generator waiting for capacity.
+- After any run finishes (success or error), `getNumberOfItemsFlowing()` must be 0.
+
+## Public API stability
+
+- `ValueBag` defaults to `any`; untyped flows must keep compiling forever. Typed-bag features may
+  only add inference, never require annotations.
+- Every step function referenced in logs falls back to `fn.name`; keep step wrappers named functions.
