@@ -46,6 +46,15 @@ describe('PendingDataControl', () => {
     expect(pendingDataControl.size).toEqual(0)
   })
 
+  test('destroyBucket should be a no-op on size for a bucket that never counted an item', async () => {
+    const pendingDataControl = new PendingDataControlInMemory()
+    pendingDataControl.increment('a')
+
+    // e.g. a run whose generator yielded nothing still destroys its bucket on teardown
+    pendingDataControl.destroyBucket('never-used')
+    expect(pendingDataControl.size).toEqual(1)
+  })
+
   test('acquireSlot should count the item immediately when below the limit', async () => {
     const pendingDataControl = new PendingDataControlInMemory()
     pendingDataControl.increment('a')
