@@ -72,7 +72,7 @@ export class Caminho implements CaminhoInterface {
 
   public async run(initialBag?: ValueBag): Promise<ValueBag> {
     const runId = generateId()
-    const initial$ = from(this.generator({ ...initialBag }, runId))
+    const initial$ = this.getInitialObservable(initialBag, runId)
     const observable$ = this.operators.reduce((acc, operator) => applyOperator(acc, operator, runId), initial$)
 
     const finalObservable$ = this.options?.maxItemsFlowing
@@ -84,6 +84,19 @@ export class Caminho implements CaminhoInterface {
     } finally {
       this.pendingDataControl?.destroyBucket(runId)
     }
+  }
+
+  /**
+  * Items are counted when actually delivered into the flow, not when the generator produces them,
+  * so a run torn down by an error can never account for values that no one consumed.
+  */
+  private getInitialObservable(initialBag: ValueBag | undefined, runId: string) {
+    const source$ = from(this.generator({ ...initialBag }, runId))
+    if (!this.options?.maxItemsFlowing) {
+      return source$
+    }
+    const pendingDataControl = this.pendingDataControl as PendingDataControl
+    return source$.pipe(tap(() => pendingDataControl.increment(runId)))
   }
 
   private getGenerator(generatorParams: FromGeneratorParams): Generator {

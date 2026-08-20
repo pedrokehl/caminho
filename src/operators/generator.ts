@@ -31,6 +31,12 @@ export function wrapGenerator(generatorParams: FromGeneratorParams, loggers: Log
   }
 }
 
+/**
+ * The generator only waits for capacity here, it does not do any accounting:
+ * items are counted by the run's source observable when they are actually delivered into the flow.
+ * Counting inside the generator would leak items that are produced but never
+ * consumed when a run errors during a backpressure wait.
+ */
 export function wrapGeneratorWithBackPressure(
   generatorParams: FromGeneratorParams,
   maxItemsFlowing: number,
@@ -38,9 +44,8 @@ export function wrapGeneratorWithBackPressure(
   loggers: Loggers,
 ) {
   const wrappedGenerator = wrapGenerator(generatorParams, loggers)
-  return async function* wrappedGeneratorWithBackPressure(initialBag: ValueBag, runId: string) {
+  return async function* wrappedGeneratorWithBackPressure(initialBag: ValueBag) {
     for await (const value of wrappedGenerator({ ...initialBag })) {
-      pendingDataControl.increment(runId)
       yield value
       if (needsToWaitForBackpressure(pendingDataControl, maxItemsFlowing)) {
         await waitOnBackpressure(maxItemsFlowing, pendingDataControl)
