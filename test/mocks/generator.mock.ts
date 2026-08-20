@@ -7,8 +7,9 @@ export function getMockedJobGenerator(numberOfValuesToEmit: number) {
 
 export function getMockedGenerator<T>(data: T[]) {
   return async function* generator(): AsyncGenerator<T> {
-    for await (const value of data) {
-      yield value
+    for (const value of data) {
+      // the await preserves the one-microtask-per-item timing of a real async source
+      yield await Promise.resolve(value)
     }
   }
 }
@@ -22,9 +23,9 @@ export function getThrowingGenerator(error: Error) {
 
 export function getGeneratorThrowsAfterThYields(error: Error, numberOfYieldsBeforeThrow: number) {
   return async function* throwingGenerator(): AsyncGenerator<number> {
-    const items = new Array(numberOfYieldsBeforeThrow).fill(0)
-    for await (const value of items) {
-      yield value
+    const items = new Array(numberOfYieldsBeforeThrow).fill(0) as number[]
+    for (const value of items) {
+      yield await Promise.resolve(value)
     }
     throw error
   }

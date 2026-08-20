@@ -26,7 +26,7 @@ export class PendingDataControlInMemory implements PendingDataControl {
     // but they must settle (acquired: false) so a suspended generator can resume and clean up
     const canceled = this.waiters.filter((waiter) => waiter.bucketId === bucketId)
     this.waiters = this.waiters.filter((waiter) => waiter.bucketId !== bucketId)
-    canceled.forEach((waiter) => waiter.resolve(false))
+    canceled.forEach((waiter) => { waiter.resolve(false) })
     this.admitWaiters()
   }
 

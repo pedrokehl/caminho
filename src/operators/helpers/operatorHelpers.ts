@@ -8,7 +8,7 @@ export type OperatorApplier = (observable: Observable<ValueBag>) => Observable<V
 export type OperatorApplierWithRunId = (runId: string) => OperatorApplier
 
 export function isBatch(params: PipeParams | BatchParams): params is BatchParams {
-  return !!(params as BatchParams)?.batch
+  return !!(params as BatchParams).batch
 }
 
 export function applyOperator(

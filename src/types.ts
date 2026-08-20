@@ -116,9 +116,8 @@ export type ReducedBag<Bag, P extends string, A, K extends string> =
 
 export interface Caminho<Bag = ValueBag> {
   pipe<P extends string, V>(pipeParams: BatchParamsProvides<Bag, P, V>): Caminho<Provided<Bag, P, V>>
-  pipe(pipeParams: BatchParamsNoProvides<Bag>): Caminho<Bag>
   pipe<P extends string, V>(pipeParams: PipeParamsProvides<Bag, P, V>): Caminho<Provided<Bag, P, Awaited<V>>>
-  pipe(pipeParams: PipeParamsNoProvides<Bag>): Caminho<Bag>
+  pipe(pipeParams: BatchParamsNoProvides<Bag> | PipeParamsNoProvides<Bag>): Caminho<Bag>
   /**
   * Receives an array of StepFunctions and each provided step has the same parameters and behavior as a pipe.
   * Useful only for Asynchronous operations given NodeJS's single-threaded nature.

@@ -19,7 +19,7 @@ export type PipeParams = {
   * This is useful for example when you are calling an API that can't handle too many concurrent requests.
    */
   maxConcurrency?: number
-  fn: (valueBag: ValueBag) => unknown | Promise<unknown>
+  fn: (valueBag: ValueBag) => unknown
 }
 
 export function pipe(params: PipeParams, loggers: Loggers): OperatorApplier {
@@ -38,7 +38,7 @@ export function pipe(params: PipeParams, loggers: Loggers): OperatorApplier {
       throw err
     }
   }
-  return mergeMap(wrappedStep, params?.maxConcurrency)
+  return mergeMap(wrappedStep, params.maxConcurrency)
 }
 
 export function valueBagGetterNoProvides() {

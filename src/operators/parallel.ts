@@ -55,6 +55,9 @@ function joinByItemId(branchCount: number, getAccumulatedBag: (valueBags: ValueB
 }
 
 function removeItemIdTag(valueBag: ValueBag): ValueBag {
+  // PARALLEL_ITEM_ID is a constant internal symbol, not arbitrary input; delete avoids
+  // allocating a copy of the bag for every item passing through parallel()
+  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
   delete valueBag[PARALLEL_ITEM_ID]
   return valueBag
 }
