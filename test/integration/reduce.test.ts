@@ -155,4 +155,33 @@ describe('Reduce', () => {
     expect(saveAcc).toHaveBeenCalledTimes(2)
     expect(saveAcc).toHaveBeenNthCalledWith(2, expectedOutput)
   })
+
+  test('Should not leak kept values between concurrent runs of the same instance', async () => {
+    async function* generator(initialBag: { label: string, delayMs: number, tailDelayMs: number }) {
+      for (let i = 1; i <= 3; i += 1) {
+        await sleep(initialBag.delayMs)
+        yield `${initialBag.label}${i}`
+      }
+      // simulates a slow final iteration, e.g. a last API call returning an empty page
+      await sleep(initialBag.tailDelayMs)
+    }
+
+    const caminho = fromGenerator({ fn: generator, provides: 'item' })
+      .reduce({
+        fn: (acc: string[], valueBag) => [...acc, valueBag.item],
+        seed: [] as string[],
+        provides: 'items',
+        keep: ['label'],
+      })
+
+    // The first run finishes its items quickly but completes slowly,
+    // while the second run keeps producing items during that window.
+    const [first, second] = await Promise.all([
+      caminho.run({ label: 'X', delayMs: 5, tailDelayMs: 100 }),
+      caminho.run({ label: 'Y', delayMs: 30, tailDelayMs: 0 }),
+    ])
+
+    expect(first).toEqual({ label: 'X', items: ['X1', 'X2', 'X3'] })
+    expect(second).toEqual({ label: 'Y', items: ['Y1', 'Y2', 'Y3'] })
+  })
 })
