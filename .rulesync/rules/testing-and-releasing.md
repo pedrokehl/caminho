@@ -22,6 +22,12 @@ globs: ["test/**/*.ts", "package.json", "jsr.json", ".github/**/*"]
   the tarball from a scratch project via `require()`, `import`, and `tsc` under `nodenext`.
   Any change to `package.json` `exports`/`files`, the build scripts, or tsconfigs must keep it green.
 
+# AI rules
+
+- `.rulesync/rules/` is the only committed source of truth for agent rules. The generated configs
+  (`AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `.cursor/`) are gitignored; regenerate them
+  locally with `npx rulesync generate --targets agentsmd,claudecode,cursor`.
+
 # Benchmarks
 
 - `npm run benchmark:micro` runs the tinybench suite; CI compares PRs against the main baseline and
