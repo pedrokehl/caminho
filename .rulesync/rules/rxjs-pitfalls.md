@@ -42,5 +42,7 @@ Flows made of immediately-resolving promises form one long microtask chain; `set
 
 ## Backpressure waiters
 
-`PendingDataControl.waitUntilBelow` resolves on `decrement`/`destroyBucket`. If you add a code path
-that reduces `size` some other way, it must notify waiters or generators will hang.
+`PendingDataControl.acquireSlot` queues when at capacity; `decrement`/`destroyBucket` admit queued
+waiters FIFO, counting the slot synchronously per admission. If you add a code path that reduces
+`size` some other way, it must run the admission loop or generators will hang. Never resolve a
+waiter without consuming its slot in the same synchronous step.

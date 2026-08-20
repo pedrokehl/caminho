@@ -37,13 +37,18 @@ find code that breaks one.
 
 ## Backpressure accounting (PendingDataControl)
 
-- Items are counted when **delivered into the flow** (tap on the source observable in
-  `Caminho.getInitialObservable`), never inside the generator: a run torn down by an error must not
-  account for values nobody consumed.
+- Admission is **atomic**: an item enters the flow only through `acquireSlot`, which counts the
+  item synchronously (immediately when below the limit, or inside the FIFO wake loop when a slot
+  frees up). Never resolve capacity waiters without consuming the slot in the same synchronous
+  step — broadcasting wakeups lets concurrent runs exceed `maxItemsFlowing`.
+- The generator wrapper acquires a slot **before** pulling the next value, so the source never
+  produces ahead of capacity.
 - Decrements happen in the final tap of `run()` and in `filter`/`reduce` when they drop items.
-- `run()` destroys the run's bucket in a `finally`; `destroyBucket` and `decrement` must notify
-  backpressure waiters, otherwise an errored run deadlocks a generator waiting for capacity.
-- After any run finishes (success or error), `getNumberOfItemsFlowing()` must be 0.
+- `run()` destroys the run's bucket in a `finally`; `destroyBucket` removes the bucket's queued
+  slot requests (a torn-down run must not admit items) and, like `decrement`, hands freed
+  capacity to the remaining waiters, otherwise concurrent generators deadlock.
+- After any run finishes (success or error), `getNumberOfItemsFlowing()` must be 0, and the peak
+  across concurrent runs must never exceed `maxItemsFlowing` (tested in `concurrentRuns.test.ts`).
 
 ## Public API stability
 

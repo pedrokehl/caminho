@@ -13,8 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `parallel()` reads provided values from the correct branch when providing and
   non-providing steps are mixed.
 - `reduce()` no longer leaks kept values between concurrent runs of the same Caminho instance.
-- Items are accounted when actually delivered into the flow, fixing a phantom item leak
-  when a run errored while its generator waited for backpressure capacity.
+- Backpressure admission is atomic: each item acquires a slot before it is produced, and freed
+  capacity admits exactly one queued item. Previously an errored run could leak phantom items
+  into the shared budget, and concurrent runs woken together could exceed `maxItemsFlowing`.
 - The ESM build is now loadable by Node: `dist` is bundled with tsdown into `index.mjs` and
   `index.cjs` with per-format type declarations (`.d.mts`/`.d.cts`). The package `exports` map
   gained real `import`/`require` conditions with their own `types`, and the root `types` field
@@ -38,7 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Backpressure waits are promise-based instead of polling every 10ms,
-  roughly 10x faster wakeups on backpressure-heavy flows.
+  roughly 10x faster wakeups on backpressure-heavy flows, and the generator no longer
+  produces values ahead of the available capacity.
 - Batch buffering uses a custom first-item-timeout operator instead of `bufferTime`,
   so no timer runs while the flow is idle and `timeoutMs` counts from the first buffered item.
 - Step timing uses `performance.now()` and logger callbacks are no-op stubs when not configured,

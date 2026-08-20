@@ -29,10 +29,10 @@ export function wrapGenerator(generatorParams: FromGeneratorParams, loggers: Log
 }
 
 /**
- * The generator only waits for capacity here, it does not do any accounting:
- * items are counted by the run's source observable when they are actually delivered into the flow.
- * Counting inside the generator would leak items that are produced but never
- * consumed when a run errors during a backpressure wait.
+ * Each item atomically acquires a slot (which counts it into the run's bucket) before it is even
+ * produced, so the generator never runs ahead of the available capacity. A run torn down by an
+ * error cannot corrupt the shared budget: destroying its bucket removes its counted items and
+ * cancels its queued slot requests.
  */
 export function wrapGeneratorWithBackPressure(
   generatorParams: FromGeneratorParams,
@@ -41,12 +41,16 @@ export function wrapGeneratorWithBackPressure(
   loggers: Loggers,
 ) {
   const wrappedGenerator = wrapGenerator(generatorParams, loggers)
-  return async function* wrappedGeneratorWithBackPressure(initialBag: ValueBag) {
-    for await (const value of wrappedGenerator({ ...initialBag })) {
-      yield value
-      if (pendingDataControl.size >= maxItemsFlowing) {
-        await pendingDataControl.waitUntilBelow(maxItemsFlowing)
+  return async function* wrappedGeneratorWithBackPressure(initialBag: ValueBag, runId: string) {
+    const iterator = wrappedGenerator({ ...initialBag })
+    while (true) {
+      await pendingDataControl.acquireSlot(runId, maxItemsFlowing)
+      const next = await iterator.next()
+      if (next.done) {
+        pendingDataControl.decrement(runId)
+        return
       }
+      yield next.value
     }
   }
 }

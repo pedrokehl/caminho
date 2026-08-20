@@ -46,46 +46,67 @@ describe('PendingDataControl', () => {
     expect(pendingDataControl.size).toEqual(0)
   })
 
-  test('waitUntilBelow should resolve immediately when size is already below the threshold', async () => {
+  test('acquireSlot should count the item immediately when below the limit', async () => {
     const pendingDataControl = new PendingDataControlInMemory()
     pendingDataControl.increment('a')
-    await expect(pendingDataControl.waitUntilBelow(2)).resolves.toBeUndefined()
+
+    await expect(pendingDataControl.acquireSlot('a', 2)).resolves.toBeUndefined()
+    expect(pendingDataControl.size).toEqual(2)
   })
 
-  test('waitUntilBelow should resolve once decrement brings the size below the threshold', async () => {
+  test('acquireSlot should stay pending at the limit and consume the slot atomically once freed', async () => {
+    const pendingDataControl = new PendingDataControlInMemory()
+    pendingDataControl.increment('a', 2)
+
+    const admitted = jest.fn()
+    const waiting = pendingDataControl.acquireSlot('a', 2).then(admitted)
+
+    await flushMicrotasks()
+    expect(admitted).not.toHaveBeenCalled()
+    expect(pendingDataControl.size).toEqual(2)
+
+    pendingDataControl.decrement('a')
+    await waiting
+    expect(admitted).toHaveBeenCalled()
+    // the freed slot is consumed by the admission, size is back at the limit
+    expect(pendingDataControl.size).toEqual(2)
+  })
+
+  test('acquireSlot should admit only as many waiters as slots freed', async () => {
     const pendingDataControl = new PendingDataControlInMemory()
     pendingDataControl.increment('a', 3)
 
-    const resolved = jest.fn()
-    const waiting = pendingDataControl.waitUntilBelow(2).then(resolved)
+    const admittedFirst = jest.fn()
+    const admittedSecond = jest.fn()
+    const firstWaiting = pendingDataControl.acquireSlot('b', 3).then(admittedFirst)
+    pendingDataControl.acquireSlot('c', 3).then(admittedSecond)
 
-    await flushMicrotasks()
-    expect(resolved).not.toHaveBeenCalled()
-
-    // size drops to 2, still not below the threshold, the waiter must be kept
     pendingDataControl.decrement('a')
+    await firstWaiting
     await flushMicrotasks()
-    expect(resolved).not.toHaveBeenCalled()
 
-    // size drops to 1, below the threshold
-    pendingDataControl.decrement('a')
-    await waiting
-    expect(resolved).toHaveBeenCalled()
+    expect(admittedFirst).toHaveBeenCalled()
+    expect(admittedSecond).not.toHaveBeenCalled()
+    expect(pendingDataControl.size).toEqual(3)
   })
 
-  test('waitUntilBelow should resolve when destroyBucket brings the size below the threshold', async () => {
+  test('destroyBucket should cancel its own waiters and hand freed capacity to other buckets', async () => {
     const pendingDataControl = new PendingDataControlInMemory()
-    pendingDataControl.increment('a', 5)
+    pendingDataControl.increment('a', 2)
+    pendingDataControl.increment('b', 1)
 
-    const resolved = jest.fn()
-    const waiting = pendingDataControl.waitUntilBelow(5).then(resolved)
-
-    await flushMicrotasks()
-    expect(resolved).not.toHaveBeenCalled()
+    const admittedDoomed = jest.fn()
+    const admittedHealthy = jest.fn()
+    pendingDataControl.acquireSlot('a', 3).then(admittedDoomed)
+    const healthyWaiting = pendingDataControl.acquireSlot('b', 3).then(admittedHealthy)
 
     pendingDataControl.destroyBucket('a')
-    await waiting
-    expect(resolved).toHaveBeenCalled()
+    await healthyWaiting
+    await flushMicrotasks()
+
+    expect(admittedDoomed).not.toHaveBeenCalled()
+    expect(admittedHealthy).toHaveBeenCalled()
+    expect(pendingDataControl.size).toEqual(2)
   })
 })
 
