@@ -1,7 +1,7 @@
 import { fromGenerator, type ValueBag } from '../../src'
 import { sleep } from '../../src/utils/sleep'
 
-import { getMockedJobGenerator } from '../mocks/generator.mock'
+import { getMockedGenerator, getMockedJobGenerator } from '../mocks/generator.mock'
 import { getOnStepFinishedParamsFixture } from '../mocks/stepResult.mock'
 
 test('Parallel steps should provide valueBag properly to the following steps', async () => {
@@ -42,6 +42,88 @@ test('Parallel steps should provide valueBag properly to the following steps', a
     { job: { job_id: '8' }, status: '8 is ok', position: 'SW' },
     { job: { job_id: '9' }, status: '9 is fired', position: 'SW' },
     { job: { job_id: '10' }, status: '10 is ok', position: 'HR' },
+  ])
+})
+
+test('Parallel steps with variable latency should not mix values across items', async () => {
+  const results: ValueBag[] = []
+
+  // Branch A is fastest for the last item, branch B is fastest for the first item,
+  // so the branches emit in opposite orders when concurrency is unlimited.
+  const slowsDown = {
+    fn: async ({ id }: { id: number }) => {
+      await sleep((6 - id) * 20)
+      return `A${id}`
+    },
+    provides: 'a',
+  }
+  const speedsUp = {
+    fn: async ({ id }: { id: number }) => {
+      await sleep(id * 5)
+      return `B${id}`
+    },
+    provides: 'b',
+  }
+
+  await fromGenerator({ fn: getMockedGenerator([1, 2, 3, 4, 5]), provides: 'id' })
+    .parallel([slowsDown, speedsUp])
+    .pipe({ fn: (valueBag: ValueBag) => { results.push(valueBag) } })
+    .run()
+
+  expect(results).toHaveLength(5)
+  for (const valueBag of results) {
+    expect(valueBag).toEqual({ id: valueBag.id, a: `A${valueBag.id}`, b: `B${valueBag.id}` })
+  }
+})
+
+test('Parallel batch steps with variable latency should not mix values across items', async () => {
+  const results: ValueBag[] = []
+
+  // maxSize 1 makes every batch complete independently, with per-item latency
+  const slowsDownBatch = {
+    fn: async (valueBags: ValueBag[]) => {
+      await sleep((6 - valueBags[0].id) * 20)
+      return valueBags.map(({ id }) => `A${id}`)
+    },
+    provides: 'a',
+    batch: { maxSize: 1, timeoutMs: 1 },
+  }
+  const speedsUp = {
+    fn: async ({ id }: { id: number }) => {
+      await sleep(id * 5)
+      return `B${id}`
+    },
+    provides: 'b',
+  }
+
+  await fromGenerator({ fn: getMockedGenerator([1, 2, 3, 4, 5]), provides: 'id' })
+    .parallel([slowsDownBatch, speedsUp])
+    .pipe({ fn: (valueBag: ValueBag) => { results.push(valueBag) } })
+    .run()
+
+  expect(results).toHaveLength(5)
+  for (const valueBag of results) {
+    expect(valueBag).toEqual({ id: valueBag.id, a: `A${valueBag.id}`, b: `B${valueBag.id}` })
+  }
+})
+
+test('Parallel steps mixing non-providing and providing steps should read values from the correct branch', async () => {
+  const results: ValueBag[] = []
+  const sideEffect = jest.fn().mockName('sideEffect')
+
+  await fromGenerator({ fn: getMockedGenerator([1, 2, 3]), provides: 'id' })
+    .parallel([
+      { fn: sideEffect },
+      { fn: ({ id }: { id: number }) => `B${id}`, provides: 'b' },
+    ])
+    .pipe({ fn: (valueBag: ValueBag) => { results.push(valueBag) } })
+    .run()
+
+  expect(sideEffect).toHaveBeenCalledTimes(3)
+  expect(results).toEqual([
+    { id: 1, b: 'B1' },
+    { id: 2, b: 'B2' },
+    { id: 3, b: 'B3' },
   ])
 })
 

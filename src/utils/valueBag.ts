@@ -8,15 +8,21 @@ function isPipeParamsProvides(pipeParams: PipeGenericParams): pipeParams is Pipe
   return !!pipeParams.provides
 }
 
+type ProvidableEntry = { pipeParams: PipeGenericParamsProvides, branchIndex: number }
+
 export function buildValueBagAccumulator(pipesParams: PipeGenericParams[]) {
-  const providablePipeParams = pipesParams.filter(isPipeParamsProvides)
+  // The branch index must be preserved: the provided value has to be read
+  // from the output of the branch that actually produced it.
+  const providableEntries: ProvidableEntry[] = pipesParams
+    .map((pipeParams, branchIndex) => ({ pipeParams, branchIndex }))
+    .filter((entry): entry is ProvidableEntry => isPipeParamsProvides(entry.pipeParams))
 
   return function getAccumulatedParallelBag(valueBags: ValueBag[]) {
-    function accumulateProvidedValues(valueBag: ValueBag, pipeParams: PipeGenericParamsProvides, index: number) {
-      valueBag[pipeParams.provides] = valueBags[index][pipeParams.provides]
+    function accumulateProvidedValues(valueBag: ValueBag, { pipeParams, branchIndex }: ProvidableEntry) {
+      valueBag[pipeParams.provides] = valueBags[branchIndex][pipeParams.provides]
       return valueBag
     }
 
-    return providablePipeParams.reduce(accumulateProvidedValues, { ...valueBags[0] })
+    return providableEntries.reduce(accumulateProvidedValues, { ...valueBags[0] })
   }
 }
