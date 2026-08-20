@@ -30,8 +30,9 @@
     "test:watch": "jest -o --watch",
     "lint": "eslint ./src ./test ./benchmark ./eslint.config.mjs",
     "lint:fix": "npm run lint -- --fix",
-    "benchmark:parallel": "npx tsx ./benchmark/parallel.benchmark.ts",
-    "benchmark:subflow": "npx tsx ./benchmark/subFlow.benchmark.ts",
+    "benchmark:micro": "tsx ./benchmark/micro.benchmark.ts",
+    "benchmark:parallel": "tsx ./benchmark/parallel.benchmark.ts",
+    "benchmark:subflow": "tsx ./benchmark/subFlow.benchmark.ts",
     "prepublishOnly": "npm test && npm run build"
   },
   "repository": {
