@@ -15,13 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `reduce()` no longer leaks kept values between concurrent runs of the same Caminho instance.
 - Items are accounted when actually delivered into the flow, fixing a phantom item leak
   when a run errored while its generator waited for backpressure capacity.
-- The ESM build is now loadable by Node: the build appends explicit `.js` extensions to relative
-  imports in `dist/esm` and emits `type` markers for `dist/esm`/`dist/cjs`. The package `exports`
-  map gained a real `import` condition and the root `types` field no longer points to a
-  nonexistent file.
+- The ESM build is now loadable by Node: `dist` is bundled with tsdown into `index.mjs` and
+  `index.cjs` with per-format type declarations (`.d.mts`/`.d.cts`). The package `exports` map
+  gained real `import`/`require` conditions with their own `types`, and the root `types` field
+  no longer points to a nonexistent file.
 - `Caminho.filter()` interface no longer requires a `name`.
 - `PendingDataControl` no longer stores `NaN` when decrementing an untracked bucket.
-- The npm package no longer ships `tsbuildinfo` compiler artifacts (over half the unpacked size).
+- The npm package no longer ships compiler artifacts, and the bundled output is a fraction
+  of the previous multi-file dist size.
 
 ### Added
 

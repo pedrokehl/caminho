@@ -15,9 +15,9 @@ globs: ["test/**/*.ts", "package.json", "jsr.json", ".github/**/*"]
   interleavings of step logs. Real-clock sleeps in tests should stay in the low milliseconds.
 - Property-based tests live in `test/property/` (fast-check, keep `numRuns` around 15 so the suite
   stays fast). Compile-time typing assertions live in `test/types/` (expect-type).
-- Source imports are extensionless; the `.js` extensions Node ESM requires are appended to the
-  compiled `dist/esm` output by `scripts/addEsmExtensions.mjs` during the build. Do not add
-  extensions in `src/`.
+- Source imports are extensionless; `npm run build` bundles `src/index.ts` with tsdown
+  (`tsdown.config.ts`) into `dist/index.mjs` + `dist/index.cjs` with per-format declarations,
+  so no extension rewriting or module-type markers are needed. Do not add extensions in `src/`.
 - `npm run test:e2e` (test/e2e/, also part of the Build workflow) packs the package and consumes
   the tarball from a scratch project via `require()`, `import`, and `tsc` under `nodenext`.
   Any change to `package.json` `exports`/`files`, the build scripts, or tsconfigs must keep it green.
@@ -36,5 +36,5 @@ globs: ["test/**/*.ts", "package.json", "jsr.json", ".github/**/*"]
 2. Update `CHANGELOG.md`, moving entries from Unreleased to the new version.
 3. Publishing to npm and jsr happens via the `publish-npm.yml` and `publish-jsr.yml` workflows
    (npm uses trusted publishing; jsr publishes `src/` directly, so `src` must compile standalone).
-4. The npm package ships `dist/` (CJS + ESM + types, no tsbuildinfo) with an `exports` map;
-   after packaging changes, run `npm run test:e2e` to verify the packed output end to end.
+4. The npm package ships the bundled `dist/` (CJS + ESM + per-format types) with an `exports`
+   map; after packaging changes, run `npm run test:e2e` to verify the packed output end to end.
