@@ -1,5 +1,6 @@
 import { expectTypeOf } from 'expect-type'
 import { fromArray, fromFn, fromGenerator, fromValue, type ValueBag } from '../../src'
+import type { BatchConfig, ParallelStep } from '../../src/types'
 
 describe('ValueBag typing', () => {
   test('from* entry points type the bag from provides', async () => {
@@ -69,11 +70,11 @@ describe('ValueBag typing', () => {
       ])
     expectTypeOf(flow.run()).resolves.toEqualTypeOf<{ n: number, double: number }>()
 
-    fromArray({ items: [1, 2], provides: 'n' })
-      .parallel([
-        // @ts-expect-error a providing batched branch must return one value per bag, in an array
-        { fn: () => 123, provides: 'broken', batch },
-      ])
+    // a providing batched branch must return one value per bag, in an array
+    type ProvidingBranchReturningArray = { fn: (bags: { n: number }[]) => number[], provides: 'ok', batch: BatchConfig }
+    type ProvidingBranchReturningValue = { fn: () => number, provides: 'broken', batch: BatchConfig }
+    expectTypeOf<ProvidingBranchReturningArray>().toExtend<ParallelStep<{ n: number }>>()
+    expectTypeOf<ProvidingBranchReturningValue>().not.toExtend<ParallelStep<{ n: number }>>()
   })
 
   test('filter preserves the bag type', () => {
@@ -93,16 +94,18 @@ describe('ValueBag typing', () => {
 
   test('typed bags are closed: only declared properties are accessible', async () => {
     const result = await fromArray({ items: [1, 2], provides: 'n' })
-      .pipe({ fn: ({ n }) => n * 2, provides: 'double' })
+      .pipe({
+        fn: (bag) => {
+          // exact equality proves closure: no index signature, no undeclared properties
+          expectTypeOf(bag).toEqualTypeOf<{ n: number }>()
+          return bag.n * 2
+        },
+        provides: 'double',
+      })
       .run()
 
     expectTypeOf(result).toEqualTypeOf<{ n: number, double: number }>()
-    // @ts-expect-error undeclared properties must not be accessible on the result
-    void result.somethingElse
-
-    fromArray({ items: [1, 2], provides: 'n' })
-      // @ts-expect-error undeclared properties must not be accessible inside steps
-      .pipe({ fn: (bag) => bag.somethingElse })
+    expectTypeOf(result).not.toHaveProperty('somethingElse')
   })
 
   test('annotating the generator parameter types the initialBag properties for the whole flow', async () => {
